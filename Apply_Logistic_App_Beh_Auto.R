@@ -369,35 +369,16 @@ if(flag_cession==1 & flag_credirect==1){
 }
 
 
-# Create output dataframe
-final <- as.data.frame(cbind(scoring_df$application_id[1],
-          scoring_df$score[scoring_df$amount== unique(scoring_df$amount)
-          [which.min(abs(all_df$amount - unique(scoring_df$amount)))]
-                  & 
-          scoring_df$period==unique(scoring_df$period)
-          [which.min(abs(all_df$installments - unique(scoring_df$period)))]]))
-names(final) <- c("id","score")
-final$flag_beh <- flag_beh
-final$flag_credirect <- flag_credirect
-final$flag_next_salary <- flag_credit_next_salary
-final$flag_exclusion <- flag_exclusion
-final$status_active_total <- all_df$status_active_total
-final$status_finished_total <- all_df$status_finished_total
-final$outs_overdue_ratio_total <- all_df$outs_overdue_ratio_total
-
-all_df$installment_amount <- products[
-  products$period == unique(products$period)
-  [which.min(abs(all_df$installments - unique(products$period)))] & 		
-    products$amount == unique(products$amount)
-  [which.min(abs(all_df$amount - unique(products$amount)))] & 		
-    products$product_id == all_df$product_id, ]$installment_amount
-
-
-# Read and write
-final_exists <- read.xlsx(paste(main_dir,"results\\scored_credits_2.xlsx", 
-                                sep=""))
-final <- rbind(final_exists, final)
-write.xlsx(final, paste(main_dir,"results\\scored_credits_2.xlsx", sep=""))
+#Update database
+write_sql_query <- paste("
+  DELETE FROM ",db_name,".credits_applications_scoring WHERE application_id=",
+  application_id, sep="")
+suppressMessages(dbSendQuery(con,write_sql_query))
+suppressMessages(dbWriteTable(con, name = "credits_applications_scoring", 
+  value = scoring_df,
+  field.types = c(application_id="numeric", amount="integer", 
+  period="integer", score="character(20)",color="integer", 
+  created_at="datetime"),row.names = F, append = T))
 
 
 
