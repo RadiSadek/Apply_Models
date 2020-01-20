@@ -46,18 +46,17 @@ setwd(main_dir)
 
 
 # Load other r files
-source("C:\\Projects\\Apply_Scoring\\R\\Project\\Logistic_App_CityCash.R")
-source("C:\\Projects\\Apply_Scoring\\R\\Project\\Logistic_App_Credirect.R")
-source("C:\\Projects\\Apply_Scoring\\R\\Project\\Logistic_Beh_CityCash.R")
-source("C:\\Projects\\Apply_Scoring\\R\\Project\\Logistic_Beh_Credirect.R")
-source("C:\\Projects\\Apply_Scoring\\R\\Project\\Useful_Functions.R")
-source("C:\\Projects\\Apply_Scoring\\R\\Project\\Empty_Fields.R")
-source("C:\\Projects\\Apply_Scoring\\R\\Project\\Cutoffs.R")
-source("C:\\Projects\\Apply_Scoring\\R\\Project\\SQL_queries.R")
-source("C:\\Projects\\Apply_Scoring\\R\\Project\\Disposable_Income.R")
-source("C:\\Projects\\Apply_Scoring\\R\\Project\\Behavioral_Variables.R")
-source("C:\\Projects\\Apply_Scoring\\R\\Project\\Normal_Variables.R")
-source("C:\\Projects\\Apply_Scoring\\R\\Project\\CKR_variables.R")
+source(paste(main_dir,"R\\Project\\Logistic_App_CityCash.R", sep=""))
+source(paste(main_dir,"R\\Project\\Logistic_Beh_CityCash.R", sep=""))
+source(paste(main_dir,"R\\Project\\Logistic_Beh_Credirect.R", sep=""))
+source(paste(main_dir,"R\\Project\\Useful_Functions.R", sep=""))
+source(paste(main_dir,"R\\Project\\Empty_Fields.R", sep=""))
+source(paste(main_dir,"R\\Project\\Cutoffs.R", sep=""))
+source(paste(main_dir,"R\\Project\\SQL_queries.R", sep=""))
+source(paste(main_dir,"R\\Project\\Disposable_Income.R", sep=""))
+source(paste(main_dir,"R\\Project\\Behavioral_Variables.R", sep=""))
+source(paste(main_dir,"R\\Project\\Normal_Variables.R", sep=""))
+source(paste(main_dir,"R\\Project\\CKR_variables.R", sep=""))
 
 
 # Load predefined libraries
