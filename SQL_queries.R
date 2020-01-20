@@ -1,0 +1,203 @@
+
+##################################
+######## Define SQL queries ######
+##################################
+
+# Define big query which reads from credits_applications
+gen_big_sql_query <- function(db_name,application_id){
+big_sql_query <- paste("SELECT 
+",db_name,".credits_applications_clients.application_id, 
+",db_name,".credits_applications_clients.ownership,
+",db_name,".credits_applications_clients.education,
+",db_name,".credits_applications_clients.egn,
+",db_name,".credits_applications_clients.household_children,
+",db_name,".credits_applications_clients.household_total,
+",db_name,".credits_applications_clients.on_address,
+",db_name,".credits_applications_clients.marital_status,
+",db_name,".credits_applications_data_other.purpose,
+",db_name,".credits_applications_clients_work.experience_employer,
+",db_name,".credits_applications_clients_work.status AS status_work,
+",db_name,".credits_plan_contract.amount,
+",db_name,".credits_plan_contract.installments,
+",db_name,".credits_applications.signed_at,
+",db_name,".credits_applications.created_at,
+",db_name,".credits_applications.client_id,
+",db_name,".credits_applications.status,
+",db_name,".credits_applications.sub_status,
+",db_name,".credits_applications.product_id,
+",db_name,".credits_applications.deactivated_at
+FROM ",db_name,".credits_applications_clients
+LEFT JOIN ",db_name,".credits_applications_data_other
+ON ",db_name,".credits_applications_clients.application_id = ",db_name,
+".credits_applications_data_other.application_id
+LEFT JOIN ",db_name,".credits_applications_clients_work
+ON ",db_name,".credits_applications_clients.application_id = ",db_name,
+".credits_applications_clients_work.application_id
+LEFT JOIN ",db_name,".credits_plan_contract
+ON ",db_name,".credits_applications_clients.application_id = ",db_name,
+".credits_plan_contract.application_id
+LEFT JOIN ",db_name,".credits_applications
+ON ",db_name,".credits_applications_clients.application_id = ",db_name,
+".credits_applications.id
+WHERE credits_applications_clients.application_id=", application_id, sep="")
+return(big_sql_query)
+}
+
+# Define query for products periods and amounts
+gen_products_query <- function(db_name,all_df){
+  return(paste("SELECT * FROM ", db_name, ".products_periods_and_amounts 
+               WHERE product_id IN (",
+               all_df$product_id, ")", sep=""))
+}
+
+# Define query for products 
+gen_products_query_desc <- function(db_name,all_df){
+  return(paste("SELECT id, period, company_id FROM ", db_name, ".products 
+               WHERE id=", all_df$product_id, sep=""))
+}
+
+# Define query for income
+gen_income_sql_query <- function(db_name,application_id){
+  return(paste("SELECT application_id, amount, sub_type 
+  FROM ",db_name,".credits_applications_clients_money_income 
+  WHERE deleted_at IS NULL AND application_id=",application_id, sep=""))
+}
+
+# Define query for normal expenses 
+gen_expenses_sql_query <- function(db_name,all_df){
+  return(paste("SELECT application_id, amount 
+  FROM ",db_name,".credits_applications_clients_money_expense
+  WHERE deleted_at IS NULL AND application_id=",all_df$application_id, sep=""))
+}
+
+# Define query for expenses for loans 
+gen_loans_sql_query <- function(db_name,all_df){
+  return(paste("SELECT application_id, installment
+  FROM ",db_name,".credits_applications_clients_money_loans
+  WHERE deleted_at IS NULL AND application_id=",all_df$application_id, sep=""))
+}
+
+# Define query for getting all credits for client 
+gen_all_credits_query <- function(db_name,all_df){
+  return(paste("SELECT id, client_id, signed_at, created_at, 
+  deactivated_at, status, sub_status, product_id
+  FROM ",db_name,".credits_applications 
+  WHERE client_id=",all_df$client_id, sep =""))
+}
+
+# Define query to get if client is defined as risky 
+gen_risky_query <- function(db_name,all_df){
+  return(paste("SELECT egn
+  FROM ",db_name,".clients_risk
+  WHERE egn=",all_df$egn, " AND forbidden_credit_approval = 1", sep =""))
+}
+
+# Define query to get total amount of current application amount
+gen_total_amount_curr_query <- function(db_name,application_id){
+  return(paste("SELECT final_credit_amount
+  FROM ",db_name,".credits_plan_contract 
+  WHERE application_id=", application_id, sep =""))
+}
+
+# Define query to get the pay days of previous actives credits
+gen_plan_main_actives_past_query <- function(db_name,all_actives){
+  return(paste("SELECT application_id, pay_day
+  FROM ",db_name,".credits_plan_main WHERE application_id in(", 
+  all_actives_past$id," )", sep=""))
+}
+
+# Define query to get total amount of current application amount
+gen_prev_amount_query <- function(db_name,all_id){
+  return(paste("SELECT amount FROM ",db_name,
+  ".credits_plan_contract WHERE application_id=", 
+  all_id$id[nrow(all_id)-1], sep=""))
+}
+
+# Define query to get the maximum of delay days from previous credits
+gen_plan_main_select_query <- function(db_name,list_ids_max_delay){
+  return(paste("SELECT MAX(days_delay) AS max_delay FROM ",db_name, 
+  ".credits_plan_main WHERE application_id in(",list_ids_max_delay," 
+  )", sep=""))
+}
+
+# Define query to get paid amount on last day of previous credit
+gen_last_paid_amount_query <- function(var,db){
+  return(paste("SELECT a.object_id, a.pay_date as last_pay_date, a.amount 
+  FROM ",db,".cash_flow a INNER JOIN
+  (SELECT object_id, MAX(pay_date) AS pay_date
+  FROM ",db,".cash_flow
+  WHERE nomenclature_id IN (90,100,101) AND deleted_at IS NULL 
+  AND object_type = 4 AND object_id=",var,") AS b
+  ON a.object_id=b.object_id AND a.pay_date=b.pay_date", sep =""))
+}
+
+# Define query to get total last paid amount of previous credit 
+gen_paid_amount_query <- function(var,db){		
+  return(paste("SELECT object_id, amount 		
+  FROM ",db,".cash_flow		
+  WHERE nomenclature_id IN (90,100,101) AND deleted_at 
+  IS NULL AND object_type = 4	AND object_id=",var, sep =""))		
+}
+
+# Define query to get the last amount of previous credit
+gen_last_cred_amount_query <- function(var,db){
+  return(paste("SELECT final_credit_amount
+  FROM ",db,".credits_plan_contract 
+  WHERE application_id=", var, sep =""))
+}
+
+# Define query to get address 
+gen_address_query <- function(var,arg){
+  return(paste("SELECT 
+    c.household, c.child, c.pensioner
+    FROM ",db_name,".addresses AS a
+    RIGHT JOIN ",db_name,".cities AS c ON c.id=a.city_id
+    WHERE a.addressable_type = '",arg,"'
+    AND a.addressable_id = ",var," AND a.type = 2", sep =""))
+}
+
+# Define query to get company id (credirect or city cash) 
+gen_get_company_id_query <- function(db_name){
+  return(get_company_id_query <- paste("SELECT id, company_id FROM ", db_name, 
+     ".products", sep=""))
+}
+
+# Define query to get the CKR status 
+gen_query_ckr <- function(type_of){
+  names_col <- c("current_status_active","status_active","status_finished",
+                 "source_entity_count","cred_count", 
+                 "outstanding_performing_principal",
+                 "outstanding_overdue_principal","amount_cession")
+  query_ckr <- paste("SELECT 
+  ",db_name,".clients_ckr_files.client_id,
+  ",db_name,".clients_ckr_files.application_id,
+  ",db_name,".clients_ckr_files_data.current_status_active, 
+  ",db_name,".clients_ckr_files_data.status_active, 
+  ",db_name,".clients_ckr_files_data.status_finished,
+  ",db_name,".clients_ckr_files_data.source_entity_count,
+  ",db_name,".clients_ckr_files_data.cred_count,
+  ",db_name,".clients_ckr_files_data.outstanding_performing_principal,
+  ",db_name,".clients_ckr_files_data.outstanding_overdue_principal,	
+  ",db_name,".clients_ckr_files_data.amount_cession
+  FROM ",db_name,".clients_ckr_files_data
+  INNER JOIN ",db_name,".clients_ckr_files
+  ON ",db_name,".clients_ckr_files.id=",db_name,".clients_ckr_files_data.file_id
+  WHERE ",db_name,".clients_ckr_files_data.type=",type_of," AND ",db_name,
+                     ".clients_ckr_files.client_id=",all_df$client_id, sep ="")
+  result_df <- suppressWarnings(fetch(dbSendQuery(con, query_ckr), n=-1))
+  result_df <- merge(result_df, all_credits[,c("id","date")], 
+                     by.x = "application_id",
+                     by.y = "id", all.x = TRUE)
+  if(nrow(result_df)==0){
+    empty_df <- as.data.frame(cbind(NA,NA,NA,NA,NA,NA,NA,NA))
+    names(empty_df) <- names_col
+    return(empty_df)
+  } else {
+    result_df$date_curr <- all_df$date
+    result_df$date_diff <- difftime(result_df$date_curr, result_df$date, 
+                                    units=c("days"))
+    result_df <- result_df[order(result_df$date_diff),]
+    result_df <- result_df[!duplicated(result_df$client_id),]
+    return(result_df[,names_col])}
+}
+
