@@ -114,9 +114,9 @@ load(rdata4)
 
 # Read credits applications
 all_df <- suppressWarnings(fetch(dbSendQuery(con, 
-            gen_big_sql_query(db_name,application_id)), n=-1))
+              gen_big_sql_query(db_name,application_id)), n=-1))
 all_df$date <- ifelse(all_df$status %in% c(4,5), all_df$signed_at, 
-           all_df$created_at)
+                      all_df$created_at)
 
 
 # Apply some checks to main credit dataframe
@@ -130,26 +130,26 @@ if(nrow(all_df)>1){
 
 # Read product's periods and amounts
 products  <- suppressWarnings(fetch(dbSendQuery(con, 
-         gen_products_query(db_name,all_df)), n=-1))
+               gen_products_query(db_name,all_df)), n=-1))
 products_desc <- suppressWarnings(fetch(dbSendQuery(con, 
-         gen_products_query_desc(db_name,all_df)), n=-1))
+               gen_products_query_desc(db_name,all_df)), n=-1))
 
 
 # Read all previous credits or applications of client
 all_credits <- suppressWarnings(fetch(dbSendQuery(con, 
-         gen_all_credits_query(db_name,all_df)), n=-1))
+      gen_all_credits_query(db_name,all_df)), n=-1))
 all_credits$date <- ifelse(all_credits$status %in% c(4,5), 
-        all_credits$signed_at, all_credits$created_at)
+      all_credits$signed_at, all_credits$created_at)
 
 
 # Check if client has a risk profile
 risk <- suppressWarnings(fetch(dbSendQuery(con, 
-        gen_risky_query(db_name,all_df)), n=-1))
+    gen_risky_query(db_name,all_df)), n=-1))
 
 
 # Read total amount of current credit
 total_amount_curr <- suppressWarnings(fetch(dbSendQuery(con, 
-        gen_total_amount_curr_query(db_name,application_id)), n=-1))
+    gen_total_amount_curr_query(db_name,application_id)), n=-1))
 
 
 # Read CKR 
@@ -159,19 +159,19 @@ data_ckr_financial <- gen_query_ckr(2)
 
 # Read all previous active or terminated credits of client
 all_id <- subset(all_credits, all_credits$id==application_id | 
-            (all_credits$status %in% c(4,5) &
-            (all_credits$sub_status!=129 | is.na(all_credits$sub_status)) & 
-             all_credits$client_id==all_df$client_id))
+    (all_credits$status %in% c(4,5) &
+    (all_credits$sub_status!=129 | is.na(all_credits$sub_status)) & 
+     all_credits$client_id==all_df$client_id))
 all_id <- subset(all_id, all_id$date<=all_id$date[all_id$id==application_id])
 
 
 # Select for max delay if past AND active: must have at least 30 days of passed
 all_id_max_delay <- all_id[all_id$id != application_id,]
 all_actives_past <- subset(all_id, 
-                           all_id$id!=application_id & all_id$status==4)
+    all_id$id!=application_id & all_id$status==4)
 if(nrow(all_actives_past)>0){
   all_id_max_delay <- gen_select_relevant_ids_max_delay(db_name,all_actives,
-         all_id_max_delay)
+      all_id_max_delay)
 }
 
 
@@ -188,20 +188,20 @@ if (nrow_all_id>1){
 nrow_all_id_max_delay <- nrow(all_id_max_delay)
 if (nrow_all_id_max_delay>=1){
   list_ids_max_delay <- gen_select_relevant_ids(all_id_max_delay,
-      nrow_all_id_max_delay)
+     nrow_all_id_max_delay)
   data_plan_main_select <- suppressWarnings(fetch(dbSendQuery(con, 
-      gen_plan_main_select_query(db_name,list_ids_max_delay)), n=-1))
+     gen_plan_main_select_query(db_name,list_ids_max_delay)), n=-1))
 } 
 
 
 # Get average expenses according to client's address 
 addresses <- suppressWarnings(fetch(dbSendQuery(con, 
-       gen_address_query(all_df$client_id,"App\\\\Models\\\\Clients\\\\Client")), 
-       n=-1))
+  gen_address_query(all_df$client_id,"App\\\\Models\\\\Clients\\\\Client")), 
+  n=-1))
 if(nrow(addresses)==0){
   addresses <- suppressWarnings(fetch(dbSendQuery(con, 
-       gen_address_query(all_df$client_id,
-       "App\\\\Models\\\\Credits\\\\Applications\\\\Application")), n=-1))
+  gen_address_query(all_df$client_id,
+  "App\\\\Models\\\\Credits\\\\Applications\\\\Application")), n=-1))
 }
 
 
@@ -211,7 +211,7 @@ if(nrow(addresses)==0){
 
 # Compute flag if credit is up to next salary
 flag_credit_next_salary <- ifelse(all_df$product_id %in% 
-                                    c(25:28,36,37,41:44,49,50,55:58), 1, 0)
+      c(25:28,36,37,41:44,49,50,55:58), 1, 0)
 
 
 # Compute flag if product is credirect
@@ -245,7 +245,7 @@ all_df <- gen_norm_var(period,all_df,products)
 
 # Compute and generate variables specific for behavioral model
 data_plan_main_select_def <- ifelse(exists("data_plan_main_select"),
-                                    data_plan_main_select,NA)
+          data_plan_main_select,NA)
 all_df <- gen_other_rep(nrow_all_id,all_id,all_df,flag_credirect,
                         data_plan_main_select_def)
 
@@ -275,7 +275,7 @@ all_df$amount_diff <- ifelse(nrow_all_id<=1, NA, all_df$amount -
 # Compute income variables
 t_income <- gen_t_income(db_name,application_id,period)
 disposable_income_adj <- gen_disposable_income_adj(db_name,application_id,
-                                                   all_df,addresses,period)
+        all_df,addresses,period)
 all_df$total_income <- gen_income(db_name,application_id)
 
 
@@ -298,14 +298,14 @@ df <- gen_null_to_na(df)
 # Get if empty field threshold is passed
 empty_fields <- gen_empty_fields(flag_beh,flag_credirect,df)
 threshold_empty <- ifelse(flag_credirect==0 & flag_beh==0, 7,
-                   ifelse(flag_credirect==1 & flag_beh==0, 4,
-                   ifelse(flag_credirect==0 & flag_beh==1, 8, 5)))
+   ifelse(flag_credirect==1 & flag_beh==0, 4,
+   ifelse(flag_credirect==0 & flag_beh==1, 8, 5)))
 
 
 # Adjust count of empty fields accordingly
 empty_fields <- ifelse(flag_credirect==1, empty_fields, 
-                ifelse(is.na(df$total_income) | df$total_income==0, 
-                       threshold_empty, empty_fields))
+   ifelse(is.na(df$total_income) | df$total_income==0, 
+   threshold_empty, empty_fields))
 
 
 # Readjust fields
@@ -332,20 +332,20 @@ if (empty_fields>=threshold_empty){
   
 } else if (flag_beh==1 & flag_credirect==0){
   scoring_df <- gen_beh_citycash(df,scoring_df,products,df_Log_beh,period,
-                                 all_df,prev_amount,amount_tab,
-                                 t_income,disposable_income_adj)
+                     all_df,prev_amount,amount_tab,
+                     t_income,disposable_income_adj)
 } else if (flag_beh==1 & flag_credirect==1){
   scoring_df <- gen_beh_credirect(df,scoring_df,products,df_Log_beh,period,
-                                  all_df,prev_amount,amount_tab,
-                                  t_income,disposable_income_adj)
+                     all_df,prev_amount,amount_tab,
+                     t_income,disposable_income_adj)
 } else if (flag_beh==0 & flag_credirect==0){
   scoring_df <- gen_app_citycash(df,scoring_df,products,df_Log_beh,period,
-                                 all_df,prev_amount,amount_tab,
-                                 t_income,disposable_income_adj)
+                     all_df,prev_amount,amount_tab,
+                     t_income,disposable_income_adj)
 } else {
   scoring_df <- gen_app_credirect(df,scoring_df,products,df_Log_beh,period,
-                                  all_df,prev_amount,amount_tab,
-                                  t_income,disposable_income_adj)
+                     all_df,prev_amount,amount_tab,
+                     t_income,disposable_income_adj)
 }
 
 
