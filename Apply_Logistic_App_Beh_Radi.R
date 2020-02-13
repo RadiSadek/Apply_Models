@@ -36,8 +36,8 @@ main_dir <- "C:\\Projects\\Apply_Scoring\\"
 
 # Read argument of ID
 args <- commandArgs(trailingOnly = TRUE)
-application_id <- args[1]
-#application_id <- 523820
+#application_id <- args[1]
+application_id <- 592476
 product_id <- NA
 
 
@@ -288,6 +288,12 @@ if (empty_fields>=threshold_empty){
   
   scoring_df$score <- "Bad"
   scoring_df$color <- 1
+
+} else if (flag_credirect==1 & flag_beh==1 &
+     !is.na(all_df$max_delay) & all_df$max_delay>=180){
+  
+     scoring_df$score <- "Bad"
+     scoring_df$color <- 1
   
 } else if (flag_beh==1 & flag_credirect==0){
   scoring_df <- gen_beh_citycash(df,scoring_df,products,df_Log_beh,period,
