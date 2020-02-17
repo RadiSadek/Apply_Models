@@ -19,6 +19,7 @@ gen_beh_credirect <- function(df,scoring_df,products,df_Log_beh,period,
   df$days_diff_last_credit_cut <- ifelse(is.na(df$days_diff_last_credit), 
        "less_3", ifelse(df$days_diff_last_credit<=3,"less_3","4_more"))
   df$days_diff_last_credit <- as.factor(df$days_diff_last_credit_cut)
+  df$prev_online <- ifelse(is.na(df$prev_online),0,df$prev_online)
   df$prev_online <- as.factor(df$prev_online)
   df$max_delay_cut <- ifelse(df$max_delay<=2,"less_2",
         ifelse(df$max_delay<=13,"3_13",
