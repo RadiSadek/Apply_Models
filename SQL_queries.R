@@ -22,6 +22,7 @@ big_sql_query <- paste("SELECT
 ",db_name,".credits_applications.signed_at,
 ",db_name,".credits_applications.created_at,
 ",db_name,".credits_applications.client_id,
+",db_name,".credits_applications.office_id,
 ",db_name,".credits_applications.status,
 ",db_name,".credits_applications.sub_status,
 ",db_name,".credits_applications.product_id,

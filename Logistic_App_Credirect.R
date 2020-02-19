@@ -61,8 +61,8 @@ gen_app_credirect <- function(df,scoring_df,products,df_Log_beh,period,
     apply_logit <- predict(df_Log_Credirect_App, newdata=df, type="response")
     scoring_df$score[i] <- apply_logit
     scoring_df$score[i] <- ifelse(flag_credit_next_salary==1,
-         gen_group_scores(scoring_df$score[i],0,1,1),
-         gen_group_scores(scoring_df$score[i],0,1,0))
+         gen_group_scores(scoring_df$score[i],all_df$office_id,0,1,1),
+         gen_group_scores(scoring_df$score[i],all_df$office_id,0,1,0))
     
     # Compute flag of disposable income
     product_tab <- subset(products, products$product_id==all_df$product_id & 

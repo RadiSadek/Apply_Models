@@ -4,10 +4,14 @@
 ###################################################
 
 # Define function to get apply cutoffs
-gen_group_scores <- function(var,flag_beh,flag_credirect,
+gen_group_scores <- function(var,office,flag_beh,flag_credirect,
                              flag_credit_next_salary){
   if(flag_credirect==0 & flag_beh==0){
-    cutoffs <- cu_app_city}
+    if(flag_bad_office(office)==1){
+      cutoffs <- cu_app_city_bad_offices
+    } else {
+      cutoffs <- cu_app_city_norm_offices
+    }}
   else if (flag_credirect==1 & flag_beh==0 & flag_credit_next_salary==1){
     cutoffs <- cu_app_cred_flex}
   else if (flag_credirect==1 & flag_beh==0 & flag_credit_next_salary==0){
@@ -75,3 +79,25 @@ gen_final_df <- function(products){
   scoring_df$application_id <- application_id
   return(scoring_df)
 }
+
+# Gen flag bad office
+flag_bad_office <- function(var_off){
+  return(ifelse(
+    var_off %in% c("100","125","95","21","137","76","99","133",
+         "41","54","97","33","42","64","78","52","92","53","51","32",
+         "25","120", "107","118","28","124","132","18","5","90","34",
+         "81","71","80","12"), 1,
+    ifelse(
+      var_off %in% c("27","96","108","29","69","31","98","86",
+         "139","110","93","88","15","35","50","56","68","104","23","91",
+         "8","113","130","61","36","4","106","72","73","85","142","140",
+         "136","135","105","74","117","134"
+      ), 2,
+      ifelse(
+        var_off %in% c("75","3","58","47","17","94","16","83",
+          "9","59","114","13","70","46","55","14","7","57","24","87",
+          "79","128","11","30","1","84","43","2","10","49","44"
+        ), 3, 2
+      ))))
+}
+

@@ -55,7 +55,8 @@ gen_beh_credirect <- function(df,scoring_df,products,df_Log_beh,period,
     
     apply_logit <- predict(df_Log_beh_Credirect, newdata=df, type="response")
     scoring_df$score[i] <- apply_logit
-    scoring_df$score[i] <- gen_group_scores(scoring_df$score[i],1,1,0)
+    scoring_df$score[i] <- gen_group_scores(scoring_df$score[i],
+                                            all_df$office_id,1,1,0)
     
     # Compute flag of disposable income
     product_tab <- subset(products, products$product_id==all_df$product_id & 
