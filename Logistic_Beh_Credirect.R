@@ -54,7 +54,6 @@ gen_beh_credirect <- function(df,scoring_df,products,df_Log_beh,period,
     df$amount_diff <- as.factor(df$amount_diff)
     
     apply_logit <- predict(df_Log_beh_Credirect, newdata=df, type="response")
-    scoring_df$score[i] <- apply_logit
     scoring_df$score[i] <- gen_group_scores(scoring_df$score[i],
                                             all_df$office_id,1,1,0)
     

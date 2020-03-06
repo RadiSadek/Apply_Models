@@ -111,7 +111,6 @@ gen_beh_citycash <- function(df,scoring_df,products,df_Log_beh,period,
     
     # Apply logistic model to each amount and installment
     apply_logit <- predict(df_Log_beh, newdata=df, type="response")
-    scoring_df$score[i] <- apply_logit
     scoring_df$score[i] <- gen_group_scores(scoring_df$score[i],
                                             all_df$office_id,1,0,0)
     
