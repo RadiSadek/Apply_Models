@@ -101,3 +101,13 @@ flag_bad_office <- function(var_off){
       ))))
 }
 
+# Readjust score if necessary for certain cases
+gen_adjust_score <- function(scoring_df,crit){
+  for(i in 1:nrow(scoring_df)){
+      if(scoring_df$score[i] %in% crit){
+        scoring_df$score[i] <- "Bad"
+        scoring_df$color[i] <- 1} 
+  }
+  return(scoring_df)
+}
+

@@ -226,12 +226,12 @@ flag_exclusion <- ifelse(length(which(names(
 
 # Get and rename columns for CKR variables
 all_df <- cbind(all_df, data_ckr_financial)
-names(all_df)[(ncol(all_df)-7):ncol(all_df)] <- c("ckr_cur_fin","ckr_act_fin",
-   "ckr_fin_fin",	"src_ent_fin","cred_count_fin","outs_principal_fin",
-   "outs_overdue_fin","cession_fin")
+names(all_df)[(ncol(all_df)-8):ncol(all_df)] <- c("ckr_cur_fin","ckr_act_fin",
+   "ckr_fin_fin",	"src_ent_fin","amount_fin","cred_count_fin",
+   "outs_principal_fin","outs_overdue_fin","cession_fin")
 all_df <- cbind(all_df, data_ckr_bank)	
-names(all_df)[(ncol(all_df)-7):ncol(all_df)] <- c("ckr_cur_bank",
-   "ckr_act_bank","ckr_fin_bank",	"src_ent_bank","cred_count_bank",
+names(all_df)[(ncol(all_df)-8):ncol(all_df)] <- c("ckr_cur_bank",
+   "ckr_act_bank","ckr_fin_bank","src_ent_bank","amount_bank","cred_count_bank",
    "outs_principal_bank","outs_overdue_bank","cession_bank")
 
 
@@ -258,9 +258,22 @@ flag_beh <- ifelse(all_df$credits_cum==0, 0, 1)
 all_df <- gen_ckr_variables(all_df,flag_beh,flag_credirect)
 
 
+# Compute flag of bad CKR for city cash
+flag_bad_ckr_citycash <- ifelse(is.na(all_df$amount_fin),0,
+    ifelse(all_df$amount_fin==0, 0,
+    ifelse(all_df$outs_overdue_fin/all_df$amount_fin>=0.1 &
+           all_df$status_active_total %in% c(74,75), 1, 0)))
+
+
 # Compute if previous is online 
 all_credits <- get_company_id_prev(db_name,all_credits)
 all_df <- gen_prev_online(db_name, all_credits,all_df)
+
+
+# Get flag if credit is behavioral but with same company
+flag_beh_company <- ifelse(
+  nrow(all_credits[all_credits$company_id==
+       all_credits$company_id[all_credits$id==application_id],])>1,1,0)
 
 
 # Compute flag if last paid credit is maybe hidden refinance
@@ -331,7 +344,7 @@ if (empty_fields>=threshold_empty){
   scoring_df$color <- 1
   
 } else if (flag_credirect==1 & flag_beh==1 &
-           !is.na(all_df$max_delay) & all_df$max_delay>=180){
+     !is.na(all_df$max_delay) & all_df$max_delay>=180){
   
   scoring_df$score <- "Bad"
   scoring_df$color <- 1

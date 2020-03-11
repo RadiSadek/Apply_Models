@@ -90,20 +90,9 @@ gen_app_citycash <- function(df,scoring_df,products,df_Log_beh,period,
     product_tab <- subset(products, products$product_id==all_df$product_id & 
                             products$period==as.numeric(period_tab) &
                             products$amount==as.numeric(amount_tab))
-    criteria_color <- ifelse(0.1*all_df$installment_amount<5 & 
-                               all_df$installment_amount<=50, 5, -999)
     
     scoring_df$color[i] <- ifelse(
-      product_tab$installment_amount>=disposable_income_adj, 1,
-       ifelse(all_df$installment_amount>50,
-             (ifelse(acceptable_installment_amount>
-                       (1.1*all_df$installment_amount), 
-              1, 0)),
-       ifelse(criteria_color==5, 
-       ifelse((acceptable_installment_amount-all_df$installment_amount)>5, 
-              1, 0),
-       ifelse(acceptable_installment_amount>(1.1*all_df$installment_amount), 
-              1, 0))))
+      product_tab$installment_amount>=disposable_income_adj, 1, 0)
     
     scoring_df$color[i] <- ifelse(scoring_df$color[i]==1 | 
               scoring_df$score[i]=="Bad", 1, 

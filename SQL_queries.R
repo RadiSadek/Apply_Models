@@ -166,7 +166,7 @@ gen_get_company_id_query <- function(db_name){
 # Define query to get the CKR status 
 gen_query_ckr <- function(type_of){
   names_col <- c("current_status_active","status_active","status_finished",
-                 "source_entity_count","cred_count", 
+                 "source_entity_count","amount_drawn","cred_count", 
                  "outstanding_performing_principal",
                  "outstanding_overdue_principal","amount_cession")
   query_ckr <- paste("SELECT 
@@ -176,6 +176,7 @@ gen_query_ckr <- function(type_of){
   ",db_name,".clients_ckr_files_data.status_active, 
   ",db_name,".clients_ckr_files_data.status_finished,
   ",db_name,".clients_ckr_files_data.source_entity_count,
+  ",db_name,".clients_ckr_files_data.amount_drawn,
   ",db_name,".clients_ckr_files_data.cred_count,
   ",db_name,".clients_ckr_files_data.outstanding_performing_principal,
   ",db_name,".clients_ckr_files_data.outstanding_overdue_principal,	
@@ -190,7 +191,7 @@ gen_query_ckr <- function(type_of){
                      by.x = "application_id",
                      by.y = "id", all.x = TRUE)
   if(nrow(result_df)==0){
-    empty_df <- as.data.frame(cbind(NA,NA,NA,NA,NA,NA,NA,NA))
+    empty_df <- as.data.frame(cbind(NA,NA,NA,NA,NA,NA,NA,NA,NA))
     names(empty_df) <- names_col
     return(empty_df)
   } else {

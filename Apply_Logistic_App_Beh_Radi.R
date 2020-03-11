@@ -36,8 +36,8 @@ main_dir <- "C:\\Projects\\Apply_Scoring\\"
 
 # Read argument of ID
 args <- commandArgs(trailingOnly = TRUE)
-#application_id <- args[1]
-application_id <- 592476
+application_id <- args[1]
+#application_id <- 498551
 product_id <- NA
 
 
@@ -185,12 +185,12 @@ flag_exclusion <- ifelse(length(which(names(
 
 # Get and rename columns for CKR variables
 all_df <- cbind(all_df, data_ckr_financial)
-names(all_df)[(ncol(all_df)-7):ncol(all_df)] <- c("ckr_cur_fin","ckr_act_fin",
-   "ckr_fin_fin",	"src_ent_fin","cred_count_fin","outs_principal_fin",
-   "outs_overdue_fin","cession_fin")
+names(all_df)[(ncol(all_df)-8):ncol(all_df)] <- c("ckr_cur_fin","ckr_act_fin",
+   "ckr_fin_fin",	"src_ent_fin","amount_fin","cred_count_fin",
+   "outs_principal_fin","outs_overdue_fin","cession_fin")
 all_df <- cbind(all_df, data_ckr_bank)	
-names(all_df)[(ncol(all_df)-7):ncol(all_df)] <- c("ckr_cur_bank",
-   "ckr_act_bank","ckr_fin_bank",	"src_ent_bank","cred_count_bank",
+names(all_df)[(ncol(all_df)-8):ncol(all_df)] <- c("ckr_cur_bank",
+   "ckr_act_bank","ckr_fin_bank","src_ent_bank","amount_bank","cred_count_bank",
    "outs_principal_bank","outs_overdue_bank","cession_bank")
 
 
@@ -217,15 +217,28 @@ flag_beh <- ifelse(all_df$credits_cum==0, 0, 1)
 all_df <- gen_ckr_variables(all_df,flag_beh,flag_credirect)
 
 
+# Compute flag of bad CKR for city cash
+flag_bad_ckr_citycash <- ifelse(is.na(all_df$amount_fin),0,
+    ifelse(all_df$amount_fin==0, 0,
+    ifelse(all_df$outs_overdue_fin/all_df$amount_fin>=0.1 & 
+           all_df$status_active_total %in% c(74,75), 1, 0)))
+
+
 # Compute if previous is online 
 all_credits <- get_company_id_prev(db_name,all_credits)
 all_df <- gen_prev_online(db_name, all_credits,all_df)
 
 
+# Get flag if credit is behavioral but with same company
+flag_beh_company <- ifelse(
+  nrow(all_credits[all_credits$company_id==
+       all_credits$company_id[all_credits$id==application_id],])>1,1,0)
+
+
 # Compute flag if last paid credit is maybe hidden refinance
 all_df <- gen_ratio_last_amount_paid(db_name,all_credits,all_df)
 
-                                
+
 # Compute amount differential 
 all_df$amount_diff <- ifelse(nrow_all_id<=1, NA, all_df$amount - 
                                prev_amount$amount)
@@ -292,8 +305,8 @@ if (empty_fields>=threshold_empty){
 } else if (flag_credirect==1 & flag_beh==1 &
      !is.na(all_df$max_delay) & all_df$max_delay>=180){
   
-     scoring_df$score <- "Bad"
-     scoring_df$color <- 1
+  scoring_df$score <- "Bad"
+  scoring_df$color <- 1
   
 } else if (flag_beh==1 & flag_credirect==0){
   scoring_df <- gen_beh_citycash(df,scoring_df,products,df_Log_beh,period,
@@ -320,35 +333,52 @@ if (empty_fields>=threshold_empty){
 
 # Generate scoring dataframe
 scoring_df$created_at <- Sys.time()
-scoring_df <- scoring_df[,c("application_id","amount","period","score","color",
+scoring_df <- scoring_df[,c("application_id","amount","period","score",
+                            "color",
                             "created_at")]
 
 
-# Readjust score if necessary
+# Readjust score when applicable
 if(flag_cession==1 & flag_credirect==1){
-  for(i in 1:nrow(scoring_df)){
-    if(scoring_df$score[i] %in% c("Bad","Indeterminate","Good 1")){
-      scoring_df$score[i] <- "Bad"
-      scoring_df$color[i] <- 1} 
-  }
+  scoring_df <- gen_adjust_score(scoring_df, 
+        c("Bad","Indeterminate","Good 1"))
+}
+if(flag_bad_ckr_citycash==1 & flag_credirect==0){
+  scoring_df <- gen_adjust_score(scoring_df, c("Bad","Indeterminate"))
 }
 
 
 # Create output dataframe
 final <- as.data.frame(cbind(scoring_df$application_id[1],
-     scoring_df$score[scoring_df$amount== unique(scoring_df$amount)
-          [which.min(abs(all_df$amount - unique(scoring_df$amount)))]
-                      & 
-     scoring_df$period==unique(scoring_df$period)
-          [which.min(abs(all_df$installments - unique(scoring_df$period)))]]))
+           scoring_df$score[scoring_df$amount== unique(scoring_df$amount)
+           [which.min(abs(all_df$amount - unique(scoring_df$amount)))]
+                  & 
+           scoring_df$period==unique(scoring_df$period)
+           [which.min(abs(all_df$installments - unique(scoring_df$period)))]]))
 names(final) <- c("id","score")
+# final <- as.data.frame(cbind(
+#   scoring_df$application_id[1],
+#   scoring_df$score[scoring_df$amount==unique(scoring_df$amount)
+#           [which.min(abs(all_df$amount - unique(scoring_df$amount)))]
+#                       & 
+#                    scoring_df$period==unique(scoring_df$period)
+#           [which.min(abs(all_df$installments - unique(scoring_df$period)))]],
+#   scoring_df$PD[scoring_df$amount==unique(scoring_df$amount)
+#           [which.min(abs(all_df$amount - unique(scoring_df$amount)))]
+#                    & 
+#                    scoring_df$period==unique(scoring_df$period)
+#           [which.min(abs(all_df$installments - unique(scoring_df$period)))]]))
+#names(final) <- c("id","score","PD")
 final$flag_beh <- flag_beh
 final$flag_credirect <- flag_credirect
 final$flag_next_salary <- flag_credit_next_salary
 final$flag_exclusion <- flag_exclusion
+final$flag_bad_ckr_citycash <- flag_bad_ckr_citycash
 final$status_active_total <- all_df$status_active_total
 final$status_finished_total <- all_df$status_finished_total
 final$outs_overdue_ratio_total <- all_df$outs_overdue_ratio_total
+final$amount_fin <- all_df$amount_fin
+final$outs_overdue_fin <- all_df$outs_overdue_fin
 
 all_df$installment_amount <- products[
   products$period == unique(products$period)
@@ -356,7 +386,6 @@ all_df$installment_amount <- products[
     products$amount == unique(products$amount)
   [which.min(abs(all_df$amount - unique(products$amount)))] & 		
     products$product_id == all_df$product_id, ]$installment_amount
-
 
 # Read and write
 final_exists <- read.xlsx(paste(main_dir,"results\\scored_credits.xlsx", 
