@@ -4,7 +4,7 @@
 ########################################
 
 # Function to generate certain fields
-gen_norm_var <- function(period,all_df,products){
+gen_norm_var <- function(period,all_df,products,criteria_age){
   
   all_df$maturity <- ifelse(period==1, all_df$installments*7/30,
      ifelse(period==2, all_df$installments*14/30, all_df$installments))
@@ -29,8 +29,13 @@ gen_norm_var <- function(period,all_df,products){
       as.Date(paste("19",substring(all_df$egn,1,2),"-",
       substring(all_df$egn,3,4),"-",substring(all_df$egn,5,6), sep="")))), 
         origin="1970-01-01")
+    if(criteria_age==1){
+      date_ref <- all_df$date
+    } else {
+      date_ref <- Sys.time()
+    }
     all_df$age <- ifelse(is.na(all_df$dob), 18, 
-        floor(as.numeric(difftime(all_df$date, all_df$dob, 
+        floor(as.numeric(difftime(date_ref, all_df$dob, 
         units=c("days"))/365.242)))}
   
   return(all_df)

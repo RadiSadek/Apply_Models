@@ -12,12 +12,12 @@ get_company_id_prev <- function(db_name,all_credits){
   return(all_credits)
 }
 # Function to get if previous credit is credirect or not 
-gen_prev_online <- function(db_name,all_credits,all_df){
+gen_prev_online <- function(db_name,all_credits,all_df,app_id){
   all_credits_prev_online <- all_credits[order(all_credits$date),]
   all_credits_prev_online <- subset(all_credits_prev_online,
        all_credits_prev_online$status %in% c(4,5))
   all_credits_prev_online <- subset(all_credits_prev_online, 
-       all_credits_prev_online$id<application_id)
+       all_credits_prev_online$id<app_id)
   all_df$prev_online <- ifelse(all_credits_prev_online[
     rev(order(all_credits_prev_online$date)),][1,10]==2, 1, 0)
   return(all_df)
@@ -143,6 +143,14 @@ gen_last_paid <- function(all_id){
   var <- gen_variables_for_rep(all_id)
   return(suppressWarnings(fetch(dbSendQuery(con, 
      gen_last_paid_amount_query(var$id[nrow(var)-1],db_name)), n=-1)))
+}
+
+# Function to get total amount paid of previous credit for refinance
+gen_total_last_paid <- function(var,db_name){
+  result <- suppressWarnings(fetch(dbSendQuery(con, 
+    gen_total_paid_amount_query(var,db_name)), n=-1))
+  result <- sum(result[,2])
+  return(result)
 }
 
 # Function to get total amount (with taxes) of previous credit

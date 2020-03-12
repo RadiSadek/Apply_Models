@@ -240,7 +240,7 @@ period <- products_desc$period
 
 
 # Compute and generate general variables
-all_df <- gen_norm_var(period,all_df,products)
+all_df <- gen_norm_var(period,all_df,products,1)
 
 
 # Compute and generate variables specific for behavioral model
@@ -260,14 +260,14 @@ all_df <- gen_ckr_variables(all_df,flag_beh,flag_credirect)
 
 # Compute flag of bad CKR for city cash
 flag_bad_ckr_citycash <- ifelse(is.na(all_df$amount_fin),0,
-    ifelse(all_df$amount_fin==0, 0,
+    ifelse(all_df$amount_fin==0, 0, 
     ifelse(all_df$outs_overdue_fin/all_df$amount_fin>=0.1 &
            all_df$status_active_total %in% c(74,75), 1, 0)))
 
 
 # Compute if previous is online 
 all_credits <- get_company_id_prev(db_name,all_credits)
-all_df <- gen_prev_online(db_name, all_credits,all_df)
+all_df <- gen_prev_online(db_name, all_credits,all_df,application_id)
 
 
 # Get flag if credit is behavioral but with same company
