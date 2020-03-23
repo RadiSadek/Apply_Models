@@ -181,8 +181,13 @@ if (nrow_all_id>1){
   cash_flow <- gen_last_paid(all_id)
   total_amount <- gen_last_total_amount(all_id)
   prev_amount <- gen_last_prev_amount(all_id)
+  closest_period <- products$period[which.min(
+    abs(total_amount$installments - products$period))]
+  closest_amount <- products$amount[which.min(abs(
+    prev_amount$amount - products$amount))]
+  prev_installment_amount <- products$installment_amount[
+    products$period==closest_period & products$amount==closest_amount]
 }
-
 
 # Get correct max days of delay (of relevant previous credits)
 nrow_all_id_max_delay <- nrow(all_id_max_delay)
@@ -352,7 +357,7 @@ if (empty_fields>=threshold_empty){
 } else if (flag_beh==1 & flag_credirect==0){
   scoring_df <- gen_beh_citycash(df,scoring_df,products,df_Log_beh,period,
                      all_df,prev_amount,amount_tab,
-                     t_income,disposable_income_adj)
+                     t_income,disposable_income_adj,prev_installment_amount)
 } else if (flag_beh==1 & flag_credirect==1){
   scoring_df <- gen_beh_credirect(df,scoring_df,products,df_Log_beh,period,
                      all_df,prev_amount,amount_tab,

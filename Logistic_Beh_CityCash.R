@@ -5,7 +5,8 @@
 
 gen_beh_citycash <- function(df,scoring_df,products,df_Log_beh,period,
                              all_df,prev_amount,amount_tab,
-                             t_income,disposable_income_adj){
+                             t_income,disposable_income_adj,
+                             prev_installment_amount){
   # Cut and bin
   df$ownership <- ifelse(df$ownership %in% c("2","4"),"2_4","1_3")
   df$education <- ifelse(df$education %in% c("3","4"),"3_4",
@@ -122,6 +123,9 @@ gen_beh_citycash <- function(df,scoring_df,products,df_Log_beh,period,
     
     scoring_df$color[i] <- ifelse(
       product_tab$installment_amount>=disposable_income_adj, 1, 0)
+    
+    scoring_df$color[i] <- ifelse(
+      product_tab$installment_amount> 1.3*prev_installment_amount,1,0)
     
     scoring_df$color[i] <- 
           ifelse(scoring_df$color[i]==1 | scoring_df$score[i]=="Bad", 1, 

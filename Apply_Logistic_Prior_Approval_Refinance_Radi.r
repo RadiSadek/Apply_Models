@@ -37,8 +37,8 @@ main_dir <- "C:\\Projects\\Apply_Scoring\\"
 
 # Read argument of ID
 args <- commandArgs(trailingOnly = TRUE)
-application_id <- args[1]
-#application_id <- 490436
+#application_id <- args[1]
+application_id <- 493536
 product_id <- NA
 
 
@@ -335,7 +335,7 @@ if (empty_fields>=threshold_empty){
 } else if (flag_beh==1 & flag_credirect==0){
   scoring_df <- gen_beh_citycash(df,scoring_df,products,df_Log_beh,period,
                      all_df,prev_amount,amount_tab,
-                     t_income,disposable_income_adj)
+                     t_income,disposable_income_adj,prev_installment_amount)
 } else if (flag_beh==1 & flag_credirect==1){
   scoring_df <- gen_beh_credirect(df,scoring_df,products,df_Log_beh,period,
                      all_df,prev_amount,amount_tab,
@@ -365,7 +365,7 @@ for(i in 1:nrow(scoring_df)){
   installment_amount <- products$installment_amount[
     products$period==period_tab & products$amount==amount_tab]
   scoring_df$installment_amount_diff[i] <- ifelse(
-    installment_amount>(1.25*prev_installment_amount), 0, 1)
+    installment_amount>(1.3*prev_installment_amount), 0, 1)
 }
 
 
@@ -383,6 +383,7 @@ df_final$max_delay <- all_df$max_delay
 df_final$prev_online <- all_df$prev_online
 df_final$days_diff_last_credit <- all_df$days_diff_last_credit
 df_final$flag_credirect <- flag_credirect
+
 
 # Output results
 final_exists <- read.xlsx(paste(main_dir,

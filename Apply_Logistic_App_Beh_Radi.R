@@ -37,7 +37,7 @@ main_dir <- "C:\\Projects\\Apply_Scoring\\"
 # Read argument of ID
 args <- commandArgs(trailingOnly = TRUE)
 application_id <- args[1]
-#application_id <- 498551
+#application_id <- 458710
 product_id <- NA
 
 
@@ -140,6 +140,12 @@ if (nrow_all_id>1){
   cash_flow <- gen_last_paid(all_id)
   total_amount <- gen_last_total_amount(all_id)
   prev_amount <- gen_last_prev_amount(all_id)
+  closest_period <- products$period[which.min(
+    abs(total_amount$installments - products$period))]
+  closest_amount <- products$amount[which.min(abs(
+    prev_amount$amount - products$amount))]
+  prev_installment_amount <- products$installment_amount[
+    products$period==closest_period & products$amount==closest_amount]
 }
 
 
@@ -311,7 +317,7 @@ if (empty_fields>=threshold_empty){
 } else if (flag_beh==1 & flag_credirect==0){
   scoring_df <- gen_beh_citycash(df,scoring_df,products,df_Log_beh,period,
                      all_df,prev_amount,amount_tab,
-                     t_income,disposable_income_adj)
+                     t_income,disposable_income_adj,prev_installment_amount)
 } else if (flag_beh==1 & flag_credirect==1){
   scoring_df <- gen_beh_credirect(df,scoring_df,products,df_Log_beh,period,
                      all_df,prev_amount,amount_tab,
@@ -346,28 +352,27 @@ if(flag_bad_ckr_citycash==1 & flag_credirect==0){
   scoring_df <- gen_adjust_score(scoring_df, c("Bad","Indeterminate"))
 }
 
-
 # Create output dataframe
 final <- as.data.frame(cbind(scoring_df$application_id[1],
-           scoring_df$score[scoring_df$amount== unique(scoring_df$amount)
-           [which.min(abs(all_df$amount - unique(scoring_df$amount)))]
-                  & 
-           scoring_df$period==unique(scoring_df$period)
-           [which.min(abs(all_df$installments - unique(scoring_df$period)))]]))
+   scoring_df$score[scoring_df$amount== unique(scoring_df$amount)
+            [which.min(abs(all_df$amount - unique(scoring_df$amount)))]
+                   & 
+   scoring_df$period==unique(scoring_df$period)
+            [which.min(abs(all_df$installments - unique(scoring_df$period)))]]))
 names(final) <- c("id","score")
 # final <- as.data.frame(cbind(
-#   scoring_df$application_id[1],
-#   scoring_df$score[scoring_df$amount==unique(scoring_df$amount)
-#           [which.min(abs(all_df$amount - unique(scoring_df$amount)))]
-#                       & 
-#                    scoring_df$period==unique(scoring_df$period)
-#           [which.min(abs(all_df$installments - unique(scoring_df$period)))]],
-#   scoring_df$PD[scoring_df$amount==unique(scoring_df$amount)
-#           [which.min(abs(all_df$amount - unique(scoring_df$amount)))]
-#                    & 
-#                    scoring_df$period==unique(scoring_df$period)
-#           [which.min(abs(all_df$installments - unique(scoring_df$period)))]]))
-#names(final) <- c("id","score","PD")
+#    scoring_df$application_id[1],
+#    scoring_df$score[scoring_df$amount==unique(scoring_df$amount)
+#      [which.min(abs(all_df$amount - unique(scoring_df$amount)))]
+#                        & 
+#    scoring_df$period==unique(scoring_df$period)
+#      [which.min(abs(all_df$installments - unique(scoring_df$period)))]],
+#    scoring_df$PD[scoring_df$amount==unique(scoring_df$amount)
+#      [which.min(abs(all_df$amount - unique(scoring_df$amount)))]
+#                     & 
+#    scoring_df$period==unique(scoring_df$period)
+#      [which.min(abs(all_df$installments - unique(scoring_df$period)))]]))
+# names(final) <- c("id","score","PD")
 final$flag_beh <- flag_beh
 final$flag_credirect <- flag_credirect
 final$flag_next_salary <- flag_credit_next_salary
