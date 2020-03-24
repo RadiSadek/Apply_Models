@@ -124,8 +124,9 @@ gen_beh_citycash <- function(df,scoring_df,products,df_Log_beh,period,
     scoring_df$color[i] <- ifelse(
       product_tab$installment_amount>=disposable_income_adj, 1, 0)
     
-    scoring_df$color[i] <- ifelse(
-      product_tab$installment_amount> 1.3*prev_installment_amount,1,0)
+    if(product_tab$installment_amount> 1.3*prev_installment_amount){
+      scoring_df$color[i] <- 1 
+    }
     
     scoring_df$color[i] <- 
           ifelse(scoring_df$color[i]==1 | scoring_df$score[i]=="Bad", 1, 
