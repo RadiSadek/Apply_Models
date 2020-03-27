@@ -212,3 +212,13 @@ gen_query_ckr <- function(type_of){
     return(result_df[,names_col])}
 }
 
+# Define query for SEON phone variables
+gen_seon_phones_query <- function(db_name,criteria,var){
+  return(paste(
+"SELECT b.registered 
+FROM ",db_name,".seon_requests a
+JOIN ",db_name,".seon_requests_accounts b
+ON a.id=b.requests_id
+WHERE a.type=1 AND b.type=",criteria," AND application_id=",var,
+sep=""))
+}

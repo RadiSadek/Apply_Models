@@ -259,6 +259,13 @@ all_df <- gen_other_rep(nrow_all_id,all_id,all_df,flag_credirect,
 flag_beh <- ifelse(all_df$credits_cum==0, 0, 1)
 
 
+#  Get SEON variables 
+all_df$viber_registered <- ifelse(nrow(gen_seon_phones(
+  db_name,7,application_id))>=1,gen_seon_phones(db_name,7,application_id),NA)
+all_df$whatsapp_registered <- ifelse(nrow(gen_seon_phones(
+  db_name,8,application_id))>=1,gen_seon_phones(db_name,8,application_id),NA)
+
+
 # Compute and rework CKR variables, suitable for model application
 all_df <- gen_ckr_variables(all_df,flag_beh,flag_credirect)
 

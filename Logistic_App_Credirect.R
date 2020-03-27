@@ -15,9 +15,8 @@ gen_app_credirect <- function(df,scoring_df,products,df_Log_beh,period,
   df$marital_status_cut <- ifelse(is.na(df$marital_status), "2_5",
        ifelse(df$marital_status %in% c(1,3,4), "1_3_4", "2_5"))
   df$marital_status <- as.factor(df$marital_status_cut)
-  df$experience_employer_cut <- ifelse(is.na(df$experience_employer), "more_4",
-       ifelse(df$experience_employer<=1,"0_1",
-       ifelse(df$experience_employer<=3,"2_3","more_4")))
+  df$experience_employer_cut <- ifelse(is.na(df$experience_employer), "more_2",
+       ifelse(df$experience_employer<=1,"0_1","more_2"))
   df$experience_employer <- as.factor(df$experience_employer_cut)
   df$purpose_cut <- ifelse(is.na(df$purpose), "1_6",
        ifelse(df$purpose %in% c(1,6),"1_6",
@@ -51,6 +50,17 @@ gen_app_credirect <- function(df,scoring_df,products,df_Log_beh,period,
     ifelse(df$outs_overdue_ratio_total<=0.03,"0_0.03",
     ifelse(df$outs_overdue_ratio_total<=0.08,"0.03_0.08","more_0.08")))))
   df$outs_overdue_ratio_total <- as.factor(df$outs_overdue_ratio_total_cut)
+  
+  df$viber_registered_cut <- ifelse(is.na(df$viber_registered), "other",
+      ifelse(df$viber_registered==0, "False",
+      ifelse(df$viber_registered==1, "other", "other")))
+  df$viber_registered <- as.factor(df$viber_registered_cut)
+  
+  df$whatsapp_registered_cut <- ifelse(is.na(df$whatsapp_registered), "other",
+      ifelse(df$whatsapp_registered==0, "other",
+      ifelse(df$whatsapp_registered==1, "True", "other")))
+  df$whatsapp_registered <- as.factor(df$whatsapp_registered_cut)
+  
   
   # Apply logisic regression
   for(i in 1:nrow(scoring_df)){

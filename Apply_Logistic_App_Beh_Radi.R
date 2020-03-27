@@ -36,8 +36,8 @@ main_dir <- "C:\\Projects\\Apply_Scoring\\"
 
 # Read argument of ID
 args <- commandArgs(trailingOnly = TRUE)
-application_id <- args[1]
-#application_id <- 458710
+#application_id <- args[1]
+application_id <- 575398
 product_id <- NA
 
 
@@ -217,6 +217,13 @@ all_df <- gen_other_rep(nrow_all_id,all_id,all_df,flag_credirect,
 
 # Get flag if credit is behavioral or not
 flag_beh <- ifelse(all_df$credits_cum==0, 0, 1)
+
+
+#  Get SEON variables 
+all_df$viber_registered <- ifelse(nrow(gen_seon_phones(
+  db_name,7,application_id))>=1,gen_seon_phones(db_name,7,application_id),NA)
+all_df$whatsapp_registered <- ifelse(nrow(gen_seon_phones(
+  db_name,8,application_id))>=1,gen_seon_phones(db_name,8,application_id),NA)
 
 
 # Compute and rework CKR variables, suitable for model application
