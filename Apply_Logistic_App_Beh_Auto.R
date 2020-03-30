@@ -74,6 +74,7 @@ suppressWarnings(fetch(dbSendQuery(con, sqlMode),
 #################################
 
 # Load other r files
+source(file.path(base_dir,"Additional_Restrictions.r.r"))
 source(file.path(base_dir,"Logistic_App_CityCash.r"))
 source(file.path(base_dir,"Logistic_App_Credirect.r"))
 source(file.path(base_dir,"Logistic_Beh_CityCash.r"))
@@ -390,13 +391,18 @@ scoring_df <- scoring_df[,c("application_id","amount","period","score","color",
                             "created_at")]
 
 
-# Readjust score if necessary
+# Readjust score when applicable
 if(flag_cession==1 & flag_credirect==1){
-  for(i in 1:nrow(scoring_df)){
-    if(scoring_df$score[i] %in% c("Bad","Indeterminate","Good 1")){
-      scoring_df$score[i] <- "Bad"
-      scoring_df$color[i] <- 1} 
-  }
+  scoring_df <- gen_adjust_score(scoring_df, c("Bad","Indeterminate","Good 1"))
+}
+if(flag_bad_ckr_citycash==1 & flag_credirect==0){
+  scoring_df <- gen_adjust_score(scoring_df, c("Bad","Indeterminate"))
+}
+if(flag_beh==0 & flag_credirect==0){
+  scoring_df <- gen_restrict_citycash_app(scoring_df)
+}
+if(flag_beh==1 & flag_credirect==0){
+  scoring_df <- gen_restrict_citycash_beh(scoring_df,prev_amount)
 }
 
 

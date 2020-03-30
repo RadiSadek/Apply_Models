@@ -1,6 +1,5 @@
 
 
-
 ################################################################################
 #                    Joint script for Application to REFINANCES                #
 #      Apply Logistic Regression on all products (CityCash and Credirect)      #
@@ -37,8 +36,8 @@ main_dir <- "C:\\Projects\\Apply_Scoring\\"
 
 # Read argument of ID
 args <- commandArgs(trailingOnly = TRUE)
-#application_id <- args[1]
-application_id <- 493536
+application_id <- args[1]
+#application_id <- 582418
 product_id <- NA
 
 
@@ -47,6 +46,7 @@ setwd(main_dir)
 
 
 # Load other r files
+source(paste(main_dir,"Apply_Models\\Additional_Restrictions.r", sep=""))
 source(paste(main_dir,"Apply_Models\\Logistic_App_CityCash.r", sep=""))
 source(paste(main_dir,"Apply_Models\\Logistic_App_Credirect.r", sep=""))
 source(paste(main_dir,"Apply_Models\\Logistic_Beh_CityCash.r", sep=""))
@@ -238,6 +238,13 @@ flag_beh <- ifelse(all_df$credits_cum==0, 0, 1)
 all_df <- gen_ckr_variables(all_df,flag_beh,flag_credirect)
 
 
+# Compute flag of bad CKR for city cash
+flag_bad_ckr_citycash <- ifelse(is.na(all_df$amount_fin),0,
+      ifelse(all_df$amount_fin==0, 0,
+      ifelse(all_df$outs_overdue_fin/all_df$amount_fin>=0.1 & 
+             all_df$status_active_total %in% c(74,75), 1, 0)))
+
+
 # Compute if previous is online 
 all_credits <- get_company_id_prev(db_name,all_credits)
 all_df <- gen_prev_online(db_name, all_credits,all_df,max(all_credits$id)+1)
@@ -354,6 +361,22 @@ if (empty_fields>=threshold_empty){
 ######################################
 ### Generate final output settings ###
 ######################################
+
+
+# Readjust score when applicable
+if(flag_cession==1 & flag_credirect==1){
+  scoring_df <- gen_adjust_score(scoring_df, c("Bad","Indeterminate","Good 1"))
+}
+if(flag_bad_ckr_citycash==1 & flag_credirect==0){
+  scoring_df <- gen_adjust_score(scoring_df, c("Bad","Indeterminate"))
+}
+if(flag_beh==0 & flag_credirect==0){
+  scoring_df <- gen_restrict_citycash_app(scoring_df)
+}
+if(flag_beh==1 & flag_credirect==0){
+  scoring_df <- gen_restrict_citycash_beh(scoring_df,prev_amount)
+}
+
 
 # Compute previous installment amount and if acceptable differential
 for(i in 1:nrow(scoring_df)){

@@ -36,8 +36,8 @@ main_dir <- "C:\\Projects\\Apply_Scoring\\"
 
 # Read argument of ID
 args <- commandArgs(trailingOnly = TRUE)
-#application_id <- args[1]
-application_id <- 575398
+application_id <- args[1]
+#application_id <- 598058
 product_id <- NA
 
 
@@ -46,6 +46,7 @@ setwd(main_dir)
 
 
 # Load other r files
+source(paste(main_dir,"Apply_Models\\Additional_Restrictions.r", sep=""))
 source(paste(main_dir,"Apply_Models\\Logistic_App_CityCash.r", sep=""))
 source(paste(main_dir,"Apply_Models\\Logistic_App_Credirect.r", sep=""))
 source(paste(main_dir,"Apply_Models\\Logistic_Beh_CityCash.r", sep=""))
@@ -352,12 +353,18 @@ scoring_df <- scoring_df[,c("application_id","amount","period","score","color",
 
 # Readjust score when applicable
 if(flag_cession==1 & flag_credirect==1){
-  scoring_df <- gen_adjust_score(scoring_df, 
-        c("Bad","Indeterminate","Good 1"))
+  scoring_df <- gen_adjust_score(scoring_df, c("Bad","Indeterminate","Good 1"))
 }
 if(flag_bad_ckr_citycash==1 & flag_credirect==0){
   scoring_df <- gen_adjust_score(scoring_df, c("Bad","Indeterminate"))
 }
+if(flag_beh==0 & flag_credirect==0){
+  scoring_df <- gen_restrict_citycash_app(scoring_df)
+}
+if(flag_beh==1 & flag_credirect==0){
+  scoring_df <- gen_restrict_citycash_beh(scoring_df,prev_amount)
+}
+
 
 # Create output dataframe
 final <- as.data.frame(cbind(scoring_df$application_id[1],
@@ -380,6 +387,23 @@ names(final) <- c("id","score")
 #    scoring_df$period==unique(scoring_df$period)
 #      [which.min(abs(all_df$installments - unique(scoring_df$period)))]]))
 # names(final) <- c("id","score","PD")
+final$highest_score <- 
+  ifelse(length(names(table(scoring_df$score))
+      [names(table(scoring_df$score)) %in% c("Good 4")])!=0,"Good 4",
+  ifelse(length(names(table(scoring_df$score))
+              [names(table(scoring_df$score)) %in% c("Good 3")])!=0,"Good 3",
+  ifelse(length(names(table(scoring_df$score))
+              [names(table(scoring_df$score)) %in% c("Good 2")])!=0,"Good 2",
+  ifelse(length(names(table(scoring_df$score))
+              [names(table(scoring_df$score)) %in% c("Good 1")])!=0,"Good 1",
+  ifelse(length(names(table(scoring_df$score))
+              [names(table(scoring_df$score)) %in% c("Indeterminate")])!=0,
+         "Indeterminate",
+  ifelse(length(names(table(scoring_df$score))
+             [names(table(scoring_df$score)) %in% c("Bad")])!=0,"Bad","NULL"))))))
+         
+         
+final$highest_amount <- max(scoring_df$amount)
 final$flag_beh <- flag_beh
 final$flag_credirect <- flag_credirect
 final$flag_next_salary <- flag_credit_next_salary
