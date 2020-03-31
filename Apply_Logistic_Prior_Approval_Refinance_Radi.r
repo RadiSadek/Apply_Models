@@ -36,8 +36,8 @@ main_dir <- "C:\\Projects\\Apply_Scoring\\"
 
 # Read argument of ID
 args <- commandArgs(trailingOnly = TRUE)
-application_id <- args[1]
-#application_id <- 582418
+#application_id <- args[1]
+application_id <- 582418
 product_id <- NA
 
 
@@ -396,8 +396,11 @@ for(i in 1:nrow(scoring_df)){
 get_max_amount <- suppressWarnings(max(scoring_df$amount[scoring_df$score %in% 
     c("Indeterminate","Good 1","Good 2","Good 3","Good 4") &
     scoring_df$installment_amount_diff==1 & scoring_df$color!=1]))
-final_amount <- ifelse(is.infinite(get_max_amount), -999, 
-      ifelse(get_max_amount<po$min_amount, -999, get_max_amount))
+final_amount <- 
+      ifelse(is.infinite(get_max_amount), -999, 
+      ifelse(get_max_amount<po$min_amount, -999, 
+      ifelse(get_max_amount<(total_amount$final_credit_amount - 
+       gen_total_last_paid(max(all_id$id),db_name)+50),-999, get_max_amount)))
 df_final <- as.data.frame(cbind(application_id,final_amount))
 names(df_final) <- c("id","amount_corrected")
 df_final$flag_high_last_paid <- all_df$flag_high_last_paid

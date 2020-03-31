@@ -74,7 +74,7 @@ suppressWarnings(fetch(dbSendQuery(con, sqlMode),
 #################################
 
 # Load other r files
-source(file.path(base_dir,"Additional_Restrictions.r.r"))
+source(file.path(base_dir,"Additional_Restrictions.r"))
 source(file.path(base_dir,"Logistic_App_CityCash.r"))
 source(file.path(base_dir,"Logistic_App_Credirect.r"))
 source(file.path(base_dir,"Logistic_Beh_CityCash.r"))

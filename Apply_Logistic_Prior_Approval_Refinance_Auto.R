@@ -75,6 +75,7 @@ suppressWarnings(fetch(dbSendQuery(con, sqlMode),
 #################################
 
 # Load other r files
+source(file.path(base_dir,"Additional_Restrictions.r"))
 source(file.path(base_dir,"Logistic_App_CityCash.r"))
 source(file.path(base_dir,"Logistic_App_Credirect.r"))
 source(file.path(base_dir,"Logistic_Beh_CityCash.r"))
@@ -429,8 +430,11 @@ for(i in 1:nrow(scoring_df)){
 get_max_amount <- suppressWarnings(max(scoring_df$amount[scoring_df$score %in% 
     c("Indeterminate","Good 1","Good 2","Good 3","Good 4") &
     scoring_df$installment_amount_diff==1 & scoring_df$color!=1]))
-final_amount <- ifelse(is.infinite(get_max_amount), -999, 
-    ifelse(get_max_amount<po$min_amount, -999, get_max_amount))
+final_amount <- 
+  ifelse(is.infinite(get_max_amount), -999, 
+  ifelse(get_max_amount<po$min_amount, -999, 
+  ifelse(get_max_amount<(total_amount$final_credit_amount - 
+    gen_total_last_paid(max(all_id$id),db_name)+50),-999, get_max_amount)))
 
 
 # Update clients_prior_approval table
