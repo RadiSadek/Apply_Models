@@ -3,7 +3,7 @@
 ################################################################################
 #               Joint script for Application and Behavioral scoring            #
 #      Apply Logistic Regression on all products (CityCash and Credirect)      #
-#                          Version 6.0 (2020/01/15)                            #
+#                          Version 7.0 (2020/04/08)                            #
 ################################################################################
 
 
@@ -37,7 +37,7 @@ main_dir <- "C:\\Projects\\Apply_Scoring\\"
 # Read argument of ID
 args <- commandArgs(trailingOnly = TRUE)
 application_id <- args[1]
-#application_id <- 598058
+#application_id <- 446087
 product_id <- NA
 
 
@@ -49,6 +49,7 @@ setwd(main_dir)
 source(paste(main_dir,"Apply_Models\\Additional_Restrictions.r", sep=""))
 source(paste(main_dir,"Apply_Models\\Logistic_App_CityCash.r", sep=""))
 source(paste(main_dir,"Apply_Models\\Logistic_App_Credirect.r", sep=""))
+source(paste(main_dir,"Apply_Models\\Logistic_App_Credirect_Fraud.r", sep=""))
 source(paste(main_dir,"Apply_Models\\Logistic_Beh_CityCash.r", sep=""))
 source(paste(main_dir,"Apply_Models\\Logistic_Beh_Credirect.r", sep=""))
 source(paste(main_dir,"Apply_Models\\Useful_Functions.r", sep=""))
@@ -66,6 +67,7 @@ load("rdata\\all_repeat.rdata")
 load("rdata\\citycash_app.rdata")
 load("rdata\\credirect_app.rdata")
 load("rdata\\credirect_repeat.rdata")
+load("rdata\\credirect_app_fraud.rdata")
 
 
 ####################################
@@ -327,16 +329,16 @@ if (empty_fields>=threshold_empty){
                      all_df,prev_amount,amount_tab,
                      t_income,disposable_income_adj,prev_installment_amount)
 } else if (flag_beh==1 & flag_credirect==1){
-  scoring_df <- gen_beh_credirect(df,scoring_df,products,df_Log_beh,period,
-                     all_df,prev_amount,amount_tab,
+  scoring_df <- gen_beh_credirect(df,scoring_df,products,df_Log_beh_Credirect,
+                     period,all_df,prev_amount,amount_tab,
                      t_income,disposable_income_adj)
 } else if (flag_beh==0 & flag_credirect==0){
-  scoring_df <- gen_app_citycash(df,scoring_df,products,df_Log_beh,period,
-                     all_df,prev_amount,amount_tab,
+  scoring_df <- gen_app_citycash(df,scoring_df,products,df_Log_CityCash_App,
+                     period,all_df,prev_amount,amount_tab,
                      t_income,disposable_income_adj)
 } else {
-  scoring_df <- gen_app_credirect(df,scoring_df,products,df_Log_beh,period,
-                     all_df,prev_amount,amount_tab,
+  scoring_df <- gen_app_credirect(df,scoring_df,products,df_Log_Credirect_App,
+                     period,all_df,prev_amount,amount_tab,
                      t_income,disposable_income_adj)
 }
 
@@ -364,6 +366,14 @@ if(flag_beh==0 & flag_credirect==0){
 if(flag_beh==1 & flag_credirect==0){
   scoring_df <- gen_restrict_citycash_beh(scoring_df,prev_amount)
 }
+
+
+# Get fraud flag
+fraud_flag <- ifelse(flag_credirect==1 & flag_beh==0 & 
+   empty_fields<threshold_empty, gen_app_credirect_fraud(
+   df,scoring_df,products,df_Log_Credirect_Fraud,period,all_df,
+   prev_amount,amount_tab,t_income,disposable_income_adj), NA)
+scoring_df$warning <- fraud_flag
 
 
 # Create output dataframe
@@ -409,11 +419,13 @@ final$flag_credirect <- flag_credirect
 final$flag_next_salary <- flag_credit_next_salary
 final$flag_exclusion <- flag_exclusion
 final$flag_bad_ckr_citycash <- flag_bad_ckr_citycash
+final$flag_fraud <- fraud_flag
 final$status_active_total <- all_df$status_active_total
 final$status_finished_total <- all_df$status_finished_total
 final$outs_overdue_ratio_total <- all_df$outs_overdue_ratio_total
 final$amount_fin <- all_df$amount_fin
 final$outs_overdue_fin <- all_df$outs_overdue_fin
+
 
 all_df$installment_amount <- products[
   products$period == unique(products$period)

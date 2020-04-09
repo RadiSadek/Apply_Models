@@ -77,6 +77,7 @@ suppressWarnings(fetch(dbSendQuery(con, sqlMode),
 source(file.path(base_dir,"Additional_Restrictions.r"))
 source(file.path(base_dir,"Logistic_App_CityCash.r"))
 source(file.path(base_dir,"Logistic_App_Credirect.r"))
+source(file.path(base_dir,"Logistic_App_Credirect_Fraud.r"))
 source(file.path(base_dir,"Logistic_Beh_CityCash.r"))
 source(file.path(base_dir,"Logistic_Beh_Credirect.r"))
 source(file.path(base_dir,"Useful_Functions.r"))
@@ -107,6 +108,9 @@ load(rdata3)
 rdata4 <- file.path(base_dir, "rdata", 
                     "credirect_repeat.rdata")
 load(rdata4)
+rdata5 <- file.path(base_dir, "rdata", 
+                    "credirect_app_fraud.rdata")
+load(rdata5)
 
 
 ####################################
@@ -367,16 +371,16 @@ if (empty_fields>=threshold_empty){
                      all_df,prev_amount,amount_tab,
                      t_income,disposable_income_adj,prev_installment_amount)
 } else if (flag_beh==1 & flag_credirect==1){
-  scoring_df <- gen_beh_credirect(df,scoring_df,products,df_Log_beh,period,
-                     all_df,prev_amount,amount_tab,
+  scoring_df <- gen_beh_credirect(df,scoring_df,products,df_Log_beh_Credirect,
+                     period,all_df,prev_amount,amount_tab,
                      t_income,disposable_income_adj)
 } else if (flag_beh==0 & flag_credirect==0){
-  scoring_df <- gen_app_citycash(df,scoring_df,products,df_Log_beh,period,
-                     all_df,prev_amount,amount_tab,
+  scoring_df <- gen_app_citycash(df,scoring_df,products,df_Log_CityCash_App,
+                     period,all_df,prev_amount,amount_tab,
                      t_income,disposable_income_adj)
 } else {
-  scoring_df <- gen_app_credirect(df,scoring_df,products,df_Log_beh,period,
-                     all_df,prev_amount,amount_tab,
+  scoring_df <- gen_app_credirect(df,scoring_df,products,df_Log_Credirect_App,
+                     period,all_df,prev_amount,amount_tab,
                      t_income,disposable_income_adj)
 }
 
@@ -406,6 +410,14 @@ if(flag_beh==1 & flag_credirect==0){
 }
 
 
+# Get fraud flag
+fraud_flag <- ifelse(flag_credirect==1 & flag_beh==0 & 
+  empty_fields<threshold_empty, gen_app_credirect_fraud(
+  df,scoring_df,products,df_Log_Credirect_Fraud,period,all_df,
+  prev_amount,amount_tab,t_income,disposable_income_adj), NA)
+scoring_df$warning <- fraud_flag
+
+
 #Update database
 write_sql_query <- paste("
   DELETE FROM ",db_name,".credits_applications_scoring WHERE application_id=",
@@ -415,7 +427,7 @@ suppressMessages(dbWriteTable(con, name = "credits_applications_scoring",
   value = scoring_df,
   field.types = c(application_id="numeric", amount="integer", 
   period="integer", score="character(20)",color="integer", 
-  created_at="datetime"),row.names = F, append = T))
+  created_at="datetime", warning="integer"),row.names = F, append = T))
 
 
 

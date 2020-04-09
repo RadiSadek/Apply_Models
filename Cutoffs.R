@@ -5,7 +5,7 @@
 ######################################################
 
 
-#### Cutoffs after Coronvirus
+#### Cutoffs after Coronavirus
 
 # # Application City Cash
 cu_app_city_bad_offices <- c(0.3,0.25,0.2,0.15,0.075)
@@ -22,6 +22,9 @@ cu_beh_city <- c(0.275,0.25,0.2,0.15,0.1)
 
 # Repeat Credirect
 cu_beh_cred <- c(0.32,0.275,0.2,0.125,0.075)
+
+# Application Credirect Frauds
+cu_app_cred_frauds <- 0.2
 
 
 

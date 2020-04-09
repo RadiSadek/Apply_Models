@@ -101,3 +101,9 @@ flag_bad_office <- function(var_off){
       ))))
 }
 
+# Define cutoffs application for credirect fraud
+gen_group_scores_fraud <- function(var){
+  results <- ifelse(var>cu_app_cred_frauds,1,0)
+}
+
+

@@ -3,7 +3,7 @@
 ######## Functions to apply logisit regression on application City Cash ######
 ##############################################################################
 
-gen_app_citycash <- function(df,scoring_df,products,df_Log_beh,period,
+gen_app_citycash <- function(df,scoring_df,products,df_Log_CityCash_App,period,
                              all_df,prev_amount,amount_tab,
                              t_income,disposable_income_adj){
   # Cut and bin

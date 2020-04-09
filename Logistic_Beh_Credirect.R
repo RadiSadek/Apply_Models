@@ -3,8 +3,8 @@
 ######## Functions to apply logisit regression on repeat Credirect ######
 #########################################################################
 
-gen_beh_credirect <- function(df,scoring_df,products,df_Log_beh,period,
-                             all_df,prev_amount,amount_tab,
+gen_beh_credirect <- function(df,scoring_df,products,df_Log_beh_Credirect,
+                             period,all_df,prev_amount,amount_tab,
                              t_income,disposable_income_adj){
   #  Cut and bin
   df$age_cut <- ifelse(df$age<=31,"31_less","32_more")
