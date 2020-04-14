@@ -415,10 +415,17 @@ fraud_flag <- ifelse(flag_credirect==1 & flag_beh==0 &
   empty_fields<threshold_empty, gen_app_credirect_fraud(
   df,scoring_df,products,df_Log_Credirect_Fraud,period,all_df,
   prev_amount,amount_tab,t_income,disposable_income_adj), NA)
-scoring_df$warning <- fraud_flag
 
 
-#Update database
+# Update table credits applications
+update_table_extras_query <- paste("UPDATE ",db_name,
+  ".credits_applications SET scoring_warning = ",fraud_flag,
+  " WHERE id=",application_id, sep="")
+suppressMessages(suppressWarnings(dbSendQuery(con, 
+  update_table_extras_query)))
+
+
+# Update table credits applications scoring
 write_sql_query <- paste("
   DELETE FROM ",db_name,".credits_applications_scoring WHERE application_id=",
   application_id, sep="")
@@ -427,7 +434,7 @@ suppressMessages(dbWriteTable(con, name = "credits_applications_scoring",
   value = scoring_df,
   field.types = c(application_id="numeric", amount="integer", 
   period="integer", score="character(20)",color="integer", 
-  created_at="datetime", warning="integer"),row.names = F, append = T))
+  created_at="datetime"),row.names = F, append = T))
 
 
 
