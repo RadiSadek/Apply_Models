@@ -37,7 +37,7 @@ main_dir <- "C:\\Projects\\Apply_Scoring\\"
 # Read argument of ID
 args <- commandArgs(trailingOnly = TRUE)
 #application_id <- args[1]
-application_id <- 595614
+application_id <- 638002
 product_id <- NA
 
 
@@ -372,15 +372,7 @@ if(flag_beh==1 & flag_credirect==0){
 fraud_flag <- ifelse(flag_credirect==1 & flag_beh==0 & 
    empty_fields<threshold_empty, gen_app_credirect_fraud(
    df,scoring_df,products,df_Log_Credirect_Fraud,period,all_df,
-   prev_amount,amount_tab,t_income,disposable_income_adj), NA)
-
-
-# Update table credits applications extras
-update_table_extras_query <- paste("UPDATE ",db_name,
-".credits_applications SET scoring_warning = ",fraud_flag,
-" WHERE id=",application_id, sep="")
-suppressMessages(suppressWarnings(dbSendQuery(con, 
-   update_table_extras_query)))
+   prev_amount,amount_tab,t_income,disposable_income_adj), "NULL")
 
 
 # Create output dataframe

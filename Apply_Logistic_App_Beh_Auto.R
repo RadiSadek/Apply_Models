@@ -414,7 +414,7 @@ if(flag_beh==1 & flag_credirect==0){
 fraud_flag <- ifelse(flag_credirect==1 & flag_beh==0 & 
   empty_fields<threshold_empty, gen_app_credirect_fraud(
   df,scoring_df,products,df_Log_Credirect_Fraud,period,all_df,
-  prev_amount,amount_tab,t_income,disposable_income_adj), NA)
+  prev_amount,amount_tab,t_income,disposable_income_adj), "NULL")
 
 
 # Update table credits applications
