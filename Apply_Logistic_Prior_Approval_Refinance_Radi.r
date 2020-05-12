@@ -36,8 +36,8 @@ main_dir <- "C:\\Projects\\Apply_Scoring\\"
 
 # Read argument of ID
 args <- commandArgs(trailingOnly = TRUE)
-#application_id <- args[1]
-application_id <- 582418
+application_id <- args[1]
+#application_id <- 458752
 product_id <- NA
 
 
@@ -62,10 +62,11 @@ source(paste(main_dir,"Apply_Models\\CKR_variables.r", sep=""))
 
 
 # Load predefined libraries
-load("rdata\\all_repeat.rdata")
+load("rdata\\citycash_repeat.rdata")
 load("rdata\\citycash_app.rdata")
 load("rdata\\credirect_app.rdata")
 load("rdata\\credirect_repeat.rdata")
+load("rdata\\credirect_app_fraud.rdata")
 
 
 ####################################
@@ -155,6 +156,8 @@ if (nrow_all_id>=1){
     rbind(all_id,all_id[all_id$id==max(all_id$id),]))
   prev_amount <- gen_last_prev_amount(
     rbind(all_id,all_id[all_id$id==max(all_id$id),]))
+  prev_paid_days <- gen_prev_paid_days(rbind(all_id[all_id$id==max(all_id$id),],
+    all_id[all_id$id==max(all_id$id),]))
 }
 
 
@@ -232,6 +235,11 @@ all_df$days_diff_last_credit <- NA
 
 # Get flag if credit is behavioral or not
 flag_beh <- ifelse(all_df$credits_cum==0, 0, 1)
+
+
+# Compute ratio of number of payments
+all_df$ratio_nb_payments_prev <- ifelse(flag_beh==1,prev_paid_days/
+   total_amount$installments,NA)
 
 
 # Compute and rework CKR variables, suitable for model application
@@ -340,20 +348,20 @@ if (empty_fields>=threshold_empty){
 
   
 } else if (flag_beh==1 & flag_credirect==0){
-  scoring_df <- gen_beh_citycash(df,scoring_df,products,df_Log_beh,period,
-                     all_df,prev_amount,amount_tab,
-                     t_income,disposable_income_adj,prev_installment_amount)
+  scoring_df <- gen_beh_citycash(df,scoring_df,products,df_Log_beh_CityCash,
+                     period,all_df,prev_amount,amount_tab,
+                     t_income,disposable_income_adj,prev_installment_amount,0)
 } else if (flag_beh==1 & flag_credirect==1){
-  scoring_df <- gen_beh_credirect(df,scoring_df,products,df_Log_beh,period,
-                     all_df,prev_amount,amount_tab,
-                     t_income,disposable_income_adj)
+  scoring_df <- gen_beh_credirect(df,scoring_df,products,df_Log_beh_Credirect,
+                     period,all_df,prev_amount,amount_tab,
+                     t_income,disposable_income_adj,0)
 } else if (flag_beh==0 & flag_credirect==0){
-  scoring_df <- gen_app_citycash(df,scoring_df,products,df_Log_beh,period,
-                     all_df,prev_amount,amount_tab,
+  scoring_df <- gen_app_citycash(df,scoring_df,products,df_Log_CityCash_App,
+                     period,all_df,prev_amount,amount_tab,
                      t_income,disposable_income_adj)
 } else {
-  scoring_df <- gen_app_credirect(df,scoring_df,products,df_Log_beh,period,
-                     all_df,prev_amount,amount_tab,
+  scoring_df <- gen_app_credirect(df,scoring_df,products,df_Log_Credirect_App,
+                     period,all_df,prev_amount,amount_tab,
                      t_income,disposable_income_adj)
 }
 
@@ -409,6 +417,7 @@ df_final$max_delay <- all_df$max_delay
 df_final$prev_online <- all_df$prev_online
 df_final$days_diff_last_credit <- all_df$days_diff_last_credit
 df_final$flag_credirect <- flag_credirect
+df_final$ratio_prev_payments <- all_df$ratio_nb_payments_prev 
 
 
 # Output results

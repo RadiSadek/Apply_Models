@@ -97,7 +97,7 @@ source(file.path(base_dir,"CKR_variables.r"))
 
 # Load predefined libraries
 rdata <- file.path(base_dir, "rdata", 
-                   "all_repeat.rdata")
+                   "citycash_repeat.rdata")
 load(rdata)
 rdata4 <- file.path(base_dir, "rdata", 
                     "credirect_repeat.rdata")
@@ -192,6 +192,8 @@ if (nrow_all_id>=1){
     rbind(all_id,all_id[all_id$id==max(all_id$id),]))
   prev_amount <- gen_last_prev_amount(
     rbind(all_id,all_id[all_id$id==max(all_id$id),]))
+  prev_paid_days <- gen_prev_paid_days(rbind(all_id[all_id$id==max(all_id$id),],	
+    all_id[all_id$id==max(all_id$id),]))
 }
 
 
@@ -271,15 +273,20 @@ all_df$days_diff_last_credit <- NA
 flag_beh <- ifelse(all_df$credits_cum==0, 0, 1)
 
 
+# Compute ratio of number of payments
+all_df$ratio_nb_payments_prev <- ifelse(flag_beh==1,prev_paid_days/
+   total_amount$installments,NA)
+
+
 # Compute and rework CKR variables, suitable for model application
 all_df <- gen_ckr_variables(all_df,flag_beh,flag_credirect)
 
 
 # Compute flag of bad CKR for city cash
 flag_bad_ckr_citycash <- ifelse(is.na(all_df$amount_fin),0,
-   ifelse(all_df$amount_fin==0, 0,
-   ifelse(all_df$outs_overdue_fin/all_df$amount_fin>=0.1 & 
-        all_df$status_active_total %in% c(74,75), 1, 0)))
+      ifelse(all_df$amount_fin==0, 0,
+      ifelse(all_df$outs_overdue_fin/all_df$amount_fin>=0.1 & 
+             all_df$status_active_total %in% c(74,75), 1, 0)))
 
 
 # Compute if previous is online 
@@ -377,13 +384,13 @@ if (empty_fields>=threshold_empty){
 
   
 } else if (flag_beh==1 & flag_credirect==0){
-  scoring_df <- gen_beh_citycash(df,scoring_df,products,df_Log_beh,period,
-                     all_df,prev_amount,amount_tab,
-                     t_income,disposable_income_adj,prev_installment_amount)
+  scoring_df <- gen_beh_citycash(df,scoring_df,products,df_Log_beh_CityCash,
+                     period,all_df,prev_amount,amount_tab,
+                     t_income,disposable_income_adj,prev_installment_amount,0)
 } else if (flag_beh==1 & flag_credirect==1){
   scoring_df <- gen_beh_credirect(df,scoring_df,products,df_Log_beh,period,
                      all_df,prev_amount,amount_tab,
-                     t_income,disposable_income_adj)
+                     t_income,disposable_income_adj,0)
 } else if (flag_beh==0 & flag_credirect==0){
   scoring_df <- gen_app_citycash(df,scoring_df,products,df_Log_beh,period,
                      all_df,prev_amount,amount_tab,

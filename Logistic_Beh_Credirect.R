@@ -5,7 +5,7 @@
 
 gen_beh_credirect <- function(df,scoring_df,products,df_Log_beh_Credirect,
                              period,all_df,prev_amount,amount_tab,
-                             t_income,disposable_income_adj){
+                             t_income,disposable_income_adj,crit_po){
   #  Cut and bin
   df$age_cut <- ifelse(df$age<=31,"31_less","32_more")
   df$age <- as.factor(df$age_cut)
@@ -72,6 +72,12 @@ gen_beh_credirect <- function(df,scoring_df,products,df_Log_beh_Credirect,
        ifelse(scoring_df$score[i]=="Good 2", 4,
        ifelse(scoring_df$score[i]=="Good 3", 5,
        ifelse(scoring_df$score[i]=="Good 4",6,NA))))))
+    
+    if(crit_po!=0){
+      scoring_df$installment_amount[i] <- product_tab$installment_amount
+    }
+    
+    
   }
   return(scoring_df)
 }

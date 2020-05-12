@@ -153,6 +153,14 @@ gen_total_last_paid <- function(var,db_name){
   return(result)
 }
 
+# Function to get number of unique payment days of previous credit
+gen_prev_paid_days <- function(all_id){
+  var <- gen_variables_for_rep(all_id)
+  result <- suppressWarnings(fetch(dbSendQuery(con, 
+     gen_all_payments_query(var$id[nrow(var)-1],db_name)), n=-1))
+  return(length(unique(result$pay_date)))
+}
+
 # Function to get total amount (with taxes) of previous credit
 gen_last_total_amount <- function(all_id){
   var <- gen_variables_for_rep(all_id)

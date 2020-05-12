@@ -149,6 +149,14 @@ gen_total_paid_amount_query <- function(var,db){
   " GROUP BY object_id",sep =""))		
 }
 
+# Define query to get all payments of previous credit 
+gen_all_payments_query <- function(var,db){		
+  return(paste("SELECT object_id, amount, pay_date	
+  FROM ",db,".cash_flow		
+  WHERE nomenclature_id IN (90,100,101) AND deleted_at 
+  IS NULL AND object_type = 4	AND object_id=",var,sep =""))		
+}
+
 # Define query to get the last amount of previous credit
 gen_last_cred_amount_query <- function(var,db){
   return(paste("SELECT final_credit_amount, installments, amount
