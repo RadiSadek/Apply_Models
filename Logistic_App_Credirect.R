@@ -73,11 +73,7 @@ gen_app_credirect <- function(df,scoring_df,products,df_Log_Credirect_App,period
     scoring_df$score[i] <- ifelse(flag_credit_next_salary==1,
          gen_group_scores(scoring_df$score[i],all_df$office_id,0,1,1),
          gen_group_scores(scoring_df$score[i],all_df$office_id,0,1,0))
-    
-    # Apply filter for coronavirus effect  
-    scoring_df$score[i] <- ifelse(scoring_df$score[i] %in% 
-          c("Indeterminate","Good 1"), "Bad", scoring_df$score[i])
-    
+  
     # Compute flag of disposable income
     product_tab <- subset(products, products$product_id==all_df$product_id & 
          products$period==as.numeric(period_tab) &

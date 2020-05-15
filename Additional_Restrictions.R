@@ -37,6 +37,42 @@ gen_restrict_citycash_beh <- function(scoring_df,prev_amount){
   return(scoring_df)
 }
 
+# Function to apply restrictions for Credirect applications
+gen_restrict_credirect_app <- function(scoring_df,all_df,
+                                       flag_credit_next_salary){
+
+  # Apply filter for coronavirus effect
+  if(flag_credit_next_salary==1){
+    scoring_df$score <- ifelse(scoring_df$score %in% 
+            c("Indeterminate"), "Bad", scoring_df$score)
+  } else {
+    scoring_df$score <- ifelse(scoring_df$score %in% 
+            c("Indeterminate","Good 1"), "Bad", scoring_df$score)
+  }
+  if(all_df$status_work==9 & !(is.na(all_df$status_work))){
+    scoring_df$score <- "Bad"
+  }
+  scoring_df$color <- ifelse(scoring_df$score=="Bad", 1, scoring_df$color)
+  return(scoring_df)
+}
+
+# Function to apply restrictions for Credirect behavioral
+gen_restrict_credirect_beh <- function(scoring_df,all_df,
+       flag_credit_next_salary,flag_new_credirect_old_city){
+  
+  # Apply filter for coronavirus effect
+  if(flag_new_credirect_old_city==1){
+    scoring_df$score <- ifelse(scoring_df$score %in% 
+        c("Indeterminate","Good 1"), "Bad", scoring_df$score)
+  } else {
+    scoring_df$score <- ifelse(scoring_df$score %in% 
+        c("Indeterminate"), "Bad", scoring_df$score)
+  }
+
+  scoring_df$color <- ifelse(scoring_df$score=="Bad", 1, scoring_df$color)
+  return(scoring_df)
+}
+
 # Readjust score if necessary for certain cases
 gen_adjust_score <- function(scoring_df,crit){
   for(i in 1:nrow(scoring_df)){

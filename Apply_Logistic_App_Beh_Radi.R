@@ -37,7 +37,7 @@ main_dir <- "C:\\Projects\\Apply_Scoring\\"
 # Read argument of ID
 args <- commandArgs(trailingOnly = TRUE)
 application_id <- args[1]
-#application_id <- 652788
+#application_id <- 634679
 product_id <- NA
 
 
@@ -310,6 +310,12 @@ df <- gen_norm_var2(df)
 flag_cession <- ifelse(flag_credirect==1 & df$amount_cession_total>0, 1, 0)
 
 
+# Compute flag if new credirect but old citycash
+flag_new_credirect_old_city <- ifelse(flag_credirect==1 & flag_beh==1 &
+ nrow(all_credits[all_credits$company_id==2 & all_credits$id!=application_id
+      & all_credits$status %in% c(4,5),])==0, 1, 0)
+    
+
 ############################################################
 ### Apply model coefficients according to type of credit ###
 ############################################################
@@ -334,10 +340,14 @@ if (empty_fields>=threshold_empty){
   scoring_df <- gen_beh_citycash(df,scoring_df,products,df_Log_beh_CityCash,
                      period,all_df,prev_amount,amount_tab,
                      t_income,disposable_income_adj,prev_installment_amount,0)
-} else if (flag_beh==1 & flag_credirect==1){
+} else if (flag_beh==1 & flag_credirect==1 & flag_new_credirect_old_city==0){
   scoring_df <- gen_beh_credirect(df,scoring_df,products,df_Log_beh_Credirect,
                      period,all_df,prev_amount,amount_tab,
                      t_income,disposable_income_adj,0)
+} else if (flag_new_credirect_old_city==1){
+  scoring_df <- gen_app_credirect(df,scoring_df,products,df_Log_Credirect_App,
+                    period,all_df,prev_amount,amount_tab,
+                    t_income,disposable_income_adj)
 } else if (flag_beh==0 & flag_credirect==0){
   scoring_df <- gen_app_citycash(df,scoring_df,products,df_Log_CityCash_App,
                      period,all_df,prev_amount,amount_tab,
@@ -371,6 +381,14 @@ if(flag_beh==0 & flag_credirect==0){
 }
 if(flag_beh==1 & flag_credirect==0){
   scoring_df <- gen_restrict_citycash_beh(scoring_df,prev_amount)
+}
+if(flag_beh==0 & flag_credirect==1){
+  scoring_df <- gen_restrict_credirect_app(scoring_df,all_df,
+    flag_credit_next_salary)
+}
+if(flag_beh==1 & flag_credirect==1){
+  scoring_df <- gen_restrict_credirect_beh(scoring_df,all_df,
+    flag_credit_next_salary,flag_new_credirect_old_city)
 }
 
 
@@ -425,13 +443,13 @@ final$flag_next_salary <- flag_credit_next_salary
 final$flag_exclusion <- flag_exclusion
 final$flag_bad_ckr_citycash <- flag_bad_ckr_citycash
 final$flag_fraud <- fraud_flag
+final$flag_new_credirect_old_city <- flag_new_credirect_old_city
 final$status_active_total <- all_df$status_active_total
 final$status_finished_total <- all_df$status_finished_total
 final$outs_overdue_ratio_total <- all_df$outs_overdue_ratio_total
 final$amount_fin <- all_df$amount_fin
 final$outs_overdue_fin <- all_df$outs_overdue_fin
 final$ratio_nb_payments_prev <- all_df$ratio_nb_payments_prev
-
 
 all_df$installment_amount <- products[
   products$period == unique(products$period)

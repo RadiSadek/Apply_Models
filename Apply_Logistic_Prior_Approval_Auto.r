@@ -273,12 +273,20 @@ all_df <- suppressWarnings(
 all_df$max_delay <- ifelse(!(is.na(data_plan_main_select_def)), 
    data_plan_main_select_def[1], ifelse(flag_credirect==0, 60, 10))
 all_df$credits_cum <- nrow(all_id)
+all_df$days_diff_last_credit <- NA
 
 
 # Get flag if credit is behavioral or not
 flag_beh <- ifelse(all_df$credits_cum==0, 0, 1)
 all_df$ratio_nb_payments_prev <- ifelse(flag_beh==1,prev_paid_days/
    total_amount$installments,NA)
+
+
+#  Get SEON variables 
+all_df$viber_registered <- ifelse(nrow(gen_seon_phones(
+  db_name,7,application_id))>=1,gen_seon_phones(db_name,7,application_id),NA)
+all_df$whatsapp_registered <- ifelse(nrow(gen_seon_phones(
+  db_name,8,application_id))>=1,gen_seon_phones(db_name,8,application_id),NA)
 
 
 # Compute and rework CKR variables, suitable for model application
@@ -356,6 +364,13 @@ df <- gen_norm_var2(df)
 # Compute flag exclusion for cession in CKR
 flag_cession <- ifelse(flag_credirect==1 & df$amount_cession_total>0, 1, 0)
 
+
+# Compute flag if new credirect but old citycash
+flag_new_credirect_old_city <- ifelse(flag_credirect==1 & flag_beh==1 &
+  nrow(all_credits[all_credits$company_id==2 & all_credits$id!=application_id
+  & all_credits$status %in% c(4,5),])==0, 1, 0)
+
+
 # Get previous installment amount
 closest_period <- products$period[which.min(
   abs(total_amount$installments - products$period))]
@@ -379,21 +394,24 @@ if (empty_fields>=threshold_empty){
   scoring_df$score <- "Bad"
   scoring_df$color <- 1
   
-} else if (flag_credirect==1 & flag_beh==1 &	
-           !is.na(all_df$max_delay) & all_df$max_delay>=180){	
+} else if (flag_credirect==1 & flag_beh==1 &
+           !is.na(all_df$max_delay) & all_df$max_delay>=180){
   
-  scoring_df$score <- "Bad"	
-  scoring_df$color <- 1	
-
+  scoring_df$score <- "Bad"
+  scoring_df$color <- 1
   
 } else if (flag_beh==1 & flag_credirect==0){
   scoring_df <- gen_beh_citycash(df,scoring_df,products,df_Log_beh_CityCash,
                      period,all_df,prev_amount,amount_tab,
-                     t_income,disposable_income_adj,prev_installment_amount,1)
-} else if (flag_beh==1 & flag_credirect==1){
+                     t_income,disposable_income_adj,prev_installment_amount,0)
+} else if (flag_beh==1 & flag_credirect==1 & flag_new_credirect_old_city==0){
   scoring_df <- gen_beh_credirect(df,scoring_df,products,df_Log_beh_Credirect,
                      period,all_df,prev_amount,amount_tab,
-                     t_income,disposable_income_adj,1)
+                     t_income,disposable_income_adj,0)
+} else if (flag_new_credirect_old_city==1){
+  scoring_df <- gen_app_credirect(df,scoring_df,products,df_Log_Credirect_App,
+                     period,all_df,prev_amount,amount_tab,
+                     t_income,disposable_income_adj)
 } else if (flag_beh==0 & flag_credirect==0){
   scoring_df <- gen_app_citycash(df,scoring_df,products,df_Log_CityCash_App,
                      period,all_df,prev_amount,amount_tab,
@@ -422,6 +440,14 @@ if(flag_beh==0 & flag_credirect==0){
 }
 if(flag_beh==1 & flag_credirect==0){
   scoring_df <- gen_restrict_citycash_beh(scoring_df,prev_amount)
+}
+if(flag_beh==0 & flag_credirect==1){
+  scoring_df <- gen_restrict_credirect_app(scoring_df,all_df,
+    flag_credit_next_salary)
+}
+if(flag_beh==1 & flag_credirect==1){
+  scoring_df <- gen_restrict_credirect_beh(scoring_df,all_df,
+    flag_credit_next_salary,flag_new_credirect_old_city)
 }
 
 
