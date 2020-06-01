@@ -36,8 +36,8 @@ main_dir <- "C:\\Projects\\Apply_Scoring\\"
 
 # Read argument of ID
 args <- commandArgs(trailingOnly = TRUE)
-application_id <- args[1]
-#application_id <- 463502
+#application_id <- args[1]
+application_id <- 531397
 product_id <- NA
 
 
@@ -91,7 +91,7 @@ if(nrow(all_df)>1){
 
 # Read credits to score from prior approval
 po_sql_query <- paste(
-"SELECT max_amount, min_amount, product_id FROM ",db_name,
+"SELECT max_amount, min_amount, product_id, created_at FROM ",db_name,
 ".prior_approval_refinances WHERE application_id=",application_id)
 po <- suppressWarnings(fetch(dbSendQuery(con, po_sql_query), n=-1))
 

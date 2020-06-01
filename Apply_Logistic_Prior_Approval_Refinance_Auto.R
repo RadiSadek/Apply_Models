@@ -476,15 +476,22 @@ SET max_amount = ",final_amount," WHERE application_id=",application_id, sep="")
 update_prior_not_ok_query <- paste("UPDATE ",db_name,".prior_approval_refinances
 SET deleted_at = '",substring(Sys.time(),1,19),
 "', status=4 WHERE application_id=",application_id, sep="")
+delete_query <- paste("DELETE FROM ",db_name,".prior_approval_refinances 
+WHERE application_id=",application_id, sep="")
 
-if(final_amount==-999){
+flag_today_po <- ifelse(
+  substring(po$created_at,1,10)==substring(Sys.time(),1,10),1,0)
+
+if(final_amount==-999 & flag_today_po==0){
   suppressMessages(suppressWarnings(dbSendQuery(con, 
       update_prior_not_ok_query)))
+} else if(final_amount==-999 & flag_today_po==1) {
+  suppressMessages(suppressWarnings(dbSendQuery(con, 
+      delete_query)))
 } else {
   suppressMessages(suppressWarnings(dbSendQuery(con,
       update_prior_ok_query)))
 }
-
 
 
 #######
