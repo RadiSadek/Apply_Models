@@ -47,10 +47,7 @@ gen_restrict_credirect_app <- function(scoring_df,all_df,
             c("Indeterminate"), "Bad", scoring_df$score)
   } else {
     scoring_df$score <- ifelse(scoring_df$score %in% 
-            c("Indeterminate","Good 1"), "Bad", scoring_df$score)
-  }
-  if(all_df$status_work==9 & !(is.na(all_df$status_work))){
-    scoring_df$score <- "Bad"
+            c("Indeterminate"), "Bad", scoring_df$score)
   }
   scoring_df$color <- ifelse(scoring_df$score=="Bad", 1, scoring_df$color)
   return(scoring_df)

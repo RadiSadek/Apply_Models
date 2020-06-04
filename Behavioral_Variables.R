@@ -186,11 +186,11 @@ gen_select_relevant_ids <- function(all_id_max_delay,nrow_all_id_max_delay){
 }
 
 # Function to select ids only of relevant credits for max delay
-gen_select_relevant_ids_max_delay <- function(db_name,all_actives,
+gen_select_relevant_ids_max_delay <- function(db_name,all_actives_past,
                                               all_id_max_delay){
   
   data_plan_main_actives_past <- suppressWarnings(fetch(dbSendQuery(con, 
-      gen_plan_main_actives_past_query(db_name,all_actives)), n=-1))
+      gen_plan_main_actives_past_query(db_name,all_actives_past)), n=-1))
   data_plan_main_actives_past$date_diff <- difftime(Sys.time(), 
       data_plan_main_actives_past$pay_day, units=c("days"))
   agg_passed_installments <- as.data.frame(aggregate(

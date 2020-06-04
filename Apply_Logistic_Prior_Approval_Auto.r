@@ -29,12 +29,12 @@ load_dot_env(file = here('.env'))
 #########################
 
 args <- commandArgs(trailingOnly = TRUE)
-аpproval_id <- args[1]
+approval_id <- args[1]
 product_id <- args[2]
 
 
 #######################
-### Manual settings ###
+### Manual settings ###a
 #######################
 
 # Defines the directory where the RScript is located
@@ -76,7 +76,8 @@ suppressWarnings(fetch(dbSendQuery(con, sqlMode),
 # Load other r files
 source(file.path(base_dir,"Additional_Restrictions.r"))
 source(file.path(base_dir,"Logistic_App_CityCash.r"))
-source(file.path(base_dir,"Logistic_App_Credirect.r"))
+source(file.path(base_dir,"Logistic_App_Credirect_installments.r"))
+source(file.path(base_dir,"Logistic_App_Credirect_payday.r"))
 source(file.path(base_dir,"Logistic_Beh_CityCash.r"))
 source(file.path(base_dir,"Logistic_Beh_Credirect.r"))
 source(file.path(base_dir,"Useful_Functions.r"))
@@ -171,8 +172,8 @@ total_amount_curr <- suppressWarnings(fetch(dbSendQuery(con,
 
 
 # Read CKR 
-data_ckr_bank <- gen_query_ckr(1)
-data_ckr_financial <- gen_query_ckr(2)
+data_ckr_bank <- gen_query_ckr(all_df,all_credits,1)
+data_ckr_financial <- gen_query_ckr(all_df,all_credits,2)
 
 
 # Read all previous active or terminated credits of client
@@ -186,8 +187,8 @@ all_id <- subset(all_credits, all_credits$id==application_id |
 all_id_max_delay <- all_id
 all_actives_past <- subset(all_id, all_id$status==4)
 if(nrow(all_actives_past)>0){
-  all_id_max_delay <- gen_select_relevant_ids_max_delay(db_name,all_actives,
-      all_id_max_delay)
+  all_id_max_delay <- gen_select_relevant_ids_max_delay(db_name,
+      all_actives_past,all_id_max_delay)
 }
 
 
@@ -395,7 +396,7 @@ if (empty_fields>=threshold_empty){
   scoring_df$color <- 1
   
 } else if (flag_credirect==1 & flag_beh==1 &
-           !is.na(all_df$max_delay) & all_df$max_delay>=180){
+     !is.na(all_df$max_delay) & all_df$max_delay>=180){
   
   scoring_df$score <- "Bad"
   scoring_df$color <- 1
@@ -406,20 +407,32 @@ if (empty_fields>=threshold_empty){
                      t_income,disposable_income_adj,prev_installment_amount,0)
 } else if (flag_beh==1 & flag_credirect==1 & flag_new_credirect_old_city==0){
   scoring_df <- gen_beh_credirect(df,scoring_df,products,df_Log_beh_Credirect,
-                     period,all_df,prev_amount,amount_tab,
-                     t_income,disposable_income_adj,0)
-} else if (flag_new_credirect_old_city==1){
-  scoring_df <- gen_app_credirect(df,scoring_df,products,df_Log_Credirect_App,
-                     period,all_df,prev_amount,amount_tab,
-                     t_income,disposable_income_adj)
+                    period,all_df,prev_amount,amount_tab,
+                    t_income,disposable_income_adj,0)
+} else if (flag_new_credirect_old_city==1 & flag_credit_next_salary==1){
+  scoring_df <- gen_app_credirect_payday(df,scoring_df,products,
+                 df_Log_Credirect_App_payday,period,all_df,prev_amount,
+                 amount_tab,t_income,disposable_income_adj,
+                 flag_credit_next_salary)
+} else if (flag_new_credirect_old_city==1 & flag_credit_next_salary==0){
+  scoring_df <- gen_app_credirect_installments(df,scoring_df,products,
+                 df_Log_Credirect_App_installments,period,all_df,
+                 prev_amount,amount_tab,t_income,disposable_income_adj,
+                 flag_credit_next_salary)
 } else if (flag_beh==0 & flag_credirect==0){
   scoring_df <- gen_app_citycash(df,scoring_df,products,df_Log_CityCash_App,
                      period,all_df,prev_amount,amount_tab,
                      t_income,disposable_income_adj)
+} else if (flag_beh==0 & flag_credirect==1 & flag_credit_next_salary==1){
+  scoring_df <- gen_app_credirect_payday(df,scoring_df,products,
+                      df_Log_Credirect_App_payday,period,all_df,prev_amount,
+                      amount_tab,t_income,disposable_income_adj,
+                      flag_credit_next_salary)
 } else {
-  scoring_df <- gen_app_credirect(df,scoring_df,products,df_Log_Credirect_App,
-                     period,all_df,prev_amount,amount_tab,
-                     t_income,disposable_income_adj)
+  scoring_df <- gen_app_credirect_installments(df,scoring_df,products,
+                      df_Log_Credirect_App_installments,period,all_df,
+                      prev_amount,amount_tab,t_income,disposable_income_adj,
+                      flag_credit_next_salary)
 }
 
 

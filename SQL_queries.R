@@ -101,7 +101,7 @@ gen_total_amount_curr_query <- function(db_name,application_id){
 }
 
 # Define query to get the pay days of previous actives credits
-gen_plan_main_actives_past_query <- function(db_name,all_actives){
+gen_plan_main_actives_past_query <- function(db_name,all_actives_past){
   return(paste("SELECT application_id, pay_day
   FROM ",db_name,".credits_plan_main WHERE application_id in(", 
   all_actives_past$id," )", sep=""))
@@ -181,7 +181,7 @@ gen_get_company_id_query <- function(db_name){
 }
 
 # Define query to get the CKR status 
-gen_query_ckr <- function(type_of){
+gen_query_ckr <- function(all_df,all_credits,type_of){
   names_col <- c("current_status_active","status_active","status_finished",
                  "source_entity_count","amount_drawn","cred_count", 
                  "outstanding_performing_principal",
