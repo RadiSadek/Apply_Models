@@ -67,13 +67,13 @@ gen_app_credirect_payday <- function(df,scoring_df,products,
   df$outs_overdue_ratio_total <- as.factor(df$outs_overdue_ratio_total_cut)
   
   df$viber_registered_cut <- ifelse(is.na(df$viber_registered), "other",
-    ifelse(df$viber_registered=="False", "False",
-    ifelse(df$viber_registered=="True", "other", "other")))
+    ifelse(df$viber_registered==0, "False",
+    ifelse(df$viber_registered==1, "other", "other")))
   df$viber_registered <- as.factor(df$viber_registered_cut)
   
   df$whatsapp_registered_cut <- ifelse(is.na(df$whatsapp_registered), "other",
-     ifelse(df$whatsapp_registered=="False", "other",
-     ifelse(df$whatsapp_registered=="True", "True", "other")))
+     ifelse(df$whatsapp_registered==0, "other",
+     ifelse(df$whatsapp_registered==1, "True", "other")))
   df$whatsapp_registered <- as.factor(df$whatsapp_registered_cut)
 
   # Apply logisic regression

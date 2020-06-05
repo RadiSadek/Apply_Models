@@ -41,13 +41,17 @@ gen_restrict_citycash_beh <- function(scoring_df,prev_amount){
 gen_restrict_credirect_app <- function(scoring_df,all_df,
                                        flag_credit_next_salary){
 
-  # Apply filter for coronavirus effect
   if(flag_credit_next_salary==1){
     scoring_df$score <- ifelse(scoring_df$score %in% 
             c("Indeterminate"), "Bad", scoring_df$score)
   } else {
     scoring_df$score <- ifelse(scoring_df$score %in% 
             c("Indeterminate"), "Bad", scoring_df$score)
+    scoring_df$score <- 
+      ifelse(scoring_df$score %in% c("Good 4") & scoring_df$amount>1000,"Bad",
+      ifelse(scoring_df$score %in% c("Good 3","Good 2","Good 1") &
+             scoring_df$amount>600,"Bad",
+             scoring_df$score))
   }
   scoring_df$color <- ifelse(scoring_df$score=="Bad", 1, scoring_df$color)
   return(scoring_df)
