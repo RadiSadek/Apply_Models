@@ -404,11 +404,11 @@ if (empty_fields>=threshold_empty){
 } else if (flag_beh==1 & flag_credirect==0){
   scoring_df <- gen_beh_citycash(df,scoring_df,products,df_Log_beh_CityCash,
                      period,all_df,prev_amount,amount_tab,
-                     t_income,disposable_income_adj,prev_installment_amount,0)
+                     t_income,disposable_income_adj,prev_installment_amount,1)
 } else if (flag_beh==1 & flag_credirect==1 & flag_new_credirect_old_city==0){
   scoring_df <- gen_beh_credirect(df,scoring_df,products,df_Log_beh_Credirect,
                     period,all_df,prev_amount,amount_tab,
-                    t_income,disposable_income_adj,0)
+                    t_income,disposable_income_adj,1)
 } else if (flag_new_credirect_old_city==1 & flag_credit_next_salary==1){
   scoring_df <- gen_app_credirect_payday(df,scoring_df,products,
                  df_Log_Credirect_App_payday,period,all_df,prev_amount,
