@@ -22,11 +22,6 @@ gen_app_credirect_installments <- function(df,scoring_df,products,
       ifelse(df$marital_status %in% c(2,3,4,5), "not_1", df$marital_status))
   df$marital_status <- as.factor(df$marital_status_cut)
   
-  df$maturity_cut <- ifelse(df$maturity<=2,"2",
-      ifelse(df$maturity<=3,"3",
-      ifelse(df$maturity<=9,"4_9","more_10")))
-  df$maturity <- as.factor(df$maturity_cut)
-  
   df$status_work_cut <- ifelse(is.na(df$status_work), "other",
       ifelse(df$status_work %in% c(4,5), "4_5","other"))
   df$status_work <- as.factor(df$status_work_cut)
@@ -61,8 +56,18 @@ gen_app_credirect_installments <- function(df,scoring_df,products,
     period_tab <- as.numeric(scoring_df$period[i])
     amount_tab <- as.numeric(scoring_df$amount[i])
     
+    # Compute correct maturity for each amount and product_id
+    current_maturity <- ifelse(period==1, period_tab*7/30, 
+                               ifelse(period==2, period_tab*14/30, period_tab))
+    df$maturity_cut <- ifelse(current_maturity<=2,"2",
+             ifelse(current_maturity<=3,"3",
+             ifelse(current_maturity<=9,"4_9","more_10")))
+    df$maturity <- as.factor(df$maturity_cut)
+    
+    
     apply_logit <- predict(df_Log_Credirect_App_installments, newdata=df, 
                            type="response")
+    
     scoring_df$score[i] <- apply_logit
     scoring_df$score[i] <- gen_group_scores(scoring_df$score[i],
           all_df$office_id,0,1,0)
