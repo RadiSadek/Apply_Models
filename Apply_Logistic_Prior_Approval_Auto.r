@@ -458,9 +458,13 @@ if(flag_beh==0 & flag_credirect==1){
   scoring_df <- gen_restrict_credirect_app(scoring_df,all_df,
     flag_credit_next_salary)
 }
-if(flag_beh==1 & flag_credirect==1){
+if(flag_beh==1 & flag_credirect==1 & flag_new_credirect_old_city==0){
   scoring_df <- gen_restrict_credirect_beh(scoring_df,all_df,
     flag_credit_next_salary,flag_new_credirect_old_city)
+}
+if(flag_beh==1 & flag_credirect==1 & flag_new_credirect_old_city==1){
+  scoring_df <- gen_restrict_credirect_app(scoring_df,all_df,
+    flag_credit_next_salary)
 }
 
 

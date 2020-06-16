@@ -36,8 +36,8 @@ main_dir <- "C:\\Projects\\Apply_Scoring\\"
 
 # Read argument of ID
 args <- commandArgs(trailingOnly = TRUE)
-application_id <- args[1]
-#application_id <- 666738
+#application_id <- args[1]
+application_id <- 669624
 product_id <- NA
 
 
@@ -317,7 +317,8 @@ flag_cession <- ifelse(flag_credirect==1 & df$amount_cession_total>0, 1, 0)
 flag_new_credirect_old_city <- ifelse(flag_credirect==1 & flag_beh==1 &
  nrow(all_credits[all_credits$company_id==2 & all_credits$id!=application_id
       & all_credits$status %in% c(4,5),])==0, 1, 0)
-    
+
+
 
 ############################################################
 ### Apply model coefficients according to type of credit ###
@@ -402,9 +403,13 @@ if(flag_beh==0 & flag_credirect==1){
   scoring_df <- gen_restrict_credirect_app(scoring_df,all_df,
     flag_credit_next_salary)
 }
-if(flag_beh==1 & flag_credirect==1){
+if(flag_beh==1 & flag_credirect==1 & flag_new_credirect_old_city==0){
   scoring_df <- gen_restrict_credirect_beh(scoring_df,all_df,
     flag_credit_next_salary,flag_new_credirect_old_city)
+}
+if(flag_beh==1 & flag_credirect==1 & flag_new_credirect_old_city==1){
+  scoring_df <- gen_restrict_credirect_app(scoring_df,all_df,
+    flag_credit_next_salary)
 }
 
 
