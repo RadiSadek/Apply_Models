@@ -235,7 +235,7 @@ flag_credirect <- ifelse(products_desc$company_id==2, 1, 0)
 
 # Compute flag if client has previous otpisan or tsediran
 flag_exclusion <- ifelse(length(which(names(
-  table(all_credits$sub_status)) %in% c(124,133)))>0, 1,
+  table(all_id$sub_status)) %in% c(124,133)))>0, 1,
   ifelse(nrow(risk)>0, 1, 0))
 
 
@@ -298,14 +298,14 @@ flag_bad_ckr_citycash <- ifelse(is.na(all_df$amount_fin),0,
 
 
 # Compute if previous is online 
-all_credits <- get_company_id_prev(db_name,all_credits)
-all_df <- gen_prev_online(db_name, all_credits,all_df,max(all_credits$id)+1)
+all_id <- get_company_id_prev(db_name,all_id)
+all_df <- gen_prev_online(db_name,all_id,all_df,max(all_id$id)+1)
                              
                               
 # Get flag if credit is behavioral but with same company
 flag_beh_company <- ifelse(
-  nrow(all_credits[all_credits$company_id==
-  all_credits$company_id[all_credits$id==application_id],])>1,1,0)
+  nrow(all_id[all_id$company_id==
+  all_id$company_id[all_id$id==application_id],])>1,1,0)
 
 
 # Compute flag if last paid credit is maybe hidden refinance
@@ -364,8 +364,8 @@ flag_cession <- ifelse(flag_credirect==1 & df$amount_cession_total>0, 1, 0)
 
 # Compute flag if new credirect but old citycash
 flag_new_credirect_old_city <- ifelse(flag_credirect==1 & flag_beh==1 &
-  nrow(all_credits[all_credits$company_id==2 & all_credits$id!=application_id
-  & all_credits$status %in% c(4,5),])==0, 1, 0)
+  nrow(all_id[all_id$company_id==2 & all_id$id!=application_id
+  & all_id$status %in% c(4,5),])==0, 1, 0)
 
 
 # Get previous installment amount
