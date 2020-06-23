@@ -12,7 +12,7 @@ cu_app_city_bad_offices <- c(0.3,0.25,0.2,0.15,0.075)
 cu_app_city_norm_offices <- c(0.35,0.3,0.225,0.15,0.075)
 
 # Application Credirect Flex
-cu_app_cred_flex <- c(0.125,0.1,0.08,0.05,0.035)
+cu_app_cred_flex <- c(0.15,0.125,0.08,0.05,0.035)
 
 # Application Credirect Potrebitelski
 cu_app_cred_user <- c(0.58,0.535,0.5,0.4,0.325)
