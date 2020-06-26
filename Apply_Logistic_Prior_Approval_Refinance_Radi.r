@@ -37,7 +37,7 @@ main_dir <- "C:\\Projects\\Apply_Scoring\\"
 # Read argument of ID
 args <- commandArgs(trailingOnly = TRUE)
 application_id <- args[1]
-#application_id <- 558349
+#application_id <- 658693
 product_id <- NA
 
 
@@ -138,7 +138,8 @@ data_ckr_financial <- gen_query_ckr(all_df,all_credits,2)
 # Read all previous active or terminated credits of client
 all_id <- subset(all_credits, all_credits$id==application_id | 
     (all_credits$status %in% c(4,5) &
-    (all_credits$sub_status!=129 | is.na(all_credits$sub_status)) & 
+    (!(all_credits$sub_status %in% c(129,122,133)) | 
+       is.na(all_credits$sub_status)) & 
      all_credits$client_id==all_df$client_id))
 
 
@@ -229,7 +230,7 @@ data_plan_main_select_def <- ifelse(exists("data_plan_main_select"),
 all_df <- suppressWarnings(
   gen_other_rep(nrow_all_id,all_id,
                 all_df,flag_credirect,
-                data_plan_main_select_def))
+                data_plan_main_select_def,application_id))
 all_df$max_delay <- ifelse(!(is.na(data_plan_main_select_def)), 
    data_plan_main_select_def[1], ifelse(flag_credirect==0, 60, 10))
 all_df$credits_cum <- nrow(all_id)
@@ -296,7 +297,7 @@ products <- subset(products, products$amount<=all_df$amount)
 
 
 # Prepare final dataframe
-scoring_df <- gen_final_df(products)
+scoring_df <- gen_final_df(products,application_id)
 
 
 # Make back-up dataframe

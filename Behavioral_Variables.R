@@ -24,7 +24,8 @@ gen_prev_online <- function(db_name,all_credits,all_df,app_id){
 }
                             
 # Function to get if last credit is eventually a hidden refinance
-gen_ratio_last_amount_paid <- function(db_name,all_credits,all_df){
+gen_ratio_last_amount_paid <- function(db_name,all_credits,all_df,
+     application_id,products_desc,nrow_all_id,cash_flow,total_amount){
 
   all_credits <- all_credits[rev(order(all_credits$date)),]
   all_credits_actives <- subset(all_credits, all_credits$status==4 & 
@@ -96,7 +97,7 @@ gen_ratio_last_amount_paid <- function(db_name,all_credits,all_df){
 
 # Function to compute variables for repeat customers
 gen_other_rep <- function(nrow_all_id,all_id,all_df,flag_credirect,
-                          data_plan_main_select_def){
+                          data_plan_main_select_def,application_id){
   
   if (nrow_all_id>1){
     all_id <- all_id[order(all_id$date),]

@@ -53,6 +53,10 @@ gen_restrict_credirect_app <- function(scoring_df,all_df,
              scoring_df$amount>600,"Bad",
              scoring_df$score))
   }
+  if(all_df$age<21){
+    scoring_df$score <- ifelse(scoring_df$amount>300,"Bad",scoring_df$score)
+  }
+  
   scoring_df$color <- ifelse(scoring_df$score=="Bad", 1, scoring_df$color)
   return(scoring_df)
 }

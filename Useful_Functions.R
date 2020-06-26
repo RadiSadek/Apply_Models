@@ -43,7 +43,7 @@ gen_aggregate_income_exp <- function(input){
 }
 
 # Define function to prepare final data frame to aggregate scoring
-gen_final_df <- function(products){
+gen_final_df <- function(products,application_id){
   
   suppressMessages(suppressWarnings(require("reshape")))
   # Read table with number of payments/number of for city cash
@@ -104,6 +104,29 @@ flag_bad_office <- function(var_off){
 # Define cutoffs application for credirect fraud
 gen_group_scores_fraud <- function(var){
   results <- ifelse(var>cu_app_cred_frauds,1,0)
+}
+
+# Define sql string query for writing in DB for PO terminated
+gen_sql_string_po_terminated <- function(inc){
+  return(paste("(",offers$id[inc],",",
+    offers$office_id[inc],",",offers$client_id[inc],",",
+    offers$group[inc],",",offers$product_id[inc],",",
+    offers$application_id[inc],",",offers$credit_amount[inc],",",
+    offers$installment_amount[inc],",",offers$hide_until_date[inc],",'",
+    offers$created_at[inc],"',",offers$updated_at[inc],",",
+    offers$deleted_at[inc],")",
+    sep=""))
+}
+
+# Define sql string query for writing in DB for PO refinanced
+gen_sql_string_po_refinance <- function(inc){
+  return(paste("(",offers$application_id[inc],",",
+    offers$product_id[inc],",",offers$min_amount[inc],",",
+    offers$max_amount[inc],",",offers$ref_application_id[inc],",",
+    offers$status[inc],",",offers$processed_by[inc],",'",
+    offers$created_at[inc],"',",offers$updated_at[inc],",",
+    offers$deleted_at[inc],")",
+    sep=""))
 }
 
 

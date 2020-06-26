@@ -36,8 +36,8 @@ main_dir <- "C:\\Projects\\Apply_Scoring\\"
 
 # Read argument of ID
 args <- commandArgs(trailingOnly = TRUE)
-#application_id <- args[1]
-application_id <- 681992
+application_id <- args[1]
+#application_id <- 423406
 product_id <- NA
 
 
@@ -125,7 +125,8 @@ data_ckr_financial <- gen_query_ckr(all_df,all_credits,2)
 # Read all previous active or terminated credits of client
 all_id <- subset(all_credits, all_credits$id==application_id | 
     (all_credits$status %in% c(4,5) &
-    (all_credits$sub_status!=129 | is.na(all_credits$sub_status)) & 
+    (!(all_credits$sub_status %in% c(129,122,133)) | 
+       is.na(all_credits$sub_status)) & 
      all_credits$client_id==all_df$client_id))
 all_id <- subset(all_id, all_id$date<=all_id$date[all_id$id==application_id])
 
@@ -219,7 +220,7 @@ all_df <- gen_norm_var(period,all_df,products,1)
 data_plan_main_select_def <- ifelse(exists("data_plan_main_select"),
           data_plan_main_select,NA)
 all_df <- gen_other_rep(nrow_all_id,all_id,all_df,flag_credirect,
-                        data_plan_main_select_def)
+                        data_plan_main_select_def,application_id)
 
 
 # Get flag if credit is behavioral or not
@@ -261,7 +262,8 @@ flag_beh_company <- ifelse(
 
 
 # Compute flag if last paid credit is maybe hidden refinance
-all_df <- gen_ratio_last_amount_paid(db_name,all_id,all_df)
+all_df <- gen_ratio_last_amount_paid(db_name,all_id,all_df,application_id,
+  products_desc,nrow_all_id,cash_flow,total_amount)
 
 
 # Compute amount differential 
@@ -281,7 +283,7 @@ products <- subset(products, products$amount<=all_df$amount)
 
 
 # Prepare final dataframe
-scoring_df <- gen_final_df(products)
+scoring_df <- gen_final_df(products,application_id)
 
 
 # Make back-up dataframe
