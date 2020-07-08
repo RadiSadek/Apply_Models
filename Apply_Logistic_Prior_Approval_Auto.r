@@ -1,9 +1,9 @@
 
 
 ################################################################################
-#            Joint script for Application to TERMINATED CREDITS                #
+#         Script for generating  daily offers for terminated credits           #
 #      Apply Logistic Regression on all products (CityCash and Credirect)      #
-#                          Version 6.0 (2020/01/15)                            #
+#                          Version 1.0 (2020/06/23)                            #
 ################################################################################
 
 
@@ -24,21 +24,16 @@ load_dot_env(file = here('.env'))
 
 
 
-#########################
-### Command arguments ###
-#########################
-
-args <- commandArgs(trailingOnly = TRUE)
-approval_id <- args[1]
-product_id <- args[2]
-
-
 #######################
-### Manual settings ###a
+### Manual settings ###
 #######################
 
 # Defines the directory where the RScript is located
 base_dir <- here('app/Factories/Scoring')
+
+
+# Define product id
+product_id <- NA
 
 
 
@@ -74,453 +69,252 @@ suppressWarnings(fetch(dbSendQuery(con, sqlMode),
 #################################
 
 # Load other r files
-source(file.path(base_dir,"Additional_Restrictions.r"))
-source(file.path(base_dir,"Logistic_App_CityCash.r"))
-source(file.path(base_dir,"Logistic_App_Credirect_installments.r"))
-source(file.path(base_dir,"Logistic_App_Credirect_payday.r"))
-source(file.path(base_dir,"Logistic_Beh_CityCash.r"))
-source(file.path(base_dir,"Logistic_Beh_Credirect.r"))
 source(file.path(base_dir,"Useful_Functions.r"))
-source(file.path(base_dir,"Empty_Fields.r"))
-source(file.path(base_dir,"Cutoffs.r"))
 source(file.path(base_dir,"SQL_queries.r"))
-source(file.path(base_dir,"Disposable_Income.r"))
-source(file.path(base_dir,"Behavioral_Variables.r"))
-source(file.path(base_dir,"Normal_Variables.r"))
-source(file.path(base_dir,"CKR_variables.r"))
+source(file.path(base_dir,"Terminated.r"))
 
 
 
-########################
-####### Settings #######
-########################
+###################################################
+### Generate data of potential credits to offer ###
+###################################################
 
-# Load predefined libraries
-rdata <- file.path(base_dir, "rdata", 
-                   "citycash_repeat.rdata")
-load(rdata)
-rdata4 <- file.path(base_dir, "rdata", 
-                    "credirect_repeat.rdata")
-load(rdata4)
+# Read credit applications 
+get_actives_sql <- suppressWarnings(dbSendQuery(con, paste("
+SELECT id, status, date, signed_at, product_id, client_id, 
+deactivated_at, sub_status, office_id
+FROM ",db_name,".credits_applications 
+WHERE status IN (4,5)",sep="")))
+all_credits <- fetch(get_actives_sql,n=-1)
 
 
-####################################
-### Read database and build data ###
-####################################
+# Get company ID
+company_id <- suppressWarnings(fetch(dbSendQuery(con, 
+    gen_get_company_id_query(db_name)), n=-1))
+all_credits <- merge(all_credits,company_id,by.x = "product_id",
+    by.y = "id",all.x = TRUE)
 
-# Read credits to score from prior approval - terminated
-po_sql_query <- paste("SELECT * FROM ",db_name,
-".clients_prior_approval_applications WHERE id=",approval_id)
+
+# Subset terminated credits
+all_credits_raw <- all_credits
+all_credits <- subset(all_credits,all_credits$status %in% c(5))
+all_credits <- subset(all_credits, is.na(all_credits$sub_status) | 
+  all_credits$sub_status %in% c(123,128))
+
+
+# Subset based on time difference since deactivation
+all_credits <- subset(all_credits,substring(all_credits$deactivated_at,1,10)==
+  (as.Date(Sys.time())-3))
+
+
+# Get last credit amount
+credit_amount_sql <- suppressWarnings(dbSendQuery(con, paste("
+SELECT application_id , amount as credit_amount
+FROM ",db_name,".credits_plan_contract", sep ="")))
+credit_amount <- fetch(credit_amount_sql,n=-1)
+all_credits <- merge(all_credits,credit_amount,by.x = "id",
+                     by.y = "application_id",all.x = TRUE)
+all_credits <- all_credits[rev(order(all_credits$date)),]
+all_credits <- all_credits[order(all_credits$client_id), ]
+all_credits <- all_credits[!duplicated(all_credits$client_id),]
+
+
+
+#####################################################
+### Apply selection criteria for credits to offer ###
+#####################################################
+
+# Remove credits with more than 1 "varnat"
+all_credits_varnat <- subset(all_credits_raw,all_credits_raw$sub_status==122)
+all_credits_varnat$count <- 1
+count_varnat <- as.data.frame(aggregate(all_credits_varnat$count,
+    by=list(all_credits_varnat$client_id),FUN=sum))
+names(count_varnat) <- c("client_id","tot_varnat")
+all_credits <- merge(all_credits,count_varnat,by.x = "client_id",
+                     by.y = "client_id",all.x = TRUE)
+select_credits  <- subset(all_credits,is.na(all_credits$tot_varnat) | 
+                          all_credits$tot_varnat<2)
+
+
+# Remove credits with already an offer of corresponding company
+po_sql_query <- paste(
+  "SELECT id, client_id, product_id, application_id, created_at, credit_amount,
+  installment_amount,deleted_at FROM ",db_name,
+  ".clients_prior_approval_applications",sep="")
 po <- suppressWarnings(fetch(dbSendQuery(con, po_sql_query), n=-1))
-
-
-# Get last application_id of terminated or active credit
-last_id_query <- paste("SELECT id FROM ",db_name,
-".credits_applications WHERE client_id=",po$client_id," AND status IN (4,5)
-ORDER BY id DESC LIMIT 1", sep="")
-last_id <- suppressWarnings(fetch(dbSendQuery(con, last_id_query), n=-1))
-application_id <- last_id$id
-
-
-# Read credits applications
-all_df <- suppressWarnings(fetch(dbSendQuery(con, 
-              gen_big_sql_query(db_name,application_id)), n=-1))
-all_df$date <- ifelse(all_df$status %in% c(4,5), all_df$signed_at, 
-                      all_df$created_at)
-
-
-# Apply some checks to main credit dataframe
-if(!is.na(product_id)){
-  all_df$product_id <- product_id
-}
-if(nrow(all_df)>1){
-  all_df <- all_df[!duplicated(all_df$application_id),]
-}
-
-
-# Recorrect amount to get highest possible amount
-all_df$amount <- po$credit_amount
-all_df$product_id <- po$product_id
-
-
-# Read product's periods and amounts
-products  <- suppressWarnings(fetch(dbSendQuery(con, 
-   gen_products_query(db_name,all_df)), n=-1))
-products_desc <- suppressWarnings(fetch(dbSendQuery(con, 
-   gen_products_query_desc(db_name,all_df)), n=-1))
-
-
-# Read all previous credits or applications of client
-all_credits <- suppressWarnings(fetch(dbSendQuery(con, 
-      gen_all_credits_query(db_name,all_df)), n=-1))
-all_credits$date <- ifelse(all_credits$status %in% c(4,5), 
-      all_credits$signed_at, all_credits$created_at)
-# all_credits <- rbind(all_credits, 
-#       all_credits[all_credits$id==application_id,])
-# application_id <- application_id + 1 
-# all_credits[nrow(all_credits),]$id <- application_id 
-
-
-# Check if client has a risk profile
-risk <- suppressWarnings(fetch(dbSendQuery(con, 
-    gen_risky_query(db_name,all_df)), n=-1))
-
-
-# Read total amount of current credit
-total_amount_curr <- suppressWarnings(fetch(dbSendQuery(con, 
-    gen_total_amount_curr_query(db_name,application_id)), n=-1))
-
-
-# Read CKR 
-data_ckr_bank <- gen_query_ckr(all_df,all_credits,1)
-data_ckr_financial <- gen_query_ckr(all_df,all_credits,2)
-
-
-# Read all previous active or terminated credits of client
-all_id <- subset(all_credits, all_credits$id==application_id | 
-    (all_credits$status %in% c(4,5) &
-    (!(all_credits$sub_status %in% c(129,122,133)) | 
-        is.na(all_credits$sub_status)) & 
-     all_credits$client_id==all_df$client_id))
-
-
-# Select for max delay if past AND active: must have at least 30 days of passed
-all_id_max_delay <- all_id
-all_actives_past <- subset(all_id, all_id$status==4)
-if(nrow(all_actives_past)>0){
-  all_id_max_delay <- gen_select_relevant_ids_max_delay(db_name,
-      all_actives_past,all_id_max_delay)
-}
-
-
-# Generate sum paid and amounts of previous credit 
-nrow_all_id <- nrow(all_id)
-if (nrow_all_id>=1){
-  cash_flow <- gen_last_paid(rbind(all_id,all_id[all_id$id==max(all_id$id),]))
-  total_amount <- gen_last_total_amount(
-    rbind(all_id,all_id[all_id$id==max(all_id$id),]))
-  prev_amount <- gen_last_prev_amount(
-    rbind(all_id,all_id[all_id$id==max(all_id$id),]))
-  prev_paid_days <- gen_prev_paid_days(rbind(all_id[all_id$id==max(all_id$id),],
-    all_id[all_id$id==max(all_id$id),]))
-}
-
-
-# Get correct max days of delay (of relevant previous credits)
-all_id_max_delay <- all_id_max_delay[!duplicated(all_id_max_delay$id),]
-nrow_all_id_max_delay <- nrow(all_id_max_delay)
-if (nrow_all_id_max_delay>=1){
-  list_ids_max_delay <- gen_select_relevant_ids(all_id_max_delay,
-     nrow_all_id_max_delay)
-  data_plan_main_select <- suppressWarnings(fetch(dbSendQuery(con, 
-     gen_plan_main_select_query(db_name,list_ids_max_delay)), n=-1))
-} 
-
-
-# Get average expenses according to client's address 
-addresses <- suppressWarnings(fetch(dbSendQuery(con, 
-  gen_address_query(all_df$client_id,"App\\\\Models\\\\Clients\\\\Client")), 
-  n=-1))
-if(nrow(addresses)==0){
-  addresses <- suppressWarnings(fetch(dbSendQuery(con, 
-  gen_address_query(all_df$client_id,
-  "App\\\\Models\\\\Credits\\\\Applications\\\\Application")), n=-1))
-}
-
-
-############################################
-### Compute and rework additional fields ###
-############################################
-
-# Compute flag if credit is up to next salary
-flag_credit_next_salary <- ifelse(all_df$product_id %in% 
-      c(25:28,36,37,41:44,49,50,55:58), 1, 0)
-
-
-# Compute flag if product is credirect
-flag_credirect <- ifelse(products_desc$company_id==2, 1, 0)
-
-
-# Compute flag if client has previous otpisan or tsediran
-flag_exclusion <- ifelse(length(which(names(
-  table(all_id$sub_status)) %in% c(124,133)))>0, 1,
-  ifelse(nrow(risk)>0, 1, 0))
-
-
-all_df <- cbind(all_df, data_ckr_financial)	
-names(all_df)[(ncol(all_df)-8):ncol(all_df)] <- c("ckr_cur_fin","ckr_act_fin",	
-  "ckr_fin_fin",	"src_ent_fin","amount_fin","cred_count_fin",	
-  "outs_principal_fin","outs_overdue_fin","cession_fin")	
-all_df <- cbind(all_df, data_ckr_bank)		
-names(all_df)[(ncol(all_df)-8):ncol(all_df)] <- c("ckr_cur_bank",	
-  "ckr_act_bank","ckr_fin_bank","src_ent_bank","amount_bank","cred_count_bank",	
-  "outs_principal_bank","outs_overdue_bank","cession_bank")
-
-
-# Set period variable (monthly, twice weekly, weekly)
-period <- products_desc$period
-
-
-# Compute and generate general variables
-all_df <- gen_norm_var(period,all_df,products,2)
-
-
-# Compute and generate variables specific for behavioral model
-data_plan_main_select_def <- ifelse(exists("data_plan_main_select"),
-          data_plan_main_select,NA)
-all_df <- suppressWarnings(
-  gen_other_rep(nrow_all_id,all_id,
-                all_df,flag_credirect,
-                data_plan_main_select_def,application_id))
-all_df$max_delay <- ifelse(!(is.na(data_plan_main_select_def)), 
-   data_plan_main_select_def[1], ifelse(flag_credirect==0, 60, 10))
-all_df$credits_cum <- nrow(all_id)
-all_df$days_diff_last_credit <- NA
-
-
-# Get flag if credit is behavioral or not
-flag_beh <- ifelse(all_df$credits_cum==0, 0, 1)
-all_df$ratio_nb_payments_prev <- ifelse(flag_beh==1,prev_paid_days/
-   total_amount$installments,NA)
-
-
-#  Get SEON variables 
-all_df$viber_registered <- ifelse(nrow(gen_seon_phones(
-  db_name,7,application_id))>=1,gen_seon_phones(db_name,7,application_id),NA)
-all_df$whatsapp_registered <- ifelse(nrow(gen_seon_phones(
-  db_name,8,application_id))>=1,gen_seon_phones(db_name,8,application_id),NA)
-
-
-# Compute and rework CKR variables, suitable for model application
-all_df <- gen_ckr_variables(all_df,flag_beh,flag_credirect)
-
-
-# Compute flag of bad CKR for city cash
-flag_bad_ckr_citycash <- ifelse(is.na(all_df$amount_fin),0,
-      ifelse(all_df$amount_fin==0, 0,
-      ifelse(all_df$outs_overdue_fin/all_df$amount_fin>=0.1 & 
-             all_df$status_active_total %in% c(74,75), 1, 0)))
-
-
-# Compute if previous is online 
-all_id <- get_company_id_prev(db_name,all_id)
-all_df <- gen_prev_online(db_name,all_id,all_df,max(all_id$id)+1)
-                             
-                              
-# Get flag if credit is behavioral but with same company
-flag_beh_company <- ifelse(
-  nrow(all_id[all_id$company_id==
-  all_id$company_id[all_id$id==application_id],])>1,1,0)
-
-
-# Compute flag if last paid credit is maybe hidden refinance
-all_df$flag_high_last_paid <- ifelse(
- gen_total_last_paid(max(all_id$id),db_name)/total_amount$final_credit_amount>0.5,
-  0,1)
-                                
-# Compute amount differential 
-all_df$amount_diff <- ifelse(nrow_all_id<=1, NA, all_df$amount - 
-        prev_amount$amount)
-
-
-# Compute income variables
-t_income <- gen_t_income(db_name,application_id,period)
-disposable_income_adj <- gen_disposable_income_adj(db_name,application_id,
-        all_df,addresses,period)
-all_df$total_income <- gen_income(db_name,application_id)
-
-
-# Read relevant product amounts (not superior to amount of application)
-products <- subset(products, products$amount<=all_df$amount)
-
-
-# Prepare final dataframe
-scoring_df <- gen_final_df(products,application_id)
-
-
-# Make back-up dataframe
-df <- all_df
-
-
-# Correct empty and missing value fields (to standard format)
-df <- gen_null_to_na(df)
-
-
-# Get if empty field threshold is passed
-empty_fields <- gen_empty_fields(flag_beh,flag_credirect,df)
-threshold_empty <- ifelse(flag_credirect==0 & flag_beh==0, 7,
-   ifelse(flag_credirect==1 & flag_beh==0, 4,
-   ifelse(flag_credirect==0 & flag_beh==1, 8, 5)))
-
-
-# Adjust count of empty fields accordingly
-empty_fields <- ifelse(flag_credirect==1, empty_fields, 
-   ifelse(is.na(df$total_income) | df$total_income==0, 
-   threshold_empty, empty_fields))
-
-
-# Readjust fields
-df <- gen_norm_var2(df)
-
-
-# Compute flag exclusion for cession in CKR
-flag_cession <- ifelse(flag_credirect==1 & df$amount_cession_total>0, 1, 0)
-
-
-# Compute flag if new credirect but old citycash
-flag_new_credirect_old_city <- ifelse(flag_credirect==1 & flag_beh==1 &
-  nrow(all_id[all_id$company_id==2 & all_id$id!=application_id
-  & all_id$status %in% c(4,5),])==0, 1, 0)
-
-
-# Get previous installment amount
-closest_period <- products$period[which.min(
-  abs(total_amount$installments - products$period))]
-closest_amount <- products$amount[which.min(abs(
-  prev_amount$amount - products$amount))]
-prev_installment_amount <- products$installment_amount[
-  products$period==closest_period & products$amount==closest_amount]
-
-
-############################################################
-### Apply model coefficients according to type of credit ###
-############################################################
-
-if (empty_fields>=threshold_empty){
-  
-  scoring_df$score <- "NULL"
-  scoring_df$color <- 2
-  
-} else if (flag_exclusion==1){
-  
-  scoring_df$score <- "Bad"
-  scoring_df$color <- 1
-  
-} else if (flag_credirect==1 & flag_beh==1 &
-     !is.na(all_df$max_delay) & all_df$max_delay>=180){
-  
-  scoring_df$score <- "Bad"
-  scoring_df$color <- 1
-  
-} else if (flag_beh==1 & flag_credirect==0){
-  scoring_df <- gen_beh_citycash(df,scoring_df,products,df_Log_beh_CityCash,
-                     period,all_df,prev_amount,amount_tab,
-                     t_income,disposable_income_adj,prev_installment_amount,1)
-} else if (flag_beh==1 & flag_credirect==1 & flag_new_credirect_old_city==0){
-  scoring_df <- gen_beh_credirect(df,scoring_df,products,df_Log_beh_Credirect,
-                    period,all_df,prev_amount,amount_tab,
-                    t_income,disposable_income_adj,1)
-} else if (flag_new_credirect_old_city==1 & flag_credit_next_salary==1){
-  scoring_df <- gen_app_credirect_payday(df,scoring_df,products,
-                 df_Log_Credirect_App_payday,period,all_df,prev_amount,
-                 amount_tab,t_income,disposable_income_adj,
-                 flag_credit_next_salary)
-} else if (flag_new_credirect_old_city==1 & flag_credit_next_salary==0){
-  scoring_df <- gen_app_credirect_installments(df,scoring_df,products,
-                 df_Log_Credirect_App_installments,period,all_df,
-                 prev_amount,amount_tab,t_income,disposable_income_adj,
-                 flag_credit_next_salary)
-} else if (flag_beh==0 & flag_credirect==0){
-  scoring_df <- gen_app_citycash(df,scoring_df,products,df_Log_CityCash_App,
-                     period,all_df,prev_amount,amount_tab,
-                     t_income,disposable_income_adj)
-} else if (flag_beh==0 & flag_credirect==1 & flag_credit_next_salary==1){
-  scoring_df <- gen_app_credirect_payday(df,scoring_df,products,
-                      df_Log_Credirect_App_payday,period,all_df,prev_amount,
-                      amount_tab,t_income,disposable_income_adj,
-                      flag_credit_next_salary)
-} else {
-  scoring_df <- gen_app_credirect_installments(df,scoring_df,products,
-                      df_Log_Credirect_App_installments,period,all_df,
-                      prev_amount,amount_tab,t_income,disposable_income_adj,
-                      flag_credit_next_salary)
-}
-
-
-######################################
-### Generate final output settings ###
-######################################
-
-
-# Readjust score when applicable
-if(flag_cession==1 & flag_credirect==1){
-  scoring_df <- gen_adjust_score(scoring_df, c("Bad","Indeterminate","Good 1"))
-}
-if(flag_bad_ckr_citycash==1 & flag_credirect==0){
-  scoring_df <- gen_adjust_score(scoring_df, c("Bad","Indeterminate"))
-}
-if(flag_beh==0 & flag_credirect==0){
-  scoring_df <- gen_restrict_citycash_app(scoring_df)
-}
-if(flag_beh==1 & flag_credirect==0){
-  scoring_df <- gen_restrict_citycash_beh(scoring_df,prev_amount)
-}
-if(flag_beh==0 & flag_credirect==1){
-  scoring_df <- gen_restrict_credirect_app(scoring_df,all_df,
-    flag_credit_next_salary)
-}
-if(flag_beh==1 & flag_credirect==1 & flag_new_credirect_old_city==0){
-  scoring_df <- gen_restrict_credirect_beh(scoring_df,all_df,
-    flag_credit_next_salary,flag_new_credirect_old_city)
-}
-if(flag_beh==1 & flag_credirect==1 & flag_new_credirect_old_city==1){
-  scoring_df <- gen_restrict_credirect_app(scoring_df,all_df,
-    flag_credit_next_salary)
-}
-
-
-# Compute previous installment amount and if acceptable differential
-for(i in 1:nrow(scoring_df)){
-  period_tab <- as.numeric(scoring_df$period[i])
-  amount_tab <- as.numeric(scoring_df$amount[i])
-  product_tab <- subset(products, products$product_id==all_df$product_id & 
-     products$period==as.numeric(period_tab) &
-     products$amount==as.numeric(amount_tab))
-  installment_amount <- products$installment_amount[
-    products$period==period_tab & products$amount==amount_tab]
-  scoring_df$installment_amount_diff[i] <- ifelse(
-    installment_amount>(1.3*prev_installment_amount), 0, 1)
-}
-
-
-# Generate final correction
-get_max_amount <- suppressWarnings(max(scoring_df$amount[scoring_df$score %in%
-          c("Good 1","Good 2","Good 3","Good 4") &
-          scoring_df$installment_amount_diff==1]))
-if(is.infinite(get_max_amount)){
-  get_max_installment <- -999
-} else {
-  get_max_installment <- max(scoring_df$installment_amount[
-    scoring_df$installment_amount_diff==1 & scoring_df$amount==get_max_amount])
-}
-final_amount <- ifelse(is.infinite(get_max_amount), -999, get_max_amount)
-final_installment <- get_max_installment
-
-
-# Update clients_prior_approval table
-update_prior_ok_query <- paste("UPDATE ",db_name,
-".clients_prior_approval_applications
-SET credit_amount = ",final_amount,", installment_amount = ",
-final_installment,",updated_at = '",substring(Sys.time(),1,19),
-"' WHERE id=",approval_id, sep="")
-update_prior_not_ok_query <- paste("UPDATE ",db_name,
-".clients_prior_approval_applications
-SET updated_at = '",substring(Sys.time(),1,19),"', deleted_at = '",
-substring(Sys.time(),1,19),"'
-WHERE id=",approval_id, sep="")
-
-if(final_amount==-999){
-  suppressMessages(suppressWarnings(dbSendQuery(con, 
-                                                update_prior_not_ok_query)))
-} else {
-  suppressMessages(suppressWarnings(dbSendQuery(con, 
-                                                update_prior_ok_query)))
+po <- merge(po,company_id,by.x = "product_id",by.y = "id",all.x = TRUE)
+po_raw <- po
+po_select_citycash <- po[is.na(po$deleted_at) & po$company_id==1,]
+po_select_credirect <- po[is.na(po$deleted_at) & po$company_id==2,]
+select_credits_citycash <- select_credits[!(select_credits$client_id %in% 
+    po_select_citycash$client_id) & select_credits$company_id==1,]
+select_credits_credirect <- select_credits[!(select_credits$client_id %in% 
+    po_select_credirect$client_id) & select_credits$company_id==2,]
+select_credits <- rbind(select_credits_citycash,select_credits_credirect)
+
+
+# Remove those who have active credit of corresponding company
+actives_cur_citycash <- subset(all_credits_raw,all_credits_raw$status %in% c(4)
+   & all_credits_raw$company_id==1)
+actives_cur_credirect <- subset(all_credits_raw,all_credits_raw$status %in% c(4)
+   & all_credits_raw$company_id==2)
+select_credits_citycash <- subset(select_credits,
+   !(select_credits$client_id %in% actives_cur_citycash$client_id) & 
+     select_credits$company_id==1)
+select_credits_credirect <- subset(select_credits,
+   !(select_credits$client_id %in% actives_cur_credirect$client_id) & 
+     select_credits$company_id==2)
+select_credits <- rbind(select_credits_citycash,select_credits_credirect)
+
+
+
+#####################
+### Compute score ###
+#####################
+
+# Compute and append score
+select_credits <- select_credits[!duplicated(select_credits$client_id),]
+select_credits$max_amount <- NA
+select_credits$max_installment_amount <- NA
+select_credits$score_max_amount <- NA
+select_credits$max_delay <- NA
+for(i in 1:nrow(select_credits)){
+  client_id <- select_credits$client_id[i]
+  last_id <- select_credits$id[i]
+  calc <- gen_terminated_fct(con,client_id,product_id,last_id)
+  select_credits$max_amount[i] <- calc[[1]]
+  select_credits$max_installment_amount[i] <- calc[[2]]
+  select_credits$score_max_amount[i] <- calc[[3]]
+  select_credits$max_delay[i] <- as.numeric(calc[[4]])
 }
 
 
 
+##################################
+### Reapply selection criteria ###
+##################################
 
-#######
-# END #
-#######
+# Select only City Cash criteria
+select_credits <- subset(select_credits,select_credits$company_id==1)
+
+# Select based on score and DPD
+select_credits <- subset(select_credits,select_credits$max_amount>-Inf & 
+                           select_credits$max_amount<Inf)
+select_credits <- subset(select_credits,select_credits$max_delay<=200)
+
+
+
+#############################################
+### Work on final dataset and write in DB ###
+#############################################
+
+# Read current database
+id_max <- max(po$id)+1
+
+
+# Create final dataframe for writing in DB
+offers <- select_credits
+offers$id <- seq(id_max,id_max+nrow(offers)-1,1)
+offers$application_id <- NA
+offers$group <- NA
+offers$hide_until_date <- NA
+offers$created_at <- Sys.time()
+offers$updated_at <- NA
+offers$deleted_at <- NA
+offers <- offers[,c("id","office_id","client_id","group","product_id",
+    "application_id","max_amount","max_installment_amount","hide_until_date",
+    "created_at","updated_at","deleted_at")]
+names(offers)[names(offers)=="max_amount"] <- "credit_amount"
+names(offers)[names(offers)=="max_installment_amount"] <- "installment_amount"
+offers[is.na(offers)] <- "NULL"
+
+
+# Make result ready for SQL query
+string_sql <- gen_sql_string_po_terminated(offers,1)
+for(i in 2:nrow(offers)){
+  string_sql <- paste(string_sql,gen_sql_string_po_terminated(offers,i),sep=",")
+}
+
+
+# Output real offers
+update_prior_query <- paste("INSERT INTO ",db_name,
+".clients_prior_approval_applications VALUES ",
+string_sql,";", sep="")
+
+
+# Write in database
+if(nrow(offers)>0){
+  suppressMessages(suppressWarnings(dbSendQuery(con,update_prior_query)))
+}
+
+###################################
+### Updating certain old offers ###
+###################################
+
+# Choose credits for updating
+po_old <- po_raw
+po_old$time_past <- as.numeric(
+  round(difftime(as.Date(substring(Sys.time(),1,10)),
+  as.Date(substring(po_old$created_at,1,10)),units=c("days")),2))
+po_old <- subset(po_old,po_old$time_past>0 & po_old$time_past<=360 & 
+  po_old$time_past%%30==0 & is.na(po_old$deleted_at))
+
+# See if any new credit created after offer
+po_old <- merge(po_old,gen_if_credit_after_po_terminated(
+  all_credits_raw,po_old,"last_appl_id_citycash",1),by.x = "client_id",
+  by.y = "client_id",all.x = TRUE) 
+po_old <- merge(po_old,gen_if_credit_after_po_terminated(
+  all_credits_raw,po_old,"last_appl_id_credirect",2),by.x = "client_id",
+  by.y = "client_id",all.x = TRUE) 
+po_old$last_id <- ifelse(po_old$company_id==1,po_old$last_appl_id_citycash,
+    po_old$last_appl_id_credirect)
+po_old <- po_old[,-which(names(po_old) %in% c("last_appl_id_credirect",
+                "last_appl_id_citycash"))]
+po_old$criteria <- ifelse(po_old$company_id==1,
+                   ifelse(po_old$signed_at.x>=po_old$created_at,0,1),
+                   ifelse(po_old$signed_at.y>=po_old$created_at,0,1))
+po_old <- subset(po_old,po_old$criteria==1)
+
+
+# Update scoring to selected credits
+for(i in 1:nrow(po_old)){
+  client_id <- po_old$client_id[i]
+  last_id <- po_old$last_id[i]
+  calc <- gen_terminated_fct(con,client_id,product_id,last_id)
+  po_old$credit_amount[i] <- calc[[1]]
+  po_old$installment_amount[i] <- calc[[2]]
+  po_old$max_delay[i] <- as.numeric(calc[[4]])
+}
+
+
+# Change database
+po_not_ok <- subset(po_old,is.infinite(po_old$credit_amount))
+po_ok <- subset(po_old,!(is.infinite(po_old$credit_amount)))
+po_ok <- subset(po_ok,po_ok$max_delay<=200)
+if(nrow(po_not_ok)>0){
+  po_not_ok_query <- paste("UPDATE ",db_name,
+       ".clients_prior_approval_applications SET updated_at = '",
+       substring(Sys.time(),1,19),"', deleted_at = '",
+       substring(Sys.time(),1,19),"'
+       WHERE id IN",gen_string_po_terminated(po_not_ok), sep="")
+  suppressMessages(suppressWarnings(dbSendQuery(con,po_not_ok_query)))
+}
+if(nrow(po_ok)>0){
+  po_ok_query <- paste("UPDATE ",db_name,
+       ".clients_prior_approval_applications SET updated_at = '",
+       substring(Sys.time(),1,19),"' WHERE id IN",
+       gen_string_po_terminated(po_ok), sep="")
+  suppressMessages(suppressWarnings(dbSendQuery(con,po_ok_query)))
+  suppressMessages(suppressWarnings(dbSendQuery(con,
+    gen_string_delete_po_terminated(po_ok,po_ok$credit_amount,
+    "credit_amount",db_name))))
+  suppressMessages(suppressWarnings(dbSendQuery(con,
+    gen_string_delete_po_terminated(po_ok,po_ok$installment_amount,
+    "installment_amount",db_name))))
+}
+
+
+###########
+### End ###
+###########
 

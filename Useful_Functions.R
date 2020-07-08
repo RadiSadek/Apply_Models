@@ -107,26 +107,86 @@ gen_group_scores_fraud <- function(var){
 }
 
 # Define sql string query for writing in DB for PO terminated
-gen_sql_string_po_terminated <- function(inc){
-  return(paste("(",offers$id[inc],",",
-    offers$office_id[inc],",",offers$client_id[inc],",",
-    offers$group[inc],",",offers$product_id[inc],",",
-    offers$application_id[inc],",",offers$credit_amount[inc],",",
-    offers$installment_amount[inc],",",offers$hide_until_date[inc],",'",
-    offers$created_at[inc],"',",offers$updated_at[inc],",",
-    offers$deleted_at[inc],")",
+gen_sql_string_po_terminated <- function(input,inc){
+  return(paste("(",input$id[inc],",",
+    input$office_id[inc],",",input$client_id[inc],",",
+    input$group[inc],",",input$product_id[inc],",",
+    input$application_id[inc],",",input$credit_amount[inc],",",
+    input$installment_amount[inc],",",input$hide_until_date[inc],",'",
+    input$created_at[inc],"',",input$updated_at[inc],",",
+    input$deleted_at[inc],")",
     sep=""))
 }
 
 # Define sql string query for writing in DB for PO refinanced
-gen_sql_string_po_refinance <- function(inc){
-  return(paste("(",offers$application_id[inc],",",
-    offers$product_id[inc],",",offers$min_amount[inc],",",
-    offers$max_amount[inc],",",offers$ref_application_id[inc],",",
-    offers$status[inc],",",offers$processed_by[inc],",'",
-    offers$created_at[inc],"',",offers$updated_at[inc],",",
-    offers$deleted_at[inc],")",
-    sep=""))
+gen_sql_string_po_refinance <- function(input,inc){
+   return(paste("(",input$application_id[inc],",",
+     input$product_id[inc],",",input$min_amount[inc],",",
+     input$max_amount[inc],",",input$ref_application_id[inc],",",
+     input$status[inc],",",input$processed_by[inc],",'",
+     input$created_at[inc],"',",input$updated_at[inc],",",
+     input$deleted_at[inc],")",
+     sep=""))
+}
+
+# Correct maximum installment amount of PO 
+gen_correct_max_installment_po <- function(period_po,period,installment_amount){
+  if(period_po==3 & period==1){
+    result <- installment_amount*7/30
+  } else if (period_po==3 & period==2){
+    result <- installment_amount*14/30
+  } else if (period_po==2 & period==3){
+    result <- installment_amount*30/14
+  } else if (period_po==2 & period==1){
+    result <- installment_amount*7/14
+  } else if (period_po==1 & period==3){
+    result <- installment_amount*30/7
+  } else if (period_po==1 & period==2){
+    result <- installment_amount*14/7
+  }
+  return(result)
+}
+
+# Function to create column for scoring table for display
+gen_final_table_display <- function(scoring_df){
+  scoring_df$display_score <- ifelse(scoring_df$score %in% c("Bad"),"No",
+   ifelse(scoring_df$score %in% c("NULL"),"NULL","Yes"))
+  scoring_df$color <- ifelse(scoring_df$display_score=="No",1,
+   ifelse(scoring_df$display_score=="NULL",2, 6))
+  return(scoring_df)
+}
+
+# Function  to get last credit per company 
+gen_if_credit_after_po_terminated <- function(input,table_po,name,company){
+ result <- as.data.frame(aggregate(
+  input$id[input$client_id %in% table_po$client_id & input$company_id==company],
+  by=list(input$client_id[input$client_id %in% table_po$client_id & 
+          input$company_id==company]),FUN=max))
+ names(result) <- c("client_id",name)
+ result <- merge(result,input[,c("id","signed_at")],by.x = name,by.y = "id",
+                  all.x = TRUE)
+}
+
+# Function to make string for DB update of PO terminated (delete offer)
+gen_string_po_terminated <- function(input){
+  string_sql_update <- input$id[1]
+  if(nrow(input)>1){
+    for(i in 2:nrow(input)){
+      string_sql_update <- paste(string_sql_update,input$id[i],
+                                 sep=",")}}
+  return(paste("(",string_sql_update,")",sep=""))
+}
+
+# Function to make string for DB update of PO terminated (update offer)
+gen_string_delete_po_terminated <- function(input,var,var_name,db_name){
+  iterate_string <- paste("WHEN id = ",input$id[1]," THEN ",var[1],sep="")
+  if(nrow(input)>1){
+    for(i in 2:nrow(input)){
+      iterate_string <- paste(iterate_string,
+        paste("WHEN id = ",input$id[i]," THEN ",var[i],sep=""))}
+  }
+  return(paste("UPDATE ",db_name,".clients_prior_approval_applications SET ",
+    var_name," = CASE ",iterate_string," ELSE ",var_name," END;",sep=""))
 }
 
 
