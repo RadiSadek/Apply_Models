@@ -172,6 +172,8 @@ select_credits <- rbind(select_credits_citycash,select_credits_credirect)
 ### Compute score ###
 #####################
 
+if(nrow(select_credits)>0){
+
 # Compute and append score
 select_credits <- select_credits[!duplicated(select_credits$client_id),]
 select_credits$max_amount <- NA
@@ -211,6 +213,7 @@ select_credits <- subset(select_credits,select_credits$max_delay<=200)
 # Read current database
 id_max <- max(po$id)+1
 
+if(nrow(select_credits)>0){
 
 # Create final dataframe for writing in DB
 offers <- select_credits
@@ -245,7 +248,8 @@ string_sql,";", sep="")
 # Write in database
 if(nrow(offers)>0){
   suppressMessages(suppressWarnings(dbSendQuery(con,update_prior_query)))
-}
+}}}
+
 
 ###################################
 ### Updating certain old offers ###
@@ -295,7 +299,7 @@ if(nrow(po_not_ok)>0){
   po_not_ok_query <- paste("UPDATE ",db_name,
        ".clients_prior_approval_applications SET updated_at = '",
        substring(Sys.time(),1,19),"', deleted_at = '",
-       substring(Sys.time(),1,19),"'
+       paste(substring(Sys.time(),1,10),"04:00:00",sep=),"'
        WHERE id IN",gen_string_po_terminated(po_not_ok), sep="")
   suppressMessages(suppressWarnings(dbSendQuery(con,po_not_ok_query)))
 }

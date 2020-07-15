@@ -468,7 +468,8 @@ fraud_flag <- ifelse(flag_credirect==1 & flag_beh==0 &
 
 
 # Recorrect for prior approvals - terminated
-scoring_df <- gen_correction_po(con,db_name,all_df,scoring_df,products,period)
+scoring_df <- gen_correction_po(con,db_name,all_df,all_id,
+                                scoring_df,products,period)
 
 
 # Create column for table display

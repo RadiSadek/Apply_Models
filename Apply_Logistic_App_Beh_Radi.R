@@ -36,8 +36,8 @@ main_dir <- "C:\\Projects\\Apply_Scoring\\"
 
 # Read argument of ID
 args <- commandArgs(trailingOnly = TRUE)
-#application_id <- args[1]
-application_id <- 692423
+application_id <- args[1]
+#application_id <- 692420
 product_id <- NA
 
 
@@ -424,7 +424,8 @@ fraud_flag <- ifelse(flag_credirect==1 & flag_beh==0 &
 
 
 # Recorrect for prior approvals - terminated
-scoring_df <- gen_correction_po(con,db_name,all_df,scoring_df,products,period)
+scoring_df <- gen_correction_po(con,db_name,all_df,all_id,
+                                scoring_df,products,period)
 
 
 # Create column for table display
