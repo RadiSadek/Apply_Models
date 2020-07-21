@@ -193,12 +193,19 @@ if (nrow_all_id>1){
   total_amount <- gen_last_total_amount(all_id)
   prev_amount <- gen_last_prev_amount(all_id)
   prev_paid_days <- gen_prev_paid_days(all_id)
-  closest_period <- products$period[which.min(
-    abs(total_amount$installments - products$period))]
-  closest_amount <- products$amount[which.min(abs(
-    prev_amount$amount - products$amount))]
-  prev_installment_amount <- products$installment_amount[
-    products$period==closest_period & products$amount==closest_amount]
+
+  prev_installment_amount_vect <-  rep(NA,nrow(all_id)-1)
+  for(i in 1:length(prev_installment_amount_vect)){
+    closest_period <- products$period[which.min(
+      abs(gen_last_total_amount(all_id[1:(nrow(all_id)+1-i),])$installments - 
+          products$period))]
+    closest_amount <- products$amount[which.min(abs(
+      gen_last_prev_amount(all_id[1:(nrow(all_id)+1-i),])$amount - 
+          products$amount))]
+    prev_installment_amount_vect[i] <- products$installment_amount[
+      products$period==closest_period & products$amount==closest_amount]
+  }
+  prev_installment_amount <- max(prev_installment_amount_vect)
 }
 
 
@@ -462,9 +469,9 @@ if(flag_beh==1 & flag_credirect==1 & flag_new_credirect_old_city==1){
 
 # Get fraud flag
 fraud_flag <- ifelse(flag_credirect==1 & flag_beh==0 & 
-  empty_fields<threshold_empty, gen_app_credirect_fraud(
-  df,scoring_df,products,df_Log_Credirect_Fraud,period,all_df,
-  prev_amount,amount_tab,t_income,disposable_income_adj), "NULL")
+   empty_fields<threshold_empty, gen_app_credirect_fraud(
+   df,scoring_df,products,df_Log_Credirect_Fraud,period,all_df,
+   prev_amount,amount_tab,t_income,disposable_income_adj), "NULL")
 
 
 # Recorrect for prior approvals - terminated

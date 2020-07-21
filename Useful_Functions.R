@@ -150,7 +150,8 @@ gen_correct_max_installment_po <- function(period_po,period,installment_amount){
 # Function to create column for scoring table for display
 gen_final_table_display <- function(scoring_df){
   scoring_df$display_score <- ifelse(scoring_df$score %in% c("Bad"),"No",
-   ifelse(scoring_df$score %in% c("NULL"),"NULL","Yes"))
+   ifelse(scoring_df$color %in% c(1),"No",
+   ifelse(scoring_df$score %in% c("NULL"),"NULL","Yes")))
   scoring_df$color <- ifelse(scoring_df$display_score=="No",1,
    ifelse(scoring_df$display_score=="NULL",2, 6))
   return(scoring_df)
@@ -188,5 +189,23 @@ gen_string_delete_po_terminated <- function(input,var,var_name,db_name){
   return(paste("UPDATE ",db_name,".clients_prior_approval_applications SET ",
     var_name," = CASE ",iterate_string," ELSE ",var_name," END;",sep=""))
 }
+
+
+# Function to make string for DB update of PO refinanced (update offer)
+gen_string_po_refinance <- function(input,var,var_name,db_name){
+  iterate_string <- paste("WHEN application_id = ",input$application_id[1],
+          " THEN ",var[1],sep="")
+  if(nrow(input)>1){
+    for(i in 2:nrow(input)){
+      iterate_string <- paste(iterate_string,
+          paste("WHEN application_id = ",input$application_id[i],
+                " THEN ",var[i],sep=""))}
+  }
+  return(paste("UPDATE ",db_name,".prior_approval_refinances SET ",
+          var_name," = CASE ",iterate_string," ELSE ",var_name," END;",sep=""))
+}
+
+
+
 
 

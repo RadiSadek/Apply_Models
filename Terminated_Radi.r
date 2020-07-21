@@ -296,12 +296,20 @@ flag_new_credirect_old_city <- ifelse(flag_credirect==1 & flag_beh==1 &
 
 
 # Get previous installment amount
-closest_period <- products$period[which.min(
-  abs(total_amount$installments - products$period))]
-closest_amount <- products$amount[which.min(abs(
-  prev_amount$amount - products$amount))]
-prev_installment_amount <- products$installment_amount[
-  products$period==closest_period & products$amount==closest_amount]
+all_id_install <- rbind(all_id,all_id[nrow(all_id),])
+prev_installment_amount_vect <-  rep(NA,nrow(all_id_install)-1)
+for(i in 1:length(prev_installment_amount_vect)){
+  closest_period <- products$period[which.min(
+    abs(gen_last_total_amount(
+    all_id_install[1:(nrow(all_id_install)+1-i),])$installments - 
+        products$period))]
+  closest_amount <- products$amount[which.min(abs(
+    gen_last_prev_amount(all_id_install[1:(nrow(all_id_install)+1-i),])$amount - 
+      products$amount))]
+  prev_installment_amount_vect[i] <- products$installment_amount[
+    products$period==closest_period & products$amount==closest_amount]
+}
+prev_installment_amount <- max(prev_installment_amount_vect)
 
 
 
@@ -413,7 +421,7 @@ for(i in 1:nrow(all_id)){
   all_id$amount[i] <- suppressWarnings(fetch(dbSendQuery(con,
     gen_big_sql_query(db_name,all_id$id[i])), n=-1))$amount
 }
-max_prev_amount <- max(all_id$amount[ 
+max_prev_amount <- max(all_id$amount[
   all_id$company_id==all_id$company_id[all_id$id==application_id]])
 
 
