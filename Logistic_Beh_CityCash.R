@@ -104,8 +104,10 @@ gen_beh_citycash <- function(df,scoring_df,products,df_Log_beh_CityCash,period,
       products$period==period_tab & products$amount==amount_tab]
     
     amount_diff_loc <- amount_tab - prev_amount$amount
-    df$amount_diff <- ifelse(amount_diff_loc<=-250,"less_-250",
-         ifelse(amount_diff_loc<=150,"-250_150","more_150"))
+    df$amount_diff <- ifelse(is.na(amount_diff_loc),"0_250",
+           ifelse(amount_diff_loc<0,"less_0",
+           ifelse(amount_diff_loc>=300,"more_300","0_250")))
+    
     
     # Compute correct maturity for each amount and product_id
     current_maturity <- ifelse(period==1, period_tab*7/30, 
