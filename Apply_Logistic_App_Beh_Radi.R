@@ -36,8 +36,8 @@ main_dir <- "C:\\Projects\\Apply_Scoring\\"
 
 # Read argument of ID
 args <- commandArgs(trailingOnly = TRUE)
-application_id <- args[1]
-#application_id <- 457124
+#application_id <- args[1]
+application_id <- 692790
 product_id <- NA
 
 
@@ -144,6 +144,7 @@ if(nrow(all_actives_past)>0){
 
 # Generate variables for payments of previous credits
 nrow_all_id <- nrow(all_id)
+all_id <- all_id[order(all_id$signed_at),]
 if (nrow_all_id>1){
   cash_flow <- gen_last_paid(all_id)
   total_amount <- gen_last_total_amount(all_id)

@@ -6,16 +6,25 @@
 # Function to apply restrictions for City Cash applications
 gen_restrict_citycash_app <- function(scoring_df){
   
-  if(max(scoring_df$amount)>400){
-    score_df <- subset(scoring_df,scoring_df$amount>400)
-    criteria <- length(names(table(score_df$score))
-      [names(table(score_df$score)) %in% c("Good 2","Good 3","Good 4")])
-    if(criteria==0 & nrow(subset(scoring_df,scoring_df$amount<=400))==0){
-      scoring_df$score <- "Bad"
-      scoring_df$color <- 1}
-    if(criteria==0 & nrow(subset(scoring_df,scoring_df$amount<=400))>0){
-      scoring_df <- subset(scoring_df,scoring_df$amount<=400)}
-  }
+  score_df_800 <- subset(scoring_df,scoring_df$amount>800)
+  criteria_800 <- length(names(table(score_df_800$score))
+     [names(table(score_df_800$score)) %in% c("Good 4")])
+  score_df_600 <- subset(scoring_df,scoring_df$amount>600)
+  criteria_600 <- length(names(table(score_df_600$score))
+    [names(table(score_df_600$score)) %in% c("Good 2","Good 3","Good 4")])
+  score_df_400 <- subset(scoring_df,scoring_df$amount>400)
+  criteria_400 <- length(names(table(score_df_400$score))
+    [names(table(score_df_400$score)) %in% c("Good 1","Good 2",
+    "Good 3","Good 4")])
+  
+  scoring_df$score <- ifelse(scoring_df$score %in% c("NULL"),scoring_df$score,
+    ifelse(scoring_df$amount>1000,"Bad",
+    ifelse(criteria_800==0 & scoring_df$amount>800,"Bad",
+    ifelse(criteria_600==0 & scoring_df$amount>600,"Bad",
+    ifelse(criteria_400==0 & scoring_df$amount>400,"Bad",scoring_df$score)))))
+  scoring_df$color <- ifelse(scoring_df$score %in% c("NULL"),scoring_df$color,
+    ifelse(scoring_df$score %in% c("Bad"),1,scoring_df$color))
+           
   return(scoring_df)
 }
 
@@ -25,15 +34,12 @@ gen_restrict_citycash_beh <- function(scoring_df,prev_amount){
   criteria <- length(names(table(scoring_df$score))
     [names(table(scoring_df$score)) %in% 
         c("Good 1","Good 2","Good 3","Good 4")])
-  if(criteria==0 & 
-     nrow(subset(scoring_df,scoring_df$amount<=prev_amount$amount))>0){
-    scoring_df <- subset(scoring_df,scoring_df$amount<=prev_amount$amount)
-  }
-  if(criteria==0 & 
-     nrow(subset(scoring_df,scoring_df$amount<=prev_amount$amount))==0){
-    scoring_df$score <- "Bad"
-    scoring_df$color <- 1
-  }
+  scoring_df$score <- ifelse(scoring_df$score %in% c("NULL"),scoring_df$score,
+    ifelse(criteria==0 & scoring_df$amount>prev_amount$amount,"Bad",
+           scoring_df$score))
+  scoring_df$color <- ifelse(scoring_df$score %in% c("NULL"),scoring_df$color,
+    ifelse(scoring_df$score %in% c("Bad"),1,scoring_df$color))
+
   return(scoring_df)
 }
 

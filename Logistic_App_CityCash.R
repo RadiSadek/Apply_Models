@@ -91,8 +91,7 @@ gen_app_citycash <- function(df,scoring_df,products,df_Log_CityCash_App,period,
                             products$period==as.numeric(period_tab) &
                             products$amount==as.numeric(amount_tab))
     
-    scoring_df$color[i] <- ifelse(
-      product_tab$installment_amount>=disposable_income_adj, 1, 0)
+    scoring_df$color[i] <- 0
     
     scoring_df$color[i] <- ifelse(scoring_df$color[i]==1 | 
               scoring_df$score[i]=="Bad", 1, 

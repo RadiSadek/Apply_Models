@@ -53,7 +53,7 @@ gen_beh_citycash <- function(df,scoring_df,products,df_Log_beh_CityCash,period,
   df$purpose <- as.factor(df$purpose_cut)
   
   df$days_diff_last_credit_cut <- ifelse(is.na(df$days_diff_last_credit), 
-     "less_7",ifelse(df$days_diff_last_credit<=7,"less_7","8_more"))
+     "3_more",ifelse(df$days_diff_last_credit<=2,"less_2","3_more"))
   df$days_diff_last_credit <- as.factor(df$days_diff_last_credit_cut)
   
   df$max_delay_cut <- ifelse(df$max_delay<=2,"less_2",
@@ -127,8 +127,7 @@ gen_beh_citycash <- function(df,scoring_df,products,df_Log_beh_CityCash,period,
         products$period==as.numeric(period_tab) &
         products$amount==as.numeric(amount_tab))
     
-    scoring_df$color[i] <- ifelse(
-      product_tab$installment_amount>=disposable_income_adj, 1, 0)
+    scoring_df$color[i] <- 0
     
     if(product_tab$installment_amount> 1.3*prev_installment_amount){
       scoring_df$color[i] <- 1 

@@ -188,6 +188,7 @@ if(nrow(all_actives_past)>0){
 
 # Generate variables for payments of previous credits
 nrow_all_id <- nrow(all_id)
+all_id <- all_id[order(all_id$signed_at),]
 if (nrow_all_id>1){
   cash_flow <- gen_last_paid(all_id)
   total_amount <- gen_last_total_amount(all_id)

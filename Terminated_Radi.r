@@ -195,7 +195,7 @@ all_df <- suppressWarnings(
 all_df$max_delay <- ifelse(!(is.na(data_plan_main_select_def)), 
       data_plan_main_select_def[1], ifelse(flag_credirect==0, 60, 10))
 all_df$credits_cum <- nrow(all_id)
-all_df$days_diff_last_credit <- NA
+all_df$days_diff_last_credit <- 3
 
 
 # Get flag if credit is behavioral or not
@@ -296,7 +296,8 @@ flag_new_credirect_old_city <- ifelse(flag_credirect==1 & flag_beh==1 &
 
 
 # Get previous installment amount
-all_id_install <- rbind(all_id,all_id[nrow(all_id),])
+all_id_install <- all_id[order(all_id$signed_at),]
+all_id_install <- rbind(all_id_install,all_id_install[nrow(all_id_install),])
 prev_installment_amount_vect <-  rep(NA,nrow(all_id_install)-1)
 for(i in 1:length(prev_installment_amount_vect)){
   closest_period <- products$period[which.min(
