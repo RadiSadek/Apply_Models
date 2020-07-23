@@ -50,6 +50,11 @@ gen_restrict_credirect_app <- function(scoring_df,all_df,
   if(flag_credit_next_salary==1){
     scoring_df$score <- ifelse(scoring_df$score %in% 
             c("Indeterminate"), "Bad", scoring_df$score)
+    scoring_df$score <- 
+      ifelse(scoring_df$score %in% c("Good 4") & scoring_df$amount>800,"Bad",
+      ifelse(scoring_df$score %in% c("Good 3","Good 2","Good 1") &
+             scoring_df$amount>600,"Bad",
+             scoring_df$score))
   } else {
     scoring_df$score <- ifelse(scoring_df$score %in% 
             c("Indeterminate"), "Bad", scoring_df$score)
