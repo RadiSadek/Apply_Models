@@ -62,12 +62,14 @@ gen_correction_po <- function(con,db_name,all_df,all_id,
         scoring_df$score <- ifelse(
           scoring_df$amount<=po$credit_amount & 
             scoring_df$installment_amount<=po$installment_amount &
-            scoring_df$score %in% c("Bad","Indeterminate"),"Good 1",
-          scoring_df$score)
+            scoring_df$score %in% c("Bad","Indeterminate"),"Good corr",
+            scoring_df$score)
         scoring_df <-  scoring_df[,-which(names(scoring_df) %in% 
                                             c("installment_amount"))]
-        scoring_df$color <- ifelse(scoring_df$score=="Good 1", 3, 
-                                   scoring_df$color)}
+        scoring_df$color <- ifelse(scoring_df$score=="Good corr", 3, 
+                                   scoring_df$color)
+        scoring_df$score <- ifelse(scoring_df$score=="Good corr","Good 1",
+                                   scoring_df$score)}
     } 
  }
   
