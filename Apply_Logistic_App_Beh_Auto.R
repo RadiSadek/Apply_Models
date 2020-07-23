@@ -482,6 +482,11 @@ scoring_df <- gen_correction_po(con,db_name,all_df,all_id,
 
 # Create column for table display
 scoring_df <- gen_final_table_display(scoring_df)
+if(flag_beh==1 & flag_credirect==1 & flag_new_credirect_old_city==0){
+  for (i in 1:nrow(scoring_df)){
+    scoring_df$display_score[i] <- scoring_df$score[i]
+  }
+}
 
 
 # Update table credits applications

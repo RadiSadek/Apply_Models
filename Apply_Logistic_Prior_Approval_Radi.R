@@ -74,7 +74,7 @@ all_credits <- subset(all_credits, is.na(all_credits$sub_status) |
 
 # Subset based on time difference since deactivation
 all_credits <- subset(all_credits,substring(all_credits$deactivated_at,1,10)==
-  (as.Date(Sys.time())-4))
+  (as.Date(Sys.time())-3))
 
 
 # Get last credit amount
@@ -217,7 +217,7 @@ string_sql,";", sep="")
 
 # Write in database
 if(nrow(offers)>0){
-  #suppressMessages(suppressWarnings(dbSendQuery(con,update_prior_query)))
+  suppressMessages(suppressWarnings(dbSendQuery(con,update_prior_query)))
 }}}
 
 

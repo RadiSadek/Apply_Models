@@ -18,7 +18,7 @@ cu_app_cred_flex <- c(0.15,0.125,0.08,0.05,0.035)
 cu_app_cred_user <- c(0.58,0.535,0.5,0.4,0.325)
 
 # Repeat City Cash
-cu_beh_city <- c(0.3,0.25,0.2,0.15,0.1)
+cu_beh_city <- c(0.35,0.3,0.225,0.15,0.075)
 
 # Repeat Credirect
 cu_beh_cred <- c(0.32,0.275,0.2,0.125,0.075)

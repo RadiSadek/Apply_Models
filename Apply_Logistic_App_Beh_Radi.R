@@ -37,7 +37,7 @@ main_dir <- "C:\\Projects\\Apply_Scoring\\"
 # Read argument of ID
 args <- commandArgs(trailingOnly = TRUE)
 #application_id <- args[1]
-application_id <- 692790
+application_id <- 704413
 product_id <- NA
 
 
@@ -83,6 +83,7 @@ all_df <- suppressWarnings(fetch(dbSendQuery(con,
               gen_big_sql_query(db_name,application_id)), n=-1))
 all_df$date <- ifelse(all_df$status %in% c(4,5), all_df$signed_at, 
                       all_df$created_at)
+all_df$amount <- 3000
 
 
 # Apply some checks to main credit dataframe
@@ -438,6 +439,11 @@ scoring_df <- gen_correction_po(con,db_name,all_df,all_id,
 
 # Create column for table display
 scoring_df <- gen_final_table_display(scoring_df)
+if(flag_beh==1 & flag_credirect==1 & flag_new_credirect_old_city==0){
+  for (i in 1:nrow(scoring_df)){
+    scoring_df$display_score[i] <- scoring_df$score[i]
+  }
+}
 
 
 # Create output dataframe
