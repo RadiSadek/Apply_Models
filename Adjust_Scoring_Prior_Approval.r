@@ -39,7 +39,7 @@ gen_correction_po <- function(con,db_name,all_df,all_id,
       # Check if last po of same company has been deleted by scoring
       if(!(is.na(po$deleted_at)) & substring(po$deleted_at,12,19)=="04:00:00"){
         flag_corrected_scoring <- 1
-      } else if (!(is.na(po$deleted_at)) & po$deleted_at<="2020-07-20"){ 
+      } else if (!(is.na(po$deleted_at)) & po$deleted_at<="2020-07-23"){ 
         flag_corrected_scoring <- 1 } else {
         flag_corrected_scoring <- 0 }
       

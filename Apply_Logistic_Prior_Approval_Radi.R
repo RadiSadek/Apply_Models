@@ -74,7 +74,7 @@ all_credits <- subset(all_credits, is.na(all_credits$sub_status) |
 
 # Subset based on time difference since deactivation
 all_credits <- subset(all_credits,substring(all_credits$deactivated_at,1,10)==
-  (as.Date(Sys.time())-3))
+  (as.Date(Sys.time())-2))
 
 
 # Get last credit amount
@@ -137,6 +137,9 @@ select_credits_credirect <- subset(select_credits,
 select_credits <- rbind(select_credits_citycash,select_credits_credirect)
 
 
+# Select only City Cash criteria
+select_credits <- subset(select_credits,select_credits$company_id==1)
+
 
 #####################
 ### Compute score ###
@@ -165,9 +168,6 @@ for(i in 1:nrow(select_credits)){
 ##################################
 ### Reapply selection criteria ###
 ##################################
-
-# Select only City Cash criteria
-select_credits <- subset(select_credits,select_credits$company_id==1)
 
 # Select based on score and DPD
 select_credits <- subset(select_credits,select_credits$max_amount>-Inf & 

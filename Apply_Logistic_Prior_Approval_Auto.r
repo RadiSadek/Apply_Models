@@ -167,6 +167,9 @@ select_credits_credirect <- subset(select_credits,
 select_credits <- rbind(select_credits_citycash,select_credits_credirect)
 
 
+# Select only City Cash criteria
+select_credits <- subset(select_credits,select_credits$company_id==1)
+
 
 #####################
 ### Compute score ###
