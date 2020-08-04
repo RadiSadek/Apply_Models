@@ -194,7 +194,7 @@ if (nrow_all_id>=1){
     rbind(all_id,all_id[all_id$id==max(all_id$id),]))
   prev_amount <- gen_last_prev_amount(
     rbind(all_id,all_id[all_id$id==max(all_id$id),]))
-  prev_paid_days <- gen_prev_paid_days(rbind(all_id[all_id$id==max(all_id$id),],	
+  prev_paid_days <- gen_prev_paid_days(rbind(all_id[all_id$id==max(all_id$id),],
     all_id[all_id$id==max(all_id$id),]))
 }
 
@@ -374,8 +374,8 @@ closest_period <- products$period[which.min(
   abs(total_amount$installments - products$period))]
 closest_amount <- products$amount[which.min(abs(
   prev_amount$amount - products$amount))]
-prev_installment_amount <- products$installment_amount[
-  products$period==closest_period & products$amount==closest_amount]
+# prev_installment_amount <- products$installment_amount[
+#   products$period==closest_period & products$amount==closest_amount]
 
 
 ############################################################
@@ -400,8 +400,8 @@ if (empty_fields>=threshold_empty){
   
 } else if (flag_beh==1 & flag_credirect==0){
   scoring_df <- gen_beh_citycash(df,scoring_df,products,df_Log_beh_CityCash,
-                     period,all_df,prev_amount,amount_tab,
-                     t_income,disposable_income_adj,prev_installment_amount,0)
+                     period,all_id,all_df,prev_amount,amount_tab,
+                     t_income,disposable_income_adj,0)
 } else if (flag_beh==1 & flag_credirect==1 & flag_new_credirect_old_city==0){
   scoring_df <- gen_beh_credirect(df,scoring_df,products,df_Log_beh_Credirect,
                      period,all_df,prev_amount,amount_tab,
@@ -474,7 +474,7 @@ for(i in 1:nrow(scoring_df)){
   installment_amount <- products$installment_amount[
     products$period==period_tab & products$amount==amount_tab]
   scoring_df$installment_amount_diff[i] <- ifelse(
-    installment_amount>(1.3*prev_installment_amount), 0, 1)
+    installment_amount>gen_installment_ratio(db_name,all_id,all_df), 0, 1)
 }
 
 # Generate final correction

@@ -205,3 +205,57 @@ gen_select_relevant_ids_max_delay <- function(db_name,all_actives_past,
   return(all_id_max_delay)
 }
 
+# Get maximum previous installment amount
+gen_prev_max_installment <- function(db_name,input,all_df){
+  
+  input <- input[order(input$signed_at),]
+  all_df$period <- suppressWarnings(fetch(dbSendQuery
+     (con,gen_products_query_desc(db_name,all_df[1,])), n=-1))$period
+  
+  for(i in 1:nrow(input)){
+  
+    input$installment_amount[i] <- suppressWarnings(fetch(
+      dbSendQuery(con,gen_max_pmt_main(db_name,input$id[i])), n=-1))$max_pmt
+    input$period[i] <- suppressWarnings(fetch(dbSendQuery
+      (con,gen_products_query_desc(db_name,input[i,])), n=-1))$period
+    
+    if(input$period[i]!=all_df$period){
+      input$installment_amount[i] <- gen_correct_max_installment_po(
+        input$period[i],all_df$period,input$installment_amount[i])
+    }
+  }
+  prev_installment_amount <- max(input$installment_amount)
+  return(prev_installment_amount)
+}
+
+# Function to compute installment ratio 
+gen_installment_ratio <- function(db_name,all_id,all_df){
+  
+  all_id_local <- subset(all_id,all_id$status %in% c(5))
+  all_id_local2 <- subset(all_id,all_id$status %in% c(4))
+  
+  if(nrow(all_id_local)>0){
+    for (i in 1:nrow(all_id_local)){
+      all_id_local$max_delay[i] <- fetch(dbSendQuery(
+        con,gen_plan_main_select_query(db_name,all_id_local$id[i])), 
+        n=-1)$max_delay
+    }
+    
+    all_id_local_ok <- subset(all_id_local,all_id_local$max_delay<=60)
+    all_id_local_not_ok <- subset(all_id_local,all_id_local$max_delay>60)
+    
+    final_prev_installment_amount <- 
+      ifelse(nrow(all_id_local_ok)>0 & nrow(all_id_local_not_ok)==0,
+             1.3*gen_prev_max_installment(db_name,all_id_local_ok,all_df),
+         ifelse(nrow(all_id_local_ok)>0 & nrow(all_id_local_not_ok)>0,
+             1.1*gen_prev_max_installment(db_name,all_id_local_ok,all_df),
+             1*gen_prev_max_installment(db_name,all_id_local_not_ok,all_df)
+             ))
+  } else {
+    final_prev_installment_amount <- 1.1*gen_prev_max_installment(
+      db_name,all_id_local2,all_df)
+  }
+  return(final_prev_installment_amount)
+}
+
+

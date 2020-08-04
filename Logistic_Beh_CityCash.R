@@ -4,9 +4,8 @@
 #########################################################################
 
 gen_beh_citycash <- function(df,scoring_df,products,df_Log_beh_CityCash,period,
-                             all_df,prev_amount,amount_tab,
-                             t_income,disposable_income_adj,
-                             prev_installment_amount,crit_po){
+                             all_id,all_df,prev_amount,amount_tab,
+                             t_income,disposable_income_adj,crit_po){
   # Cut and bin
   df$age_cut <- ifelse(df$age<=29,"less_29",
      ifelse(df$age<=37,"30_37",
@@ -129,7 +128,8 @@ gen_beh_citycash <- function(df,scoring_df,products,df_Log_beh_CityCash,period,
     
     scoring_df$color[i] <- 0
     
-    if(product_tab$installment_amount> 1.3*prev_installment_amount){
+    if(product_tab$installment_amount> gen_installment_ratio(
+      db_name,all_id,all_df)){
       scoring_df$color[i] <- 1 
     }
     
@@ -144,7 +144,6 @@ gen_beh_citycash <- function(df,scoring_df,products,df_Log_beh_CityCash,period,
     if(crit_po!=0){
       scoring_df$installment_amount[i] <- product_tab$installment_amount
     }
-    
   }
   return(scoring_df)
 }

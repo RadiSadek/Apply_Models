@@ -104,7 +104,7 @@ all_credits <- subset(all_credits, is.na(all_credits$sub_status) |
 
 # Subset based on time difference since deactivation
 all_credits <- subset(all_credits,substring(all_credits$deactivated_at,1,10)==
-  (as.Date(Sys.time())-3))
+  (as.Date(Sys.time())-4))
 
 
 # Get last credit amount
@@ -184,13 +184,15 @@ select_credits$max_installment_amount <- NA
 select_credits$score_max_amount <- NA
 select_credits$max_delay <- NA
 for(i in 1:nrow(select_credits)){
-  client_id <- select_credits$client_id[i]
-  last_id <- select_credits$id[i]
-  calc <- gen_terminated_fct(con,client_id,product_id,last_id)
-  select_credits$max_amount[i] <- calc[[1]]
-  select_credits$max_installment_amount[i] <- calc[[2]]
-  select_credits$score_max_amount[i] <- calc[[3]]
-  select_credits$max_delay[i] <- as.numeric(calc[[4]])
+  suppressWarnings(tryCatch({
+    client_id <- select_credits$client_id[i]
+    last_id <- select_credits$id[i]
+    calc <- gen_terminated_fct(con,client_id,product_id,last_id)
+    select_credits$max_amount[i] <- calc[[1]]
+    select_credits$max_installment_amount[i] <- calc[[2]]
+    select_credits$score_max_amount[i] <- calc[[3]]
+    select_credits$max_delay[i] <- as.numeric(calc[[4]])
+  }, error=function(e){}))
 }
 
 
@@ -198,9 +200,6 @@ for(i in 1:nrow(select_credits)){
 ##################################
 ### Reapply selection criteria ###
 ##################################
-
-# Select only City Cash criteria
-select_credits <- subset(select_credits,select_credits$company_id==1)
 
 # Select based on score and DPD
 select_credits <- subset(select_credits,select_credits$max_amount>-Inf & 

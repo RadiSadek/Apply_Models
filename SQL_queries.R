@@ -230,3 +230,14 @@ ON a.id=b.requests_id
 WHERE a.type=1 AND b.type=",criteria," AND application_id=",var,
 sep=""))
 }
+
+# Define query to get max installment amount per application id
+gen_max_pmt_main <- function(db_name,id){
+  return(paste(
+"SELECT max(pmt_final) AS max_pmt
+FROM ",db_name,".credits_plan_main
+WHERE application_id=",id,sep=""))
+}
+
+
+

@@ -37,7 +37,7 @@ main_dir <- "C:\\Projects\\Apply_Scoring\\"
 # Read argument of ID
 args <- commandArgs(trailingOnly = TRUE)
 application_id <- args[1]
-#application_id <- 658693
+#application_id <- 689647
 product_id <- NA
 
 
@@ -152,9 +152,9 @@ if(nrow(all_actives_past)>0){
 }
 
 
-# Generate sum paid and amounts of previous credit 
+# Generate sum paid and amounts of previous credit
 nrow_all_id <- nrow(all_id)
-if (nrow_all_id>=1){
+if (nrow_all_id>=0){
   cash_flow <- gen_last_paid(rbind(all_id,all_id[all_id$id==max(all_id$id),]))
   total_amount <- gen_last_total_amount(
     rbind(all_id,all_id[all_id$id==max(all_id$id),]))
@@ -335,15 +335,6 @@ flag_new_credirect_old_city <- ifelse(flag_credirect==1 & flag_beh==1 &
   & all_id$status %in% c(4,5),])==0, 1, 0)
 
 
-# Get previous installment amount
-closest_period <- products$period[which.min(
-  abs(total_amount$installments - products$period))]
-closest_amount <- products$amount[which.min(abs(
-  prev_amount$amount - products$amount))]
-prev_installment_amount <- products$installment_amount[
-  products$period==closest_period & products$amount==closest_amount]
-
-
 ############################################################
 ### Apply model coefficients according to type of credit ###
 ############################################################
@@ -366,8 +357,8 @@ if (empty_fields>=threshold_empty){
   
 } else if (flag_beh==1 & flag_credirect==0){
   scoring_df <- gen_beh_citycash(df,scoring_df,products,df_Log_beh_CityCash,
-                     period,all_df,prev_amount,amount_tab,
-                     t_income,disposable_income_adj,prev_installment_amount,0)
+                     period,all_id,all_df,prev_amount,amount_tab,
+                     t_income,disposable_income_adj,0)
 } else if (flag_beh==1 & flag_credirect==1 & flag_new_credirect_old_city==0){
   scoring_df <- gen_beh_credirect(df,scoring_df,products,df_Log_beh_Credirect,
                      period,all_df,prev_amount,amount_tab,
@@ -441,14 +432,14 @@ for(i in 1:nrow(scoring_df)){
   installment_amount <- products$installment_amount[
     products$period==period_tab & products$amount==amount_tab]
   scoring_df$installment_amount_diff[i] <- ifelse(
-    installment_amount>(1.3*prev_installment_amount), 0, 1)
+    installment_amount>gen_installment_ratio(db_name,all_id,all_df), 0, 1)
 }
 
 
 # Generate final correction
 get_max_amount <- suppressWarnings(max(scoring_df$amount[scoring_df$score %in% 
     c("Indeterminate","Good 1","Good 2","Good 3","Good 4") &
-    scoring_df$installment_amount_diff==1 & scoring_df$color!=1]))
+    scoring_df$installment_amount_diff==1 & scoring_df$color>1]))
 final_amount <- 
       ifelse(is.infinite(get_max_amount), -999, 
       ifelse(get_max_amount<po$min_amount, -999, 

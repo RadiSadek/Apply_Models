@@ -194,19 +194,6 @@ if (nrow_all_id>1){
   total_amount <- gen_last_total_amount(all_id)
   prev_amount <- gen_last_prev_amount(all_id)
   prev_paid_days <- gen_prev_paid_days(all_id)
-
-  prev_installment_amount_vect <-  rep(NA,nrow(all_id)-1)
-  for(i in 1:length(prev_installment_amount_vect)){
-    closest_period <- products$period[which.min(
-      abs(gen_last_total_amount(all_id[1:(nrow(all_id)+1-i),])$installments - 
-          products$period))]
-    closest_amount <- products$amount[which.min(abs(
-      gen_last_prev_amount(all_id[1:(nrow(all_id)+1-i),])$amount - 
-          products$amount))]
-    prev_installment_amount_vect[i] <- products$installment_amount[
-      products$period==closest_period & products$amount==closest_amount]
-  }
-  prev_installment_amount <- max(prev_installment_amount_vect)
 }
 
 
@@ -397,8 +384,8 @@ if (empty_fields>=threshold_empty){
   
 } else if (flag_beh==1 & flag_credirect==0){
   scoring_df <- gen_beh_citycash(df,scoring_df,products,df_Log_beh_CityCash,
-                     period,all_df,prev_amount,amount_tab,
-                     t_income,disposable_income_adj,prev_installment_amount,0)
+                     period,all_id,all_df,prev_amount,amount_tab,
+                     t_income,disposable_income_adj,0)
 } else if (flag_beh==1 & flag_credirect==1 & flag_new_credirect_old_city==0){
   scoring_df <- gen_beh_credirect(df,scoring_df,products,df_Log_beh_Credirect,
                      period,all_df,prev_amount,amount_tab,

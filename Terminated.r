@@ -319,24 +319,6 @@ flag_new_credirect_old_city <- ifelse(flag_credirect==1 & flag_beh==1 &
       & all_id$status %in% c(4,5),])==0, 1, 0)
 
 
-# Get previous installment amount
-all_id_install <- all_id[order(all_id$signed_at),]
-all_id_install <- rbind(all_id_install,all_id_install[nrow(all_id_install),])
-prev_installment_amount_vect <-  rep(NA,nrow(all_id_install)-1)
-for(i in 1:length(prev_installment_amount_vect)){
-  closest_period <- products$period[which.min(
-    abs(gen_last_total_amount(
-    all_id_install[1:(nrow(all_id_install)+1-i),])$installments - 
-        products$period))]
-  closest_amount <- products$amount[which.min(abs(
-    gen_last_prev_amount(all_id_install[1:(nrow(all_id_install)+1-i),])$amount - 
-      products$amount))]
-  prev_installment_amount_vect[i] <- products$installment_amount[
-    products$period==closest_period & products$amount==closest_amount]
-}
-prev_installment_amount <- max(prev_installment_amount_vect)
-
-
 
 ############################################################
 ### Apply model coefficients according to type of credit ###
@@ -361,8 +343,8 @@ if (empty_fields>=threshold_empty){
   
 } else if (flag_beh==1 & flag_credirect==0){
   scoring_df <- gen_beh_citycash(df,scoring_df,products,df_Log_beh_CityCash,
-                     period,all_df,prev_amount,amount_tab,
-                     t_income,disposable_income_adj,prev_installment_amount,1)
+                     period,all_id,all_df,prev_amount,amount_tab,
+                     t_income,disposable_income_adj,1)
 } else if (flag_beh==1 & flag_credirect==1 & flag_new_credirect_old_city==0){
   scoring_df <- gen_beh_credirect(df,scoring_df,products,df_Log_beh_Credirect,
                      period,all_df,prev_amount,amount_tab,
@@ -432,7 +414,7 @@ for(i in 1:nrow(scoring_df)){
   installment_amount <- products$installment_amount[
     products$period==period_tab & products$amount==amount_tab]
   scoring_df$installment_amount_diff[i] <- ifelse(
-    installment_amount>(1.3*prev_installment_amount), 0, 1)
+    installment_amount>gen_installment_ratio(db_name,all_id,all_df), 0, 1)
 }
 
 

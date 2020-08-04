@@ -89,6 +89,13 @@ gen_restrict_credirect_beh <- function(scoring_df,all_df,
   return(scoring_df)
 }
 
+# Function to apply restrictions for Big Fin applications
+gen_restrict_big_fin_app <- function(scoring_df){
+  scoring_df <- subset(scoring_df,scoring_df$amount<=3000)
+  return(scoring_df)
+}
+
+
 # Readjust score if necessary for certain cases
 gen_adjust_score <- function(scoring_df,crit){
   for(i in 1:nrow(scoring_df)){
