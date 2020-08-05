@@ -95,7 +95,6 @@ gen_restrict_big_fin_app <- function(scoring_df){
   return(scoring_df)
 }
 
-
 # Readjust score if necessary for certain cases
 gen_adjust_score <- function(scoring_df,crit){
   for(i in 1:nrow(scoring_df)){
