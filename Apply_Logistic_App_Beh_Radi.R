@@ -7,7 +7,7 @@
 ################################################################################
 
 
-
+asdasdsa
 ########################
 ### Initial settings ###
 ########################
@@ -36,8 +36,8 @@ main_dir <- "C:\\Projects\\Apply_Scoring\\"
 
 # Read argument of ID
 args <- commandArgs(trailingOnly = TRUE)
-application_id <- args[1]
-#application_id <- 693032
+#application_id <- args[1]
+application_id <- 679121
 product_id <- NA
 
 
@@ -219,8 +219,9 @@ all_df <- gen_other_rep(nrow_all_id,all_id,all_df,flag_credirect,
                         data_plan_main_select_def,application_id)
 
 
-# Get flag if credit is behavioral or not
+# Get flag if credit is behavioral or not, repeat or not 
 flag_beh <- ifelse(all_df$credits_cum==0, 0, 1)
+flag_rep <- ifelse(nrow(subset(all_id,all_id$status==5))>0,1,0)
 
 
 # Compute ratio of number of payments
