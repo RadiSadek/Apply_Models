@@ -37,7 +37,7 @@ main_dir <- "C:\\Projects\\Apply_Scoring\\"
 # Read argument of ID
 args <- commandArgs(trailingOnly = TRUE)
 application_id <- args[1]
-application_id <- 93966
+#application_id <- 693032
 product_id <- NA
 
 
@@ -401,13 +401,9 @@ if(flag_beh==0 & flag_credirect==1){
   scoring_df <- gen_restrict_credirect_app(scoring_df,all_df,
     flag_credit_next_salary)
 }
-if(flag_beh==1 & flag_credirect==1 & flag_new_credirect_old_city==0){
+if(flag_beh==1 & flag_credirect==1){
   scoring_df <- gen_restrict_credirect_beh(scoring_df,all_df,
     flag_credit_next_salary,flag_new_credirect_old_city)
-}
-if(flag_beh==1 & flag_credirect==1 & flag_new_credirect_old_city==1){
-  scoring_df <- gen_restrict_credirect_app(scoring_df,all_df,
-    flag_credit_next_salary)
 }
 if(flag_beh==0 & all_df$product_id==22){
   scoring_df <- gen_restrict_big_fin_app(scoring_df)
@@ -463,7 +459,6 @@ final$highest_score <-
   ifelse(length(names(table(scoring_df$score))
              [names(table(scoring_df$score)) %in% c("Bad")])!=0,"Bad","NULL"))))))
          
-final$installment_ratio <- gen_installment_ratio(db_name,all_id,all_df)
 final$highest_amount <- max(scoring_df$amount)
 final$flag_beh <- flag_beh
 final$flag_credirect <- flag_credirect

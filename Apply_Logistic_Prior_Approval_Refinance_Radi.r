@@ -335,6 +335,7 @@ flag_new_credirect_old_city <- ifelse(flag_credirect==1 & flag_beh==1 &
   & all_id$status %in% c(4,5),])==0, 1, 0)
 
 
+
 ############################################################
 ### Apply model coefficients according to type of credit ###
 ############################################################
@@ -350,7 +351,7 @@ if (empty_fields>=threshold_empty){
   scoring_df$color <- 1
   
 } else if (flag_credirect==1 & flag_beh==1 &
-           !is.na(all_df$max_delay) & all_df$max_delay>=180){
+      !is.na(all_df$max_delay) & all_df$max_delay>=180){
   
   scoring_df$score <- "Bad"
   scoring_df$color <- 1
@@ -412,13 +413,12 @@ if(flag_beh==0 & flag_credirect==1){
   scoring_df <- gen_restrict_credirect_app(scoring_df,all_df,
     flag_credit_next_salary)
 }
-if(flag_beh==1 & flag_credirect==1 & flag_new_credirect_old_city==0){
+if(flag_beh==1 & flag_credirect==1){
   scoring_df <- gen_restrict_credirect_beh(scoring_df,all_df,
     flag_credit_next_salary,flag_new_credirect_old_city)
 }
-if(flag_beh==1 & flag_credirect==1 & flag_new_credirect_old_city==1){
-  scoring_df <- gen_restrict_credirect_app(scoring_df,all_df,
-    flag_credit_next_salary)
+if(flag_beh==0 & all_df$product_id==22){
+  scoring_df <- gen_restrict_big_fin_app(scoring_df)
 }
 
 

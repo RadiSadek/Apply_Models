@@ -79,10 +79,10 @@ gen_restrict_credirect_beh <- function(scoring_df,all_df,
   # Apply filter for coronavirus effect
   if(flag_new_credirect_old_city==1){
     scoring_df$score <- ifelse(scoring_df$score %in% 
-        c("Indeterminate","Good 1"), "Bad", scoring_df$score)
+        c("Indeterminate","Good 1","Good 2"), "Bad", scoring_df$score)
   } else {
     scoring_df$score <- ifelse(scoring_df$score %in% 
-        c("Indeterminate"), "Bad", scoring_df$score)
+        c("Bad"), "Bad", scoring_df$score)
   }
 
   scoring_df$color <- ifelse(scoring_df$score=="Bad", 1, scoring_df$color)

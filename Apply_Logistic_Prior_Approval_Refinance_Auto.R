@@ -188,7 +188,7 @@ if(nrow(all_actives_past)>0){
 
 # Generate sum paid and amounts of previous credit 
 nrow_all_id <- nrow(all_id)
-if (nrow_all_id>=1){
+if (nrow_all_id>=0){
   cash_flow <- gen_last_paid(rbind(all_id,all_id[all_id$id==max(all_id$id),]))
   total_amount <- gen_last_total_amount(
     rbind(all_id,all_id[all_id$id==max(all_id$id),]))
@@ -369,14 +369,6 @@ flag_new_credirect_old_city <- ifelse(flag_credirect==1 & flag_beh==1 &
   & all_id$status %in% c(4,5),])==0, 1, 0)
 
 
-# Get previous installment amount
-closest_period <- products$period[which.min(
-  abs(total_amount$installments - products$period))]
-closest_amount <- products$amount[which.min(abs(
-  prev_amount$amount - products$amount))]
-# prev_installment_amount <- products$installment_amount[
-#   products$period==closest_period & products$amount==closest_amount]
-
 
 ############################################################
 ### Apply model coefficients according to type of credit ###
@@ -454,15 +446,13 @@ if(flag_beh==0 & flag_credirect==1){
   scoring_df <- gen_restrict_credirect_app(scoring_df,all_df,
     flag_credit_next_salary)
 }
-if(flag_beh==1 & flag_credirect==1 & flag_new_credirect_old_city==0){
+if(flag_beh==1 & flag_credirect==1){
   scoring_df <- gen_restrict_credirect_beh(scoring_df,all_df,
     flag_credit_next_salary,flag_new_credirect_old_city)
 }
-if(flag_beh==1 & flag_credirect==1 & flag_new_credirect_old_city==1){
-  scoring_df <- gen_restrict_credirect_app(scoring_df,all_df,
-    flag_credit_next_salary)
+if(flag_beh==0 & all_df$product_id==22){
+  scoring_df <- gen_restrict_big_fin_app(scoring_df)
 }
-
 
 # Compute previous installment amount and if acceptable differential
 for(i in 1:nrow(scoring_df)){
