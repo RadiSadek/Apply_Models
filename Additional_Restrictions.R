@@ -45,7 +45,7 @@ gen_restrict_citycash_beh <- function(scoring_df,prev_amount){
 
 # Function to apply restrictions for Credirect applications
 gen_restrict_credirect_app <- function(scoring_df,all_df,
-                                       flag_credit_next_salary){
+     flag_credit_next_salary,flag_new_credirect_old_city){
 
   if(flag_credit_next_salary==1){
     scoring_df$score <- ifelse(scoring_df$score %in% 
@@ -68,23 +68,55 @@ gen_restrict_credirect_app <- function(scoring_df,all_df,
     scoring_df$score <- ifelse(scoring_df$amount>300,"Bad",scoring_df$score)
   }
   
+  # Apply filter for new Credirects but old City Cash
+  if(flag_new_credirect_old_city==1){
+    scoring_df$score <- ifelse(scoring_df$score %in% 
+     c("Indeterminate","Good 1","Good 2"), "Bad", scoring_df$score)
+  } 
   scoring_df$color <- ifelse(scoring_df$score=="Bad", 1, scoring_df$color)
   return(scoring_df)
 }
 
 # Function to apply restrictions for Credirect behavioral
 gen_restrict_credirect_beh <- function(scoring_df,all_df,
-       flag_credit_next_salary,flag_new_credirect_old_city){
-  
-  # Apply filter for coronavirus effect
-  if(flag_new_credirect_old_city==1){
-    scoring_df$score <- ifelse(scoring_df$score %in% 
-        c("Indeterminate","Good 1","Good 2"), "Bad", scoring_df$score)
-  } else {
-    scoring_df$score <- ifelse(scoring_df$score %in% 
-        c("Bad"), "Bad", scoring_df$score)
-  }
+       flag_credit_next_salary,total_amount,cash_flow){
 
+  # Get comapany ID to filter past credits only for Credirect
+  all_df_local <- get_company_id_prev(db_name,all_df)
+  all_id_local <- all_id[all_id$status %in% c(4,5) & 
+                         all_id$company_id==all_df_local$company_id,]
+  
+  # Apply policy rules 
+  # if(flag_credit_next_salary==0 & flag_new_credirect_old_city==0){
+  #   
+  #   for(i in 1:nrow(all_id_local)){
+  #     all_id_local$amount[i] <- fetch(dbSendQuery(con,
+  #      gen_last_cred_amount_query(all_id_local$id[i],db_name)), n=-1)$amount
+  #   }
+  #   
+  #   scoring_df$allowed_amount_app <- 
+  #     ifelse(scoring_df$score %in% c("NULL","Bad","Indeterminate"),0,
+  #     ifelse(scoring_df$score %in% c("Good 4"),1000,600))
+  #   
+  #   if(cash_flow$amount<0.5*total_amount$final_credit_amount){
+  #     scoring_df$allowed_amount <- 
+  #       ifelse(scoring_df$score %in% c("Bad","Indeterminate","Good 1","NULL"),
+  #         max(all_id_local$amount) + 0,
+  #       ifelse(scoring_df$score %in% c("Good 2"),
+  #         max(all_id_local$amount) + 200,
+  #       ifelse(scoring_df$score %in% c("Good 3"),
+  #         max(all_id_local$amount) + 400, 
+  #         max(all_id_local$amount) + 1000)))
+  #     scoring_df$color <- ifelse(scoring_df$amount>
+  #        max(scoring_df$allowed_amount,scoring_df$allowed_amount_app),1,
+  #        scoring_df$color)
+  #   }
+  #   
+  #   if(cash_flow$amount>=0.5*total_amount$final_credit_amount){
+  #     
+  #   }
+  # 
+  # }
   scoring_df$color <- ifelse(scoring_df$score=="Bad", 1, scoring_df$color)
   return(scoring_df)
 }

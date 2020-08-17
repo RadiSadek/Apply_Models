@@ -200,6 +200,7 @@ all_df$days_diff_last_credit <- 3
 
 # Get flag if credit is behavioral or not
 flag_beh <- ifelse(all_df$credits_cum==0, 0, 1)
+flag_rep <- ifelse(nrow(subset(all_id,all_id$status==5))>0,1,0)
 
 
 # Compute ratio of number of payments
@@ -372,11 +373,15 @@ if(flag_beh==1 & flag_credirect==0){
 }
 if(flag_beh==0 & flag_credirect==1){
   scoring_df <- gen_restrict_credirect_app(scoring_df,all_df,
-    flag_credit_next_salary)
-}
-if(flag_beh==1 & flag_credirect==1){
-  scoring_df <- gen_restrict_credirect_beh(scoring_df,all_df,
     flag_credit_next_salary,flag_new_credirect_old_city)
+}
+if(flag_beh==1 & flag_credirect==1 & flag_new_credirect_old_city==1){
+  scoring_df <- gen_restrict_credirect_app(scoring_df,all_df,
+    flag_credit_next_salary,flag_new_credirect_old_city)
+}
+if(flag_beh==1 & flag_credirect==1 & flag_new_credirect_old_city==0){
+  scoring_df <- gen_restrict_credirect_beh(scoring_df,all_df,
+    flag_credit_next_salary,total_amount,cash_flow)
 }
 if(flag_beh==0 & flag_credirect==0 & all_df$product_id==22){
   scoring_df <- gen_restrict_big_fin_app(scoring_df)
