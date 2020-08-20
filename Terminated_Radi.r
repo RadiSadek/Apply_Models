@@ -84,6 +84,10 @@ risk <- suppressWarnings(fetch(dbSendQuery(con,
    gen_risky_query(db_name,all_df)), n=-1))
 
 
+# Check number of varnat 
+flag_varnat <- gen_nb_varnat(all_credits)
+
+
 # Read total amount of current credit
 total_amount_curr <- suppressWarnings(fetch(dbSendQuery(con, 
   gen_total_amount_curr_query(db_name,application_id)), n=-1))
@@ -307,7 +311,7 @@ if (empty_fields>=threshold_empty){
   scoring_df$score <- "NULL"
   scoring_df$color <- 2
   
-} else if (flag_exclusion==1){
+} else if (flag_exclusion==1 | flag_varnat==1){
   
   scoring_df$score <- "Bad"
   scoring_df$color <- 1
@@ -322,20 +326,10 @@ if (empty_fields>=threshold_empty){
   scoring_df <- gen_beh_citycash(df,scoring_df,products,df_Log_beh_CityCash,
                      period,all_id,all_df,prev_amount,amount_tab,
                      t_income,disposable_income_adj,1)
-} else if (flag_beh==1 & flag_credirect==1 & flag_new_credirect_old_city==0){
+} else if (flag_beh==1 & flag_credirect==1){
   scoring_df <- gen_beh_credirect(df,scoring_df,products,df_Log_beh_Credirect,
-                     period,all_df,prev_amount,amount_tab,
-                     t_income,disposable_income_adj,1)
-} else if (flag_new_credirect_old_city==1 & flag_credit_next_salary==1){
-  scoring_df <- gen_app_credirect_payday(df,scoring_df,products,
-                 df_Log_Credirect_App_payday,period,all_df,prev_amount,
-                 amount_tab,t_income,disposable_income_adj,
-                 flag_credit_next_salary)
-} else if (flag_new_credirect_old_city==1 & flag_credit_next_salary==0){
-  scoring_df <- gen_app_credirect_installments(df,scoring_df,products,
-                 df_Log_Credirect_App_installments,period,all_df,
-                 prev_amount,amount_tab,t_income,disposable_income_adj,
-                 flag_credit_next_salary)
+                     period,all_df,prev_amount,amount_tab,t_income,
+                     disposable_income_adj,1,flag_new_credirect_old_city)
 } else if (flag_beh==0 & flag_credirect==0){
   scoring_df <- gen_app_citycash(df,scoring_df,products,df_Log_CityCash_App,
                       period,all_df,prev_amount,amount_tab,
@@ -381,7 +375,7 @@ if(flag_beh==1 & flag_credirect==1 & flag_new_credirect_old_city==1){
 }
 if(flag_beh==1 & flag_credirect==1 & flag_new_credirect_old_city==0){
   scoring_df <- gen_restrict_credirect_beh(scoring_df,all_df,
-    flag_credit_next_salary,total_amount,cash_flow)
+    flag_credit_next_salary)
 }
 if(flag_beh==0 & flag_credirect==0 & all_df$product_id==22){
   scoring_df <- gen_restrict_big_fin_app(scoring_df)

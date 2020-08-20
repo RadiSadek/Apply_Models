@@ -239,5 +239,12 @@ FROM ",db_name,".credits_plan_main
 WHERE application_id=",id,sep=""))
 }
 
+# Define query to get passed installments at time of choice
+gen_passed_install_before_query <- function(db_name,id,time_choice){
+  return(paste(
+"SELECT COUNT(application_id) as passed_installments
+FROM ",db_name,".credits_plan_main 
+WHERE application_id=",id," AND pay_day<='",time_choice,"'",sep=""))
+}
 
 

@@ -5,52 +5,77 @@
 
 gen_beh_credirect <- function(df,scoring_df,products,df_Log_beh_Credirect,
                              period,all_df,prev_amount,amount_tab,
-                             t_income,disposable_income_adj,crit_po){
+                             t_income,disposable_income_adj,crit_po,
+                             flag_new_credirect_old_city){
   #  Cut and bin
-  df$age_cut <- ifelse(df$age<=31,"31_less","32_more")
-  df$age <- as.factor(df$age_cut)
-  df$gender <- as.factor(df$gender)
-  df$education <- ifelse(is.na(df$education), "not_4", 
-        ifelse(df$education %in% c(4), "4", "not_4"))
-  df$education <- as.factor(df$education)
+  df$education_cut <- ifelse(is.na(df$education), "2_3",
+      ifelse(df$education==1,"1",
+                                    ifelse(df$education==4,"4","2_3")))
+  df$education <- as.factor(df$education_cut)
+
   df$status_work_cut <- ifelse(is.na(df$status_work), "other",
-       ifelse(df$status_work %in% c(1,3,4,6,9,5), "1_3_4_5_6_9", "other"))
+     ifelse(df$status_work %in% c(1,4,5),"1_4_5","other"))
   df$status_work <- as.factor(df$status_work_cut)
-  df$days_diff_last_credit_cut <- ifelse(is.na(df$days_diff_last_credit), 
-       "less_3", ifelse(df$days_diff_last_credit<=3,"less_3","4_more"))
-  df$days_diff_last_credit <- as.factor(df$days_diff_last_credit_cut)
-  df$prev_online <- ifelse(is.na(df$prev_online),0,df$prev_online)
-  df$prev_online <- as.factor(df$prev_online)
-  df$max_delay_cut <- ifelse(df$max_delay<=2,"less_2",
-        ifelse(df$max_delay<=13,"3_13",
-        ifelse(df$max_delay<=48,"14_48","more_48")))
+  
+  df$purpose_cut <- ifelse(is.na(df$purpose), "other",
+     ifelse(df$purpose %in% c(2,4,5),"2_4_5","other"))
+  df$purpose <- as.factor(df$purpose_cut)
+  
+  df$age_cut <- ifelse(df$age<=23,"23_less",
+     ifelse(df$age<50,"24_50","51_more"))
+  df$age <- as.factor(df$age_cut)
+  
+  df$experience_employer_cut <- ifelse(is.na(df$experience_employer),"more_3",
+     ifelse(df$experience_employer<=2,"0_2","more_3"))
+  df$experience_employer <- as.factor(df$experience_employer_cut)
+  
+  df$new_cred_old_city <- flag_new_credirect_old_city
+  df$new_cred_old_city <- as.factor(df$new_cred_old_city)
+  
+  df$max_delay_cut <- ifelse(is.na(df$max_delay),"5_55",
+     ifelse(df$max_delay<=4,"less_4",
+     ifelse(df$max_delay<=55,"5_55","more_56")))
   df$max_delay <- as.factor(df$max_delay_cut)
-  df$credits_cum_cut <- ifelse(df$credits_cum<=5,"5_less","6_more")
-  df$credits_cum <- as.factor(df$credits_cum_cut)
+  
+  df$days_diff_last_credit_cut <- ifelse(is.na(df$days_diff_last_credit), 
+     "0_1",
+     ifelse(df$days_diff_last_credit %in% c(0,1),"0_1","more_2"))
+  df$days_diff_last_credit <- as.factor(df$days_diff_last_credit_cut)
+  
   df$status_active_total_cut <- ifelse(is.na(df$status_active_total),"other",
-        ifelse(df$status_active_total==0,"0","other"))
+     ifelse(df$status_active_total==0,"0","other"))
   df$status_active_total <- as.factor(df$status_active_total_cut)
-  df$status_finished_total_cut <- ifelse(is.na(df$status_finished_total),
-        "not_75", ifelse(df$status_finished_total==75,"75","not_75"))
+  
+  df$status_finished_total_cut <- ifelse(is.na(df$status_finished_total),"not_75",
+     ifelse(df$status_finished_total==75,"75","not_75"))
   df$status_finished_total <- as.factor(df$status_finished_total_cut)
+  
   df$source_entity_count_total_cut <- ifelse(
-    is.na(df$source_entity_count_total), "11_less",
-    ifelse(df$source_entity_count_total<=11,"11_less","12_more"))
+    is.na(df$source_entity_count_total), "9_less",
+    ifelse(df$source_entity_count_total<=9,"9_less","10_more"))
   df$source_entity_count_total <- as.factor(
     df$source_entity_count_total_cut)
+  
   df$outs_overdue_ratio_total_cut <- ifelse(
-    is.na(df$outs_overdue_ratio_total), "0.15_less",
-    ifelse(df$outs_overdue_ratio_total==-999,"0.15_less",
-    ifelse(df$outs_overdue_ratio_total<=0.15,"0.15_less","more_0.15")))
+    is.na(df$outs_overdue_ratio_total), "0_0.16",
+    ifelse(df$outs_overdue_ratio_total==-999,"0_0.16",
+    ifelse(df$outs_overdue_ratio_total==0,"0",
+    ifelse(df$outs_overdue_ratio_total<=0.16,"0_0.16","more_0.16"))))
   df$outs_overdue_ratio_total <- as.factor(df$outs_overdue_ratio_total_cut)
   
+  df$viber_registered_cut <- ifelse(is.na(df$viber_registered), "other",
+    ifelse(df$viber_registered=="False", "False",
+    ifelse(df$viber_registered=="True", "other", "other")))
+  df$viber_registered <- as.factor(df$viber_registered_cut)
+  
+  # Apply model
   for(i in 1:nrow(scoring_df)){
     
     period_tab <- as.numeric(scoring_df$period[i])
     amount_tab <- as.numeric(scoring_df$amount[i])
     
     amount_diff_loc <- amount_tab - prev_amount$amount
-    df$amount_diff <- ifelse(amount_diff_loc>=200,"200_more","less_200")
+    df$amount_diff <- ifelse(amount_diff_loc<250,"less_200","more_250")
     df$amount_diff <- as.factor(df$amount_diff)
     
     apply_logit <- predict(df_Log_beh_Credirect, newdata=df, type="response")

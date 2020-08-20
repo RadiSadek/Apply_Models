@@ -36,8 +36,8 @@ main_dir <- "C:\\Projects\\Apply_Scoring\\"
 
 # Read argument of ID
 args <- commandArgs(trailingOnly = TRUE)
-application_id <- args[1]
-#application_id <- 692424
+#application_id <- args[1]
+application_id <- 692893
 product_id <- NA
 
 
@@ -111,6 +111,10 @@ all_credits$date <- ifelse(all_credits$status %in% c(4,5),
 # Check if client has a risk profile
 risk <- suppressWarnings(fetch(dbSendQuery(con, 
     gen_risky_query(db_name,all_df)), n=-1))
+
+
+# Check number of varnat 
+flag_varnat <- gen_nb_varnat(all_credits)
 
 
 # Read total amount of current credit
@@ -267,7 +271,6 @@ all_df <- gen_ratio_last_amount_paid(db_name,all_id,all_df,application_id,
 all_df$amount_diff <- ifelse(nrow_all_id<=1, NA, all_df$amount - 
                                prev_amount$amount)
 
-
 # Compute income variables
 t_income <- gen_t_income(db_name,application_id,period)
 disposable_income_adj <- gen_disposable_income_adj(db_name,application_id,
@@ -328,7 +331,7 @@ if (empty_fields>=threshold_empty){
   scoring_df$score <- "NULL"
   scoring_df$color <- 2
   
-} else if (flag_exclusion==1){
+} else if (flag_exclusion==1 | flag_varnat==1){
   
   scoring_df$score <- "Bad"
   scoring_df$color <- 1
@@ -343,20 +346,10 @@ if (empty_fields>=threshold_empty){
   scoring_df <- gen_beh_citycash(df,scoring_df,products,df_Log_beh_CityCash,
                      period,all_id,all_df,prev_amount,amount_tab,
                      t_income,disposable_income_adj,0)
-} else if (flag_beh==1 & flag_credirect==1 & flag_new_credirect_old_city==0){
+} else if (flag_beh==1 & flag_credirect==1){
   scoring_df <- gen_beh_credirect(df,scoring_df,products,df_Log_beh_Credirect,
-                     period,all_df,prev_amount,amount_tab,
-                     t_income,disposable_income_adj,0)
-} else if (flag_new_credirect_old_city==1 & flag_credit_next_salary==1){
-  scoring_df <- gen_app_credirect_payday(df,scoring_df,products,
-                 df_Log_Credirect_App_payday,period,all_df,prev_amount,
-                 amount_tab,t_income,disposable_income_adj,
-                 flag_credit_next_salary)
-} else if (flag_new_credirect_old_city==1 & flag_credit_next_salary==0){
-  scoring_df <- gen_app_credirect_installments(df,scoring_df,products,
-                 df_Log_Credirect_App_installments,period,all_df,
-                 prev_amount,amount_tab,t_income,disposable_income_adj,
-                 flag_credit_next_salary)
+                     period,all_df,prev_amount,amount_tab,t_income,
+                     disposable_income_adj,0,flag_new_credirect_old_city)
 } else if (flag_beh==0 & flag_credirect==0){
   scoring_df <- gen_app_citycash(df,scoring_df,products,df_Log_CityCash_App,
                      period,all_df,prev_amount,amount_tab,
@@ -408,7 +401,7 @@ if(flag_beh==1 & flag_credirect==1 & flag_new_credirect_old_city==1){
 }
 if(flag_beh==1 & flag_credirect==1 & flag_new_credirect_old_city==0){
   scoring_df <- gen_restrict_credirect_beh(scoring_df,all_df,
-    flag_credit_next_salary,total_amount,cash_flow)
+    flag_credit_next_salary)
 }
 if(flag_beh==0 & flag_credirect==0 & all_df$product_id==22){
   scoring_df <- gen_restrict_big_fin_app(scoring_df)
@@ -429,11 +422,6 @@ scoring_df <- gen_correction_po(con,db_name,all_df,all_id,
 
 # Create column for table display
 scoring_df <- gen_final_table_display(scoring_df)
-if(flag_beh==1 & flag_credirect==1 & flag_new_credirect_old_city==0){
-  for (i in 1:nrow(scoring_df)){
-    scoring_df$display_score[i] <- scoring_df$score[i]
-  }
-}
 
 
 # Create output dataframe
@@ -472,6 +460,7 @@ final$flag_exclusion <- flag_exclusion
 final$flag_bad_ckr_citycash <- flag_bad_ckr_citycash
 final$flag_fraud <- fraud_flag
 final$flag_new_credirect_old_city <- flag_new_credirect_old_city
+final$flag_varnat <- flag_varnat
 final$status_active_total <- all_df$status_active_total
 final$status_finished_total <- all_df$status_finished_total
 final$outs_overdue_ratio_total <- all_df$outs_overdue_ratio_total

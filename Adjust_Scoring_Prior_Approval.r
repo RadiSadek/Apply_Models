@@ -18,7 +18,6 @@ gen_correction_po <- function(con,db_name,all_df,all_id,
   
   if(nrow(po)>=1){
     
-    
     # Check if any credit after offer (of same company)
     company_id <- suppressWarnings(fetch(dbSendQuery(con, 
         gen_get_company_id_query(db_name)), n=-1))
@@ -78,3 +77,53 @@ gen_correction_po <- function(con,db_name,all_df,all_id,
   return(scoring_df)
 
 }
+
+gen_correction_po_ref <- function(con,db_name,all_df,all_id,
+                              scoring_df,products,period){
+  
+  # Get comapany ID to filter past credits only for Credirect
+  all_df_local <- get_company_id_prev(db_name,all_df)
+  input <- all_id[all_id$status %in% c(4) & 
+                  all_id$company_id==all_df_local$company_id,]
+  
+  string_sql_update <- input$id[1]
+  if(nrow(input)>1){
+    for(i in 1:nrow(input)){
+      string_sql_update <- paste(string_sql_update,input$id[i],sep=",")
+      }
+  }
+  
+  if(nrow(input)>0){
+    # Read credits with already an offer for terminated prior approval
+    po_sql_query <- paste(
+      "SELECT application_id, max_amount, created_at, updated_at, product_id
+     FROM ",db_name,".prior_approval_refinances 
+     WHERE deleted_at IS NULL AND application_id IN (", 
+      string_sql_update,")",sep="")
+    po_ref <- suppressWarnings(fetch(dbSendQuery(con,po_sql_query), n=-1))
+    
+    if(nrow(po_ref)>0){
+      po_ref$final_time <- ifelse(is.na(po_ref$updated_at),po_ref$created_at,
+                                  po_ref$updated_at)
+      po_ref <- po_ref[order(po_ref$created_at),]
+      po_ref <- po_ref[1,]
+      max_installments <- max(scoring_df$period)
+      if(suppressWarnings(difftime(Sys.time(),po_ref$final_time,c("days")))<=100 
+         & all_df$product_id==po_ref$product_id){
+        scoring_df$score <- ifelse(
+          scoring_df$amount<=po_ref$max_amount & 
+            scoring_df$period==max_installments &
+            (scoring_df$score %in% c("Bad","Indeterminate") |
+               scoring_df$color==1),"Good corr",
+          scoring_df$score)
+        scoring_df$color <- ifelse(scoring_df$score=="Good corr", 3, 
+                                   scoring_df$color)
+        scoring_df$score <- ifelse(scoring_df$score=="Good corr","Good 1",
+                                   scoring_df$score)
+      }
+   }
+  }
+  return(scoring_df)
+}
+  
+
