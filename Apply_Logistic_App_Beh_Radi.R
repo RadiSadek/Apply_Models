@@ -37,8 +37,8 @@ main_dir <- "C:\\Projects\\Apply_Scoring\\"
 # Read argument of ID
 args <- commandArgs(trailingOnly = TRUE)
 application_id <- args[1]
-#application_id <- 700423
-product_id <- NA
+application_id <- 573624
+#product_id <- NA
 
 
 # Set working directory for input (R data for logistic regression) and output #
@@ -417,11 +417,13 @@ fraud_flag <- ifelse(flag_credirect==1 & flag_beh==0 &
    df,scoring_df,products,df_Log_Credirect_Fraud,period,all_df,
    prev_amount,amount_tab,t_income,disposable_income_adj), "NULL")
 
-
 # Recorrect for prior approvals - terminated
 scoring_df <- gen_correction_po(con,db_name,all_df,all_id,
                                 scoring_df,products,period)
 
+# Recorrect for prior approvals - refinances
+scoring_df <- gen_correction_po_ref(con,db_name,all_df,all_id,
+                                    scoring_df,products,period)
 
 # Create column for table display
 scoring_df <- gen_final_table_display(scoring_df)
@@ -431,7 +433,6 @@ if(flag_beh==1 & flag_credirect==1 & flag_new_credirect_old_city==0 &
     scoring_df$display_score[i] <- scoring_df$score[i]
   }
 }
-
 
 # Create output dataframe
 final <- as.data.frame(cbind(scoring_df$application_id[1],

@@ -469,6 +469,11 @@ scoring_df <- gen_correction_po(con,db_name,all_df,all_id,
                                 scoring_df,products,period)
 
 
+# Recorrect for prior approvals - refinances
+scoring_df <- gen_correction_po_ref(con,db_name,all_df,all_id,
+                                    scoring_df,products,period)
+
+
 # Create column for table display
 scoring_df <- gen_final_table_display(scoring_df)
 if(flag_beh==1 & flag_credirect==1 & flag_new_credirect_old_city==0 & 
