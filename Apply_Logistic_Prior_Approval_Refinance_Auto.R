@@ -454,6 +454,11 @@ if(flag_beh==0 & flag_credirect==0 & all_df$product_id==22){
 }
 
 
+# Reselect columns 
+scoring_df <- scoring_df[,c("application_id","amount","period","score","color",
+                            "created_at")]
+
+
 # Compute previous installment amount and if acceptable differential
 for(i in 1:nrow(scoring_df)){
   period_tab <- as.numeric(scoring_df$period[i])

@@ -78,7 +78,7 @@ gen_restrict_credirect_app <- function(scoring_df,all_df,
 }
 
 # Function to apply restrictions for Credirect behavioral
-gen_restrict_credirect_beh <- function(scoring_df,all_df,
+gen_restrict_credirect_beh <- function(scoring_df,all_df,all_id,
        flag_credit_next_salary){
 
   # Get company ID to filter past credits only for Credirect and credit amounts
@@ -98,7 +98,7 @@ gen_restrict_credirect_beh <- function(scoring_df,all_df,
   
   ratio_passed_installments_prev <- ifelse(nrow(all_id_local)==0,-999,
      ifelse(is.na(gen_prev_deactiv_date(db_name,all_df_local,all_id_local)),999,
-            gen_prev_deactiv_date(db_name,all_df_local,all_id_local)))
+        gen_prev_deactiv_date(db_name,all_df_local,all_id_local)))
 
   # Apply policy rules for Credirect Installments
   if(flag_credit_next_salary==0){

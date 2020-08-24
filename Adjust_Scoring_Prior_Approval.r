@@ -34,16 +34,8 @@ gen_correction_po <- function(con,db_name,all_df,all_id,
                              all_id_local$company_id==po$company_id & 
                              all_id_local$created_at>=po$created_at)
       
-      
-      # Check if last po of same company has been deleted by scoring
-      if(!(is.na(po$deleted_at)) & substring(po$deleted_at,12,19)=="04:00:00"){
-        flag_corrected_scoring <- 1
-      } else if (!(is.na(po$deleted_at)) & po$deleted_at<="2020-07-23"){ 
-        flag_corrected_scoring <- 1 } else {
-        flag_corrected_scoring <- 0 }
-      
       # Correct scoring for terminated prior approval
-      if(nrow(all_id_local)==0 & flag_corrected_scoring==0){
+      if(nrow(all_id_local)==0 & is.na(po$deleted_at)){
         
         # Arrange installment amount according to period
         period_po <- suppressWarnings(fetch(dbSendQuery(con, 
@@ -69,19 +61,17 @@ gen_correction_po <- function(con,db_name,all_df,all_id,
                                    scoring_df$color)
         scoring_df$score <- ifelse(scoring_df$score=="Good corr","Good 1",
                                    scoring_df$score)}
-    } 
+    }
  }
-  
   scoring_df <- scoring_df[order(scoring_df$period),]
   scoring_df <- scoring_df[order(scoring_df$amount),]
   return(scoring_df)
-
 }
 
 gen_correction_po_ref <- function(con,db_name,all_df,all_id,
                               scoring_df,products,period){
   
-  # Get comapany ID to filter past credits only for Credirect
+  # Get company ID and all current actives
   all_df_local <- get_company_id_prev(db_name,all_df)
   input <- all_id[all_id$status %in% c(4) & 
                   all_id$company_id==all_df_local$company_id,]
@@ -94,6 +84,7 @@ gen_correction_po_ref <- function(con,db_name,all_df,all_id,
   }
   
   if(nrow(input)>0){
+    
     # Read credits with already an offer for terminated prior approval
     po_sql_query <- paste(
       "SELECT application_id, max_amount, created_at, updated_at, product_id
@@ -108,14 +99,13 @@ gen_correction_po_ref <- function(con,db_name,all_df,all_id,
       po_ref <- po_ref[order(po_ref$created_at),]
       po_ref <- po_ref[1,]
       max_installments <- max(scoring_df$period)
-      if(suppressWarnings(difftime(Sys.time(),po_ref$final_time,c("days")))<=100 
+      if(suppressWarnings(difftime(Sys.time(),po_ref$final_time,c("days")))<=90 
          & all_df$product_id==po_ref$product_id){
         scoring_df$score <- ifelse(
           scoring_df$amount<=po_ref$max_amount & 
-            scoring_df$period==max_installments &
-            (scoring_df$score %in% c("Bad","Indeterminate") |
-               scoring_df$color==1),"Good corr",
-          scoring_df$score)
+          scoring_df$period==max_installments &
+         (scoring_df$score %in% c("Bad","Indeterminate") | scoring_df$color==1),
+             "Good corr",scoring_df$score)
         scoring_df$color <- ifelse(scoring_df$score=="Good corr", 3, 
                                    scoring_df$color)
         scoring_df$score <- ifelse(scoring_df$score=="Good corr","Good 1",
