@@ -374,17 +374,12 @@ if(flag_beh==1 & flag_credirect==1 & flag_new_credirect_old_city==1){
     flag_credit_next_salary,flag_new_credirect_old_city)
 }
 if(flag_beh==1 & flag_credirect==1 & flag_new_credirect_old_city==0){
-  scoring_df <- gen_restrict_credirect_beh(scoring_df,all_df,
+  scoring_df <- gen_restrict_credirect_beh(scoring_df,all_df,all_id,
     flag_credit_next_salary)
 }
 if(flag_beh==0 & flag_credirect==0 & all_df$product_id==22){
   scoring_df <- gen_restrict_big_fin_app(scoring_df)
 }
-
-
-# Reselect columns 
-scoring_df <- scoring_df[,c("application_id","amount","period","score","color",
-                            "created_at")]
 
 
 # Compute previous installment amount and if acceptable differential

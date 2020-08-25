@@ -74,7 +74,7 @@ all_credits <- subset(all_credits, is.na(all_credits$sub_status) |
 
 # Subset based on time difference since deactivation
 all_credits <- subset(all_credits,substring(all_credits$deactivated_at,1,10)==
-  (as.Date(Sys.time())-28))
+  (as.Date(Sys.time())-4))
 
 
 # Get last credit amount
