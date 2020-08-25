@@ -27,15 +27,18 @@ gen_correction_po <- function(con,db_name,all_df,all_id,
     po <- subset(po,po$company_id==all_df_local$company_id)
     
     if(nrow(po)>=1){
-      po <- po[rev(order(po$created_at)),]
+      po <- po[rev(order(po$deleted_at)),]
       po <- po[!duplicated(po$client_id),]
       all_id_local <- subset(all_id,all_id$status %in% c(4,5))
       all_id_local <- subset(all_id_local,
                              all_id_local$company_id==po$company_id & 
                              all_id_local$created_at>=po$created_at)
-      
+      po$final_time <- ifelse(!is.na(po$deleted_at),
+              difftime(Sys.time(),po$deleted_at,units=c("days")),
+              999)
+            
       # Correct scoring for terminated prior approval
-      if(nrow(all_id_local)==0 & is.na(po$deleted_at)){
+      if(nrow(all_id_local)==0 & po$final_time<=4){
         
         # Arrange installment amount according to period
         period_po <- suppressWarnings(fetch(dbSendQuery(con, 
