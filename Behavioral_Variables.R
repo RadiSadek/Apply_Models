@@ -235,21 +235,28 @@ gen_installment_ratio <- function(db_name,all_id,all_df){
   all_id_local2 <- subset(all_id,all_id$status %in% c(4))
   
   if(nrow(all_id_local)>0){
-    for (i in 1:nrow(all_id_local)){
-      all_id_local$max_delay[i] <- fetch(dbSendQuery(
-        con,gen_plan_main_select_query(db_name,all_id_local$id[i])), 
+    
+    all_id_local_tot <- all_id_local
+    for (i in 1:nrow(all_id_local_tot)){
+      all_id_local_tot$max_delay[i] <- fetch(dbSendQuery(
+        con,gen_plan_main_select_query(db_name,all_id_local_tot$id[i])), 
         n=-1)$max_delay
     }
     
-    all_id_local_ok <- subset(all_id_local,all_id_local$max_delay<=60)
-    all_id_local_not_ok <- subset(all_id_local,all_id_local$max_delay>60)
+    all_id_local_ok <- subset(all_id_local_tot,
+                              all_id_local_tot$max_delay<=60)
+    all_id_local_not_ok <- subset(all_id_local_tot,
+                              all_id_local_tot$max_delay>60)
     
     final_prev_installment_amount <- 
       ifelse(nrow(all_id_local_ok)>0 & nrow(all_id_local_not_ok)==0,
-             1.3*gen_prev_max_installment(db_name,all_id_local_ok,all_df),
+             1.3*gen_prev_max_installment(db_name,rbind(
+               all_id_local,all_id_local2),all_df),
          ifelse(nrow(all_id_local_ok)>0 & nrow(all_id_local_not_ok)>0,
-             1.1*gen_prev_max_installment(db_name,all_id_local_ok,all_df),
-             1*gen_prev_max_installment(db_name,all_id_local_not_ok,all_df)
+             1.1*gen_prev_max_installment(db_name,rbind(
+               all_id_local,all_id_local2),all_df),
+             1*gen_prev_max_installment(db_name,rbind(
+               all_id_local,all_id_local2),all_df)
              ))
   } else {
     final_prev_installment_amount <- 1.1*gen_prev_max_installment(
