@@ -247,4 +247,24 @@ FROM ",db_name,".credits_plan_main
 WHERE application_id=",id," AND pay_day<='",time_choice,"'",sep=""))
 }
 
+# Read PO terminated data per client_id
+gen_po_terminated_query <- function(db_name,input){
+  return(paste(
+    "SELECT id, client_id, application_id, credit_amount, installment_amount,
+     deleted_at, created_at, product_id 
+     FROM ",db_name,".clients_prior_approval_applications 
+     WHERE client_id=",input,
+    sep=""))
+}
+
+# Read PO refinance data per client_id
+gen_po_refinance_query <- function(db_name,input){
+  return(paste(
+    "SELECT application_id, max_amount, deleted_at, product_id
+     FROM ",db_name,".prior_approval_refinances 
+     WHERE deleted_at IS NOT NULL AND application_id IN (", 
+     input,")",sep=""))
+}
+
+
 

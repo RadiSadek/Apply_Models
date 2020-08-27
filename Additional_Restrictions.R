@@ -17,14 +17,12 @@ gen_restrict_citycash_app <- function(scoring_df){
     [names(table(score_df_400$score)) %in% c("Good 1","Good 2",
     "Good 3","Good 4")])
   
-  scoring_df$score <- ifelse(scoring_df$score %in% c("NULL"),scoring_df$score,
-    ifelse(scoring_df$amount>1000,"Bad",
-    ifelse(criteria_800==0 & scoring_df$amount>800,"Bad",
-    ifelse(criteria_600==0 & scoring_df$amount>600,"Bad",
-    ifelse(criteria_400==0 & scoring_df$amount>400,"Bad",scoring_df$score)))))
   scoring_df$color <- ifelse(scoring_df$score %in% c("NULL"),scoring_df$color,
-    ifelse(scoring_df$score %in% c("Bad"),1,scoring_df$color))
-           
+    ifelse(scoring_df$amount>1000,1,
+    ifelse(criteria_800==0 & scoring_df$amount>800,1,
+    ifelse(criteria_600==0 & scoring_df$amount>600,1,
+    ifelse(criteria_400==0 & scoring_df$amount>400,1,scoring_df$color)))))
+
   return(scoring_df)
 }
 
@@ -34,12 +32,10 @@ gen_restrict_citycash_beh <- function(scoring_df,prev_amount){
   criteria <- length(names(table(scoring_df$score))
     [names(table(scoring_df$score)) %in% 
         c("Good 1","Good 2","Good 3","Good 4")])
-  scoring_df$score <- ifelse(scoring_df$score %in% c("NULL"),scoring_df$score,
-    ifelse(criteria==0 & scoring_df$amount>prev_amount$amount,"Bad",
-           scoring_df$score))
   scoring_df$color <- ifelse(scoring_df$score %in% c("NULL"),scoring_df$color,
-    ifelse(scoring_df$score %in% c("Bad"),1,scoring_df$color))
-
+    ifelse(criteria==0 & scoring_df$amount>prev_amount$amount,1,
+           scoring_df$color))
+  
   return(scoring_df)
 }
 
@@ -48,32 +44,31 @@ gen_restrict_credirect_app <- function(scoring_df,all_df,
      flag_credit_next_salary,flag_new_credirect_old_city){
 
   if(flag_credit_next_salary==1){
-    scoring_df$score <- ifelse(scoring_df$score %in% 
-            c("Indeterminate"), "Bad", scoring_df$score)
-    scoring_df$score <- 
-      ifelse(scoring_df$score %in% c("Good 4") & scoring_df$amount>800,"Bad",
+    scoring_df$color <- ifelse(scoring_df$score %in% 
+            c("Indeterminate"),1,scoring_df$color)
+    scoring_df$color <- 
+      ifelse(scoring_df$score %in% c("Good 4") & scoring_df$amount>800,1,
       ifelse(scoring_df$score %in% c("Good 3","Good 2","Good 1") &
-             scoring_df$amount>600,"Bad",
-             scoring_df$score))
+             scoring_df$amount>600,1,
+             scoring_df$color))
   } else {
-    scoring_df$score <- ifelse(scoring_df$score %in% 
-            c("Indeterminate"), "Bad", scoring_df$score)
-    scoring_df$score <- 
-      ifelse(scoring_df$score %in% c("Good 4") & scoring_df$amount>1000,"Bad",
+    scoring_df$color <- ifelse(scoring_df$score %in% 
+            c("Indeterminate"), 1, scoring_df$color)
+    scoring_df$color <- 
+      ifelse(scoring_df$score %in% c("Good 4") & scoring_df$amount>1000,1,
       ifelse(scoring_df$score %in% c("Good 3","Good 2","Good 1") &
-             scoring_df$amount>600,"Bad",
-             scoring_df$score))
+             scoring_df$amount>600,1,
+             scoring_df$color))
   }
   if(all_df$age<21){
-    scoring_df$score <- ifelse(scoring_df$amount>300,"Bad",scoring_df$score)
+    scoring_df$color <- ifelse(scoring_df$amount>300,1,scoring_df$color)
   }
   
   # Apply filter for new Credirects but old City Cash
   if(flag_new_credirect_old_city==1){
-    scoring_df$score <- ifelse(scoring_df$score %in% 
-     c("Indeterminate","Good 1","Good 2"), "Bad", scoring_df$score)
+    scoring_df$color <- ifelse(scoring_df$score %in% 
+     c("Indeterminate","Good 1","Good 2"), 1, scoring_df$color)
   } 
-  scoring_df$color <- ifelse(scoring_df$score=="Bad", 1, scoring_df$color)
   return(scoring_df)
 }
 
@@ -175,7 +170,6 @@ gen_restrict_big_fin_app <- function(scoring_df){
 gen_adjust_score <- function(scoring_df,crit){
   for(i in 1:nrow(scoring_df)){
     if(scoring_df$score[i] %in% crit){
-      scoring_df$score[i] <- "Bad"
       scoring_df$color[i] <- 1} 
   }
   return(scoring_df)

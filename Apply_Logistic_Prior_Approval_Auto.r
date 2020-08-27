@@ -236,8 +236,11 @@ offers[is.na(offers)] <- "NULL"
 
 # Make result ready for SQL query
 string_sql <- gen_sql_string_po_terminated(offers,1)
-for(i in 2:nrow(offers)){
-  string_sql <- paste(string_sql,gen_sql_string_po_terminated(offers,i),sep=",")
+if(nrow(offers)>1){
+  for(i in 2:nrow(offers)){
+    string_sql <- paste(string_sql,gen_sql_string_po_terminated(offers,i),
+                        sep=",")
+  }
 }
 
 
