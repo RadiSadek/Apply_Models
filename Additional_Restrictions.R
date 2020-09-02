@@ -61,7 +61,8 @@ gen_restrict_credirect_app <- function(scoring_df,all_df,
              scoring_df$color))
   }
   if(all_df$age<21){
-    scoring_df$color <- ifelse(scoring_df$amount>300,1,scoring_df$color)
+    scoring_df$color <- ifelse(scoring_df$amount>300 & scoring_df$color>2,1,
+        scoring_df$color)
   }
   
   # Apply filter for new Credirects but old City Cash
