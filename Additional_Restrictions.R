@@ -44,19 +44,17 @@ gen_restrict_credirect_app <- function(scoring_df,all_df,
      flag_credit_next_salary,flag_new_credirect_old_city){
 
   if(flag_credit_next_salary==1){
-    scoring_df$color <- ifelse(scoring_df$score %in% 
-            c("Indeterminate"),1,scoring_df$color)
     scoring_df$color <- 
       ifelse(scoring_df$score %in% c("Good 4") & scoring_df$amount>800,1,
-      ifelse(scoring_df$score %in% c("Good 3","Good 2","Good 1") &
+      ifelse(scoring_df$score %in% c("Good 3","Good 2","Good 1",
+                                     "Indeterminate") &
              scoring_df$amount>600,1,
              scoring_df$color))
   } else {
-    scoring_df$color <- ifelse(scoring_df$score %in% 
-            c("Indeterminate"), 1, scoring_df$color)
     scoring_df$color <- 
       ifelse(scoring_df$score %in% c("Good 4") & scoring_df$amount>1000,1,
-      ifelse(scoring_df$score %in% c("Good 3","Good 2","Good 1") &
+      ifelse(scoring_df$score %in% c("Good 3","Good 2","Good 1",
+                                     "Indeterminate") &
              scoring_df$amount>600,1,
              scoring_df$color))
   }
