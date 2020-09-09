@@ -74,7 +74,7 @@ all_credits <- subset(all_credits, is.na(all_credits$sub_status) |
 
 # Subset based on time difference since deactivation
 all_credits <- subset(all_credits,substring(all_credits$deactivated_at,1,10)==
-  (as.Date(Sys.time())-43))
+  (as.Date(Sys.time())-6))
 
 
 # Get last credit amount
@@ -230,13 +230,12 @@ if(nrow(offers)>0){
 ### Updating certain old offers ###
 ###################################
 
+if(substring(Sys.time(),9,10)=="01"){
+
 # Choose credits for updating
 po_old <- po_raw
-po_old$time_past <- as.numeric(
-  round(difftime(as.Date(substring(Sys.time(),1,10)),
-  as.Date(substring(po_old$created_at,1,10)),units=c("days")),2))
-po_old <- subset(po_old,po_old$time_past>0 & po_old$time_past<=360 & 
-  po_old$time_past%%30==0 & is.na(po_old$deleted_at))
+po_old <- subset(po_old,is.na(po_old$deleted_at))
+
 
 # See if any new credit created after offer
 po_old <- merge(po_old,gen_if_credit_after_po_terminated(
@@ -290,6 +289,7 @@ if(nrow(po_ok)>0){
   suppressMessages(suppressWarnings(dbSendQuery(con,
     gen_string_delete_po_terminated(po_ok,po_ok$installment_amount,
     "installment_amount",db_name))))
+}
 }
 
 

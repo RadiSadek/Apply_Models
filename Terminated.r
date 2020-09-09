@@ -21,7 +21,7 @@ base_dir <- here('app/Factories/Scoring')
 sqlMode <- paste("SET sql_mode=''", sep ="")	
 suppressWarnings(fetch(dbSendQuery(con, sqlMode), 	
                        n=-1))
-  
+
 
 
 #################################
