@@ -161,6 +161,9 @@ gen_restrict_credirect_beh <- function(scoring_df,all_df,all_id,
 
 # Function to apply restrictions for Big Fin applications
 gen_restrict_big_fin_app <- function(scoring_df){
+  scoring_df$color <- 
+    ifelse(scoring_df$score %in% c("NULL"),scoring_df$color,
+    ifelse(scoring_df$score %in% c("Good 3","Good 4"),scoring_df$color,1))
   scoring_df <- subset(scoring_df,scoring_df$amount<=3000)
   return(scoring_df)
 }
