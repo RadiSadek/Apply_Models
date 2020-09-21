@@ -226,8 +226,11 @@ offers$hide_until_date <- NA
 offers$created_at <- Sys.time()
 offers$updated_at <- NA
 offers$deleted_at <- NA
+offers$credit_amount_updated <- NA
+offers$installment_amount_updated <- NA
 offers <- offers[,c("id","office_id","client_id","group","product_id",
-    "application_id","max_amount","max_installment_amount","hide_until_date",
+    "application_id","max_amount","max_installment_amount",
+    "credit_amount_updated","installment_amount_updated","hide_until_date",
     "created_at","updated_at","deleted_at")]
 names(offers)[names(offers)=="max_amount"] <- "credit_amount"
 names(offers)[names(offers)=="max_installment_amount"] <- "installment_amount"
