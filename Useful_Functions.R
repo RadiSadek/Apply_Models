@@ -83,20 +83,20 @@ gen_final_df <- function(products,application_id){
 # Gen flag bad office
 flag_bad_office <- function(var_off){
   return(ifelse(
-    var_off %in% c("100","125","95","21","137","76","99","133",
-         "41","54","97","33","42","64","78","52","92","53","51","32",
-         "25","120", "107","118","28","124","132","18","5","90","34",
-         "81","71","80","12"), 1,
+    var_off %in% c("95","100","133","137","125","41","53","99","139","52","33",
+                   "107","78","90","54","76","27","140","21","5","92","51","64",
+                   "93","28","132","42","120","97","85","15","96","50","134",
+                   "73","34"), 1,
     ifelse(
-      var_off %in% c("27","96","108","29","69","31","98","86",
-         "139","110","93","88","15","35","50","56","68","104","23","91",
-         "8","113","130","61","36","4","106","72","73","85","142","140",
-         "136","135","105","74","117","134"
+      var_off %in% c("81","69","18","32","74","25","124","136","71","142",
+                     "88","118","12","86","106","108","72","130","36","35",
+                     "83","135","56","113","110","3","94","31","68","23","75",
+                     "98","58","8","47"
       ), 2,
       ifelse(
-        var_off %in% c("75","3","58","47","17","94","16","83",
-          "9","59","114","13","70","46","55","14","7","57","24","87",
-          "79","128","11","30","1","84","43","2","10","49","44"
+        var_off %in% c("91","61","55","4","16","57","80","104","13","70",
+                       "46","29","11","24","7","17","9","79","14","114","87",
+                       "30","2","59","84","128","43","1","10","49","44"
         ), 3, 2
       ))))
 }
@@ -112,7 +112,8 @@ gen_sql_string_po_terminated <- function(input,inc){
     input$office_id[inc],",",input$client_id[inc],",",
     input$group[inc],",",input$product_id[inc],",",
     input$application_id[inc],",",input$credit_amount[inc],",",
-    input$installment_amount[inc],",",input$hide_until_date[inc],",'",
+    input$installment_amount[inc],",",input$credit_amount_updated[inc],",",
+    input$installment_amount_updated[inc],",",input$hide_until_date[inc],",'",
     input$created_at[inc],"',",input$updated_at[inc],",",
     input$deleted_at[inc],")",
     sep=""))
@@ -178,6 +179,17 @@ gen_string_po_terminated <- function(input){
   return(paste("(",string_sql_update,")",sep=""))
 }
 
+
+# Function to make string for DB update of PO terminated (delete offer)
+gen_string_po_refinance <- function(input){
+  string_sql_update <- input$application_id[1]
+  if(nrow(input)>1){
+    for(i in 2:nrow(input)){
+      string_sql_update <- paste(string_sql_update,input$application_id[i],
+                                 sep=",")}}
+  return(paste("(",string_sql_update,")",sep=""))
+}
+
 # Function to make string for DB update of PO terminated (update offer)
 gen_string_delete_po_terminated <- function(input,var,var_name,db_name){
   iterate_string <- paste("WHEN id = ",input$id[1]," THEN ",var[1],sep="")
@@ -192,7 +204,7 @@ gen_string_delete_po_terminated <- function(input,var,var_name,db_name){
 
 
 # Function to make string for DB update of PO refinanced (update offer)
-gen_string_po_refinance <- function(input,var,var_name,db_name){
+gen_string_delete_po_refinance <- function(input,var,var_name,db_name){
   iterate_string <- paste("WHEN application_id = ",input$application_id[1],
           " THEN ",var[1],sep="")
   if(nrow(input)>1){
@@ -204,8 +216,5 @@ gen_string_po_refinance <- function(input,var,var_name,db_name){
   return(paste("UPDATE ",db_name,".prior_approval_refinances SET ",
           var_name," = CASE ",iterate_string," ELSE ",var_name," END;",sep=""))
 }
-
-
-
 
 
