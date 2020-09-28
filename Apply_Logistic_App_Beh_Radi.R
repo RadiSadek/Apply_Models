@@ -37,8 +37,8 @@ main_dir <- "C:\\Projects\\Apply_Scoring\\"
 # Read argument of ID
 args <- commandArgs(trailingOnly = TRUE)
 application_id <- args[1]
-application_id <- 573624
-#product_id <- NA
+#application_id <- 740825
+product_id <- NA
 
 
 # Set working directory for input (R data for logistic regression) and output #
@@ -271,6 +271,7 @@ all_df <- gen_ratio_last_amount_paid(db_name,all_id,all_df,application_id,
 all_df$amount_diff <- ifelse(nrow_all_id<=1, NA, all_df$amount - 
                                prev_amount$amount)
 
+
 # Compute income variables
 t_income <- gen_t_income(db_name,application_id,period)
 disposable_income_adj <- gen_disposable_income_adj(db_name,application_id,
@@ -407,6 +408,7 @@ if(flag_beh==0 & flag_credirect==0 & all_df$product_id==22){
   scoring_df <- gen_restrict_big_fin_app(scoring_df)
 }
 
+
 # Reselect columns 
 scoring_df <- scoring_df[,c("application_id","amount","period","score","color",
                             "created_at")]
@@ -417,13 +419,16 @@ fraud_flag <- ifelse(flag_credirect==1 & flag_beh==0 &
    df,scoring_df,products,df_Log_Credirect_Fraud,period,all_df,
    prev_amount,amount_tab,t_income,disposable_income_adj), "NULL")
 
+
 # Recorrect for prior approvals - terminated
 scoring_df <- gen_correction_po(con,db_name,all_df,all_id,
                                 scoring_df,products,period)
 
+
 # Recorrect for prior approvals - refinances
 scoring_df <- gen_correction_po_ref(con,db_name,all_df,all_id,
                                     scoring_df,products,period)
+
 
 # Create column for table display
 scoring_df <- gen_final_table_display(scoring_df)
@@ -431,8 +436,11 @@ if(flag_beh==1 & flag_credirect==1 & flag_new_credirect_old_city==0 &
    all_df$product_id==48){
   for (i in 1:nrow(scoring_df)){
     scoring_df$display_score[i] <- scoring_df$score[i]
+    scoring_df$display_score[i] <- ifelse(scoring_df$color[i]==1,"Bad",
+                                          scoring_df$display_score[i])
   }
 }
+
 
 # Create output dataframe
 final <- as.data.frame(cbind(scoring_df$application_id[1],
@@ -471,6 +479,7 @@ final$flag_bad_ckr_citycash <- flag_bad_ckr_citycash
 final$flag_fraud <- fraud_flag
 final$flag_new_credirect_old_city <- flag_new_credirect_old_city
 final$flag_varnat <- flag_varnat
+final$flag_cession <- flag_cession
 final$status_active_total <- all_df$status_active_total
 final$status_finished_total <- all_df$status_finished_total
 final$outs_overdue_ratio_total <- all_df$outs_overdue_ratio_total
