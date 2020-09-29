@@ -167,8 +167,22 @@ select_credits_credirect <- subset(select_credits,
 select_credits <- rbind(select_credits_citycash,select_credits_credirect)
 
 
+# Join if VIP
+is_vip_query <- paste(
+  "SELECT id, is_vip
+  FROM ",db_name,".clients",sep="")
+is_vip <- suppressWarnings(fetch(dbSendQuery(con, is_vip_query), n=-1))
+select_credits <- merge(select_credits,is_vip,by.x = "client_id",
+  by.y = "id", all.x = TRUE)
+
+
 # Select only City Cash criteria
 select_credits <- subset(select_credits,select_credits$company_id==1)
+
+
+# Remove Big Fin and other Ipoteki
+select_credits <- subset(select_credits,!(select_credits$product_id %in%
+   c(22,13,59:65,53,54,51)))
 
 
 #####################
@@ -185,6 +199,11 @@ select_credits$score_max_amount <- NA
 select_credits$max_delay <- NA
 for(i in 1:nrow(select_credits)){
   suppressWarnings(tryCatch({
+    if(select_credits$product_id[i]==8 & select_credits$is_vip[i]==0){
+      product_id <- 5
+    } else {
+      product_id <- NA
+    }
     client_id <- select_credits$client_id[i]
     last_id <- select_credits$id[i]
     calc <- gen_terminated_fct(con,client_id,product_id,last_id)
@@ -289,14 +308,27 @@ po_old$criteria <- ifelse(po_old$company_id==1,
 po_old <- subset(po_old,po_old$criteria==1)
 
 
+# Join if VIP
+is_vip <- suppressWarnings(fetch(dbSendQuery(con, is_vip_query), n=-1))
+po_old <- merge(po_old,is_vip,by.x = "client_id",
+  by.y = "id", all.x = TRUE)
+
+
 # Update scoring to selected credits
 for(i in 1:nrow(po_old)){
+  suppressWarnings(tryCatch({
+  if(po_old$product_id[i]==8 & po_old$is_vip[i]==0){
+    product_id <- 5
+  } else {
+    product_id <- NA
+  }
   client_id <- po_old$client_id[i]
   last_id <- po_old$last_id[i]
   calc <- gen_terminated_fct(con,client_id,product_id,last_id)
   po_old$credit_amount[i] <- calc[[1]]
   po_old$installment_amount[i] <- calc[[2]]
   po_old$max_delay[i] <- as.numeric(calc[[4]])
+  }, error=function(e){}))
 }
 
 
