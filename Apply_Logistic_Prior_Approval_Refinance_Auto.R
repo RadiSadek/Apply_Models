@@ -95,8 +95,8 @@ all_credits <- merge(all_credits,company_id,by.x = "product_id",
 
 
 # Apply select criteria
-select <- subset(all_credits,all_credits$status %in% c(4,5))
-select <- subset(select,select$date>="2020-08-15")
+select <- subset(all_credits,all_credits$status %in% c(4))
+select <- subset(select,select$date>="2020-06-01")
 
 
 # Remove credits with already an offer 
