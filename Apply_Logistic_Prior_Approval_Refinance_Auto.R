@@ -282,10 +282,6 @@ select$max_amount <- ifelse(select$max_amount==-Inf,NA,select$max_amount)
 select$next_amount_diff <- select$max_amount - select$left_to_pay
 
 
-# Choose City Cash credits --- FOR NOW 
-select <- subset(select,select$company_id==1)
-
-
 # Subset max DPD of 200 days
 select <- subset(select,select$max_delay<=200)
 
