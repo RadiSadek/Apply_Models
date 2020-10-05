@@ -116,8 +116,9 @@ if(nrow(all_actives_past)>0){
 
 # # Generate sum paid and amounts of previous credit 
 nrow_all_id <- nrow(all_id)
+all_id <- all_id[order(all_id$signed_at),]
 if (nrow_all_id>=1){
-   all_id_loc <- all_id[all_id$id<=application_id,]
+   all_id_loc <- all_id
    all_id_loc <- rbind(all_id_loc,
                        all_id_loc[all_id_loc$id==max(all_id_loc$id),])
    cash_flow <- gen_last_paid(all_id_loc)
@@ -125,7 +126,6 @@ if (nrow_all_id>=1){
    prev_amount <- gen_last_prev_amount(all_id_loc)
    prev_paid_days <- gen_prev_paid_days(all_id_loc)
 }
-
 
 
 # Get correct max days of delay (of relevant previous credits)

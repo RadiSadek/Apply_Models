@@ -17,7 +17,7 @@ gen_beh_citycash <- function(df,scoring_df,products,df_Log_beh_CityCash,period,
   df$marital_status <- ifelse(df$marital_status==5, "5", "1_2_3_4")
   df$marital_status <- as.factor(df$marital_status)
   
-  df$education_cut <- ifelse(is.na(df$education) %in% c(2,3) ,"2_3",
+  df$education_cut <- ifelse(is.na(df$education),"2_3",
     ifelse(df$education==1,"1",
     ifelse(df$education==4,"4","2_3")))
   df$education <- as.factor(df$education_cut)
