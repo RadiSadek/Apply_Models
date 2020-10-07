@@ -64,9 +64,14 @@ all_credits <- merge(all_credits,company_id,by.x = "product_id",
     by.y = "id",all.x = TRUE)
 
 
-# Apply select criteria
+# Select actives
 select <- subset(all_credits,all_credits$status %in% c(4))
-select <- subset(select,select$date>="2020-06-01")
+
+
+# Apply time window criteria
+select$time_since <- round(difftime(as.Date(substring(Sys.time(),1,10)),
+    select$date,units=c("days")),0)
+select <- subset(select,select$time_since<=160)
 
 
 # Remove credits with already an offer 
@@ -257,7 +262,7 @@ select$max_amount <- ifelse(select$max_amount==-Inf,NA,select$max_amount)
 select$next_amount_diff <- select$max_amount - select$left_to_pay
 
 
-# Subset max DPD of 180 days 
+# Subset max DPD of 180 days
 select <- subset(select,select$max_delay<=180)
 
 

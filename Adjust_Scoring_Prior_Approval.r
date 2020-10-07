@@ -91,13 +91,27 @@ gen_correction_po_ref <- function(con,db_name,all_df,all_id,
               difftime(Sys.time(),po_ref$deleted_at,units=c("days")),999)
       po_ref <- po_ref[rev(order(po_ref$deleted_at)),]
       po_ref <- po_ref[1,]
-      max_installments <- max(scoring_df$period)
-      if(po_ref$final_time<=3 & all_df$product_id==po_ref$product_id){
-        scoring_df$color <- ifelse(
-        scoring_df$amount<=po_ref$max_amount & 
-        scoring_df$period==max_installments &
-        (scoring_df$score %in% c("Bad","Indeterminate") | scoring_df$color==1),
-        3,scoring_df$color)}
+      
+      unique_amounts <- unique(scoring_df$amount[
+        scoring_df$amount<=po_ref$max_amount])
+      count_not_bad <- vector(mode = "double",length(unique_amounts))
+      
+      for(i in 1:length(unique_amounts)){
+        amount_df <- scoring_df[scoring_df$amount==unique_amounts[i],]
+        count_not_bad[i] <- nrow(amount_df[amount_df$color>=2,])
+      }
+      correct_df <- rbind(unique_amounts,count_not_bad)
+      
+      for(i in 1:nrow(scoring_df)){
+        if(scoring_df$amount[i]<=po_ref$max_amount){
+          if(correct_df[2,correct_df[1,]==scoring_df$amount[i]]==0 & 
+             scoring_df$period[i]==unique(scoring_df$period)[which(abs(unique(
+               scoring_df$period)-median(max(scoring_df$period) - min(
+                 scoring_df$period)))==min(abs(unique(scoring_df$period)-median(
+                   max(scoring_df$period)-min(scoring_df$period)))))[1]]){
+            scoring_df$color[i] <- 3}}
+
+      }
    }
   }
   return(scoring_df)
