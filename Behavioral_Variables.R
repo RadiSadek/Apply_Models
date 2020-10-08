@@ -292,7 +292,6 @@ gen_prev_deactiv_date <- function(db_name,all_df,all_id){
   return(ratio_passed_install_at_pay)
 }
 
-
 # Compute if number of varnat >=2 and before 6 months
 gen_nb_varnat <- function(all_credits){
   
@@ -309,6 +308,24 @@ gen_nb_varnat <- function(all_credits){
   return(ifelse(nrow_varnat>=2,1,0))
 }
 
-
-
+# Compute flag if has active or hidden active
+gen_flag_if_curr_active <- function(all_id){
+  
+  all_df_local <- get_company_id_prev(db_name,all_df)
+  all_id_local_active <- all_id[all_id$status %in% c(4) & 
+                         all_id$company_id==all_df_local$company_id,]
+  all_id_local_term <- all_id[all_id$status %in% c(5) & 
+                       all_id$company_id==all_df_local$company_id,]
+  if(nrow(all_id_local_term)>0){
+    all_id_local_term <- all_id_local_term[rev(order(
+      all_id_local_term$deactivated_at)),]
+    all_id_local_term$time_to_now <- round(difftime(
+     as.Date(substring(Sys.time(),1,10)),
+     as.Date(substring(all_id_local_term$deactivated_at,1,10)),units=c("days")),
+     2)
+  }
+  
+  return(cbind(ifelse(nrow(all_id_local_active)>0,1,0),
+    ifelse(nrow(all_id_local_term[all_id_local_term$time_to_now<=2,])>0,1,0)))
+}
 

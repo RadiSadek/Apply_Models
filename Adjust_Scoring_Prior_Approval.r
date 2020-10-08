@@ -92,29 +92,41 @@ gen_correction_po_ref <- function(con,db_name,all_df,all_id,
       po_ref <- po_ref[rev(order(po_ref$deleted_at)),]
       po_ref <- po_ref[1,]
       
-      unique_amounts <- unique(scoring_df$amount[
-        scoring_df$amount<=po_ref$max_amount])
-      count_not_bad <- vector(mode = "double",length(unique_amounts))
-      
-      for(i in 1:length(unique_amounts)){
-        amount_df <- scoring_df[scoring_df$amount==unique_amounts[i],]
-        count_not_bad[i] <- nrow(amount_df[amount_df$color>=2,])
-      }
-      correct_df <- rbind(unique_amounts,count_not_bad)
-      
-      for(i in 1:nrow(scoring_df)){
-        if(scoring_df$amount[i]<=po_ref$max_amount){
-          if(correct_df[2,correct_df[1,]==scoring_df$amount[i]]==0 & 
-             scoring_df$period[i]==unique(scoring_df$period)[which(abs(unique(
-               scoring_df$period)-median(max(scoring_df$period) - min(
-                 scoring_df$period)))==min(abs(unique(scoring_df$period)-median(
-                   max(scoring_df$period)-min(scoring_df$period)))))[1]]){
-            scoring_df$color[i] <- 3}}
-
-      }
+      if(po_ref$final_time<=10){
+        unique_amounts <- unique(scoring_df$amount[
+          scoring_df$amount<=po_ref$max_amount])
+        count_not_bad <- vector(mode = "double",length(unique_amounts))
+        
+        for(i in 1:length(unique_amounts)){
+          amount_df <- scoring_df[scoring_df$amount==unique_amounts[i],]
+          count_not_bad[i] <- nrow(amount_df[amount_df$color>=2,])
+        }
+        correct_df <- as.data.frame(cbind(unique_amounts,count_not_bad))
+        if(max(correct_df$count_not_bad)>0){
+          max_amount_ok <- max(correct_df$unique_amounts[
+          correct_df$count_not_bad>0])
+          for(i in 1:nrow(scoring_df)){
+            if(scoring_df$amount[i]<=po_ref$max_amount){
+              subs <- scoring_df[scoring_df$amount==max_amount_ok,]
+              scoring_df$color[i] <- subs$color[
+                subs$period==scoring_df$period[i]]}
+          }
+        } else {
+          for(i in 1:nrow(scoring_df)){
+            if(scoring_df$amount[i]<=po_ref$max_amount){
+              if(correct_df[correct_df$unique_amounts==scoring_df$amount[i],
+              2]==0 & 
+              scoring_df$period[i]==unique(scoring_df$period)[which(abs(unique(
+              scoring_df$period)-(max(scoring_df$period) - min(
+              scoring_df$period)))==min(abs(unique(scoring_df$period)-(
+              max(scoring_df$period)-min(scoring_df$period)))))[1]]){
+              scoring_df$color[i] <- 3}}}
+        }
+        
+        scoring_df$color <- ifelse(scoring_df$amount>po_ref$max_amount,1,
+                                   scoring_df$color)}
    }
   }
   return(scoring_df)
 }
   
-

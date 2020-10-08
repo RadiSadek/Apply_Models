@@ -177,3 +177,47 @@ gen_adjust_score <- function(scoring_df,crit){
   return(scoring_df)
 }
 
+# Function to apply restrictions to Credirect Installments - Refinance
+gen_restrict_beh_refinance <- function(db_name,all_df,all_id,
+    scoring_df,flag_active){
+  
+  all_df_local <- get_company_id_prev(db_name,all_df)
+  all_id_local <- all_id[all_id$status %in% c(4,5) & 
+                         all_id$company_id==all_df_local$company_id,]
+  all_id_local <- all_id_local[rev(order(all_id_local$deactivated_at)),]
+  all_id_local_raw <- all_id_local
+  all_id_local <- all_id_local[1,]
+  
+  installments <- suppressWarnings(fetch(
+    dbSendQuery(con, gen_last_cred_amount_query(all_id_local$id[1],db_name)),
+    n=-1))$installments
+  
+  passed_paid_installments <- ifelse(flag_active[1,1]==1,
+    suppressWarnings(fetch(dbSendQuery(con, 
+    gen_passed_paid_install_before_query(db_name,all_id_local$id[1],
+    Sys.time())), n=-1))$passed_installments / installments, 
+    suppressWarnings(fetch(dbSendQuery(con, 
+    gen_passed_paid_install_before_query(db_name,all_id_local$id[1],
+    as.Date(substring(Sys.time()-3*3600*24,1,10)))), 
+    n=-1))$passed_installments / installments)
+
+  total_terminated <- nrow(subset(all_id_local_raw,all_id_local_raw$status==5))
+  
+  scoring_df$color <- 
+    ifelse(scoring_df$score %in% c("NULL"), scoring_df$color,
+    ifelse(total_terminated==0 & passed_paid_installments<0.5,1,
+    ifelse(total_terminated>0 & passed_paid_installments<0.5 
+           & scoring_df$score %in% c("Bad","Indeterminate","Good 1"),1,
+    ifelse(total_terminated>0 & passed_paid_installments<0.45
+           & scoring_df$score %in% c("Bad","Indeterminate","Good 1","Good 2"),1,
+    ifelse(total_terminated>0 & passed_paid_installments<0.4
+           & scoring_df$score %in% c("Bad","Indeterminate","Good 1","Good 2",
+                                     "Good 3"),1,
+    ifelse(total_terminated>0 & passed_paid_installments<0.3,1,
+             scoring_df$color))))))
+  
+  return(scoring_df)
+
+}
+
+

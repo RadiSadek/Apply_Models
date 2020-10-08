@@ -187,9 +187,10 @@ select$left_to_pay <- select$final_credit_amount +
   select$tax_amount - select$paid_hitherto - select$discount_amount
 
 
-# Remove Flex credits
+# Remove Flex credits and other Ipoteki
 select <- subset(select,!(select$product_id %in%
-  c(25,36,41,43,50,28,26,37,42,44,49,27,55,58,57,56)))
+  c(25,36,41,43,50,28,26,37,42,44,49,27,55,58,57,56,22,3,53,54,51,65,12,13,
+    62,63,61,64,59,60)))
 
 
 #####################
@@ -264,10 +265,6 @@ select$next_amount_diff <- select$max_amount - select$left_to_pay
 
 # Subset max DPD of 180 days
 select <- subset(select,select$max_delay<=180)
-
-
-# Choose City Cash credits --- FOR NOW 	
-select <- subset(select,select$company_id==1)
 
 
 # Subset based on if next amount is higher than hitherto due amount

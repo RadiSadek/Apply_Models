@@ -366,6 +366,13 @@ flag_new_credirect_old_city <- ifelse(flag_credirect==1 & flag_beh==1 &
       & all_id$status %in% c(4,5),])==0, 1, 0)
 
 
+# Compute flag if has current active
+if(flag_beh_company==1){
+  flag_active <- gen_flag_if_curr_active(all_id)
+} else {
+  flag_active <- cbind(NA,NA)
+}
+
 
 ############################################################
 ### Apply model coefficients according to type of credit ###
@@ -444,12 +451,25 @@ if(flag_beh==1 & flag_credirect==1 & flag_new_credirect_old_city==1){
   scoring_df <- gen_restrict_credirect_app(scoring_df,all_df,
     flag_credit_next_salary,flag_new_credirect_old_city)
 }
-if(flag_beh==1 & flag_credirect==1 & flag_new_credirect_old_city==0){
+if(flag_beh==1 & flag_credirect==1 & flag_new_credirect_old_city==0 & 
+   all_df$product_id!=48){
   scoring_df <- gen_restrict_credirect_beh(scoring_df,all_df,all_id,
     flag_credit_next_salary)
 }
+if(flag_beh_company==1 & flag_credirect==1 & flag_new_credirect_old_city==0 & 
+   all_df$product_id==48){
+  scoring_df <- gen_restrict_beh_refinance(db_name,all_df,all_id,
+   scoring_df,flag_active)
+}
 if(flag_beh==0 & flag_credirect==0 & all_df$product_id==22){
   scoring_df <- gen_restrict_big_fin_app(scoring_df)
+}
+
+
+# Apply repeat restrictions to City Cash
+if(flag_beh_company==1 & flag_credirect==0 & max(flag_active)==1){
+  scoring_df <- gen_restrict_beh_refinance(db_name,all_df,all_id,
+   scoring_df,flag_active)
 }
 
 
@@ -477,14 +497,6 @@ scoring_df <- scoring_df[,c("application_id","amount","period","score","color",
 
 # Create column for table display
 scoring_df <- gen_final_table_display(scoring_df)
-if(flag_beh==1 & flag_credirect==1 & flag_new_credirect_old_city==0 & 
-   all_df$product_id==48){
-  for (i in 1:nrow(scoring_df)){
-    scoring_df$display_score[i] <- scoring_df$score[i]
-    scoring_df$display_score[i] <- ifelse(scoring_df$color[i]==1,"Bad",
-                                          scoring_df$display_score[i])
-  }
-}
 
 
 # Update table credits applications

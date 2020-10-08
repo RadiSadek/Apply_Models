@@ -151,9 +151,9 @@ gen_correct_max_installment_po <- function(period_po,period,installment_amount){
 
 # Function to create column for scoring table for display
 gen_final_table_display <- function(scoring_df){
-  scoring_df$display_score <- ifelse(scoring_df$score %in% c("Bad"),"No",
+  scoring_df$display_score <- 
    ifelse(scoring_df$color %in% c(1),"No",
-   ifelse(scoring_df$score %in% c("NULL"),"NULL","Yes")))
+   ifelse(scoring_df$score %in% c("NULL"),"NULL","Yes"))
   scoring_df$color <- ifelse(scoring_df$display_score=="No",1,
    ifelse(scoring_df$display_score=="NULL",2, 6))
   return(scoring_df)

@@ -36,8 +36,8 @@ main_dir <- "C:\\Projects\\Apply_Scoring\\"
 
 # Read argument of ID
 args <- commandArgs(trailingOnly = TRUE)
-#application_id <- args[1]
-application_id <- 749372
+application_id <- args[1]
+#application_id <- 733155
 product_id <- NA
 
 
@@ -322,6 +322,13 @@ flag_new_credirect_old_city <- ifelse(flag_credirect==1 & flag_beh==1 &
       & all_id$status %in% c(4,5),])==0, 1, 0)
 
 
+# Compute flag if has current active
+if(flag_beh_company==1){
+  flag_active <- gen_flag_if_curr_active(all_id)
+} else {
+  flag_active <- cbind(NA,NA)
+}
+
 
 ############################################################
 ### Apply model coefficients according to type of credit ###
@@ -400,12 +407,25 @@ if(flag_beh==1 & flag_credirect==1 & flag_new_credirect_old_city==1){
   scoring_df <- gen_restrict_credirect_app(scoring_df,all_df,
     flag_credit_next_salary,flag_new_credirect_old_city)
 }
-if(flag_beh==1 & flag_credirect==1 & flag_new_credirect_old_city==0){
+if(flag_beh==1 & flag_credirect==1 & flag_new_credirect_old_city==0 & 
+   all_df$product_id!=48){
   scoring_df <- gen_restrict_credirect_beh(scoring_df,all_df,all_id,
     flag_credit_next_salary)
 }
+if(flag_beh_company==1 & flag_credirect==1 & flag_new_credirect_old_city==0 & 
+   all_df$product_id==48){
+  scoring_df <- gen_restrict_beh_refinance(db_name,all_df,all_id,
+   scoring_df,flag_active)
+}
 if(flag_beh==0 & flag_credirect==0 & all_df$product_id==22){
   scoring_df <- gen_restrict_big_fin_app(scoring_df)
+}
+
+
+# Apply repeat restrictions to City Cash
+if(flag_beh_company==1 & flag_credirect==0 & max(flag_active)==1){
+  scoring_df <- gen_restrict_beh_refinance(db_name,all_df,all_id,
+   scoring_df,flag_active)
 }
 
 
@@ -433,14 +453,6 @@ scoring_df <- scoring_df[,c("application_id","amount","period","score","color",
 
 # Create column for table display
 scoring_df <- gen_final_table_display(scoring_df)
-if(flag_beh==1 & flag_credirect==1 & flag_new_credirect_old_city==0 & 
-   all_df$product_id==48){
-  for (i in 1:nrow(scoring_df)){
-    scoring_df$display_score[i] <- scoring_df$score[i]
-    scoring_df$display_score[i] <- ifelse(scoring_df$color[i]==1,"Bad",
-                                          scoring_df$display_score[i])
-  }
-}
 
 
 # Create output dataframe
@@ -469,7 +481,7 @@ final$highest_score <-
               [names(table(scoring_df$score)) %in% c("Indeterminate")])!=0,
          "Indeterminate",
   ifelse(length(names(table(scoring_df$score))
-             [names(table(scoring_df$score)) %in% c("Bad")])!=0,"Bad","NULL"))))))
+        [names(table(scoring_df$score)) %in% c("Bad")])!=0,"Bad","NULL"))))))
          
 final$highest_amount <- max(scoring_df$amount)
 final$flag_beh <- flag_beh
@@ -481,6 +493,8 @@ final$flag_fraud <- fraud_flag
 final$flag_new_credirect_old_city <- flag_new_credirect_old_city
 final$flag_varnat <- flag_varnat
 final$flag_cession <- flag_cession
+final$flag_active <- flag_active[1,1]
+final$flag_active_hidden <- flag_active[1,2]
 final$status_active_total <- all_df$status_active_total
 final$status_finished_total <- all_df$status_finished_total
 final$outs_overdue_ratio_total <- all_df$outs_overdue_ratio_total
