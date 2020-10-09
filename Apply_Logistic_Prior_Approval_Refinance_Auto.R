@@ -101,7 +101,7 @@ select <- subset(all_credits,all_credits$status %in% c(4))
 # Apply time window criteria
 select$time_since <- round(difftime(as.Date(substring(Sys.time(),1,10)),
     select$date,units=c("days")),0)
-select <- subset(select,select$time_since<=160)
+select <- subset(select,select$time_since<=200)
 
 
 # Remove credits with already an offer 
@@ -135,8 +135,8 @@ daily <- daily[!duplicated(daily$application_id),]
 paid_install_sql <- suppressWarnings(dbSendQuery(con, paste("
 SELECT application_id, COUNT(application_id) as installments_paid
 FROM ",db_name,".credits_plan_main
-WHERE payed_at IS NOT NULL 
-GROUP BY application_id;
+WHERE payed_at IS NOT NULL AND pay_day<= '",substring(Sys.time(),1,10),
+"' GROUP BY application_id;
 ", sep ="")))
 paid_install <- fetch(paid_install_sql,n=-1)
 daily <- merge(daily,paid_install,by.x = "application_id",
