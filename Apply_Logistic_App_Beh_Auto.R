@@ -451,15 +451,9 @@ if(flag_beh==1 & flag_credirect==1 & flag_new_credirect_old_city==1){
   scoring_df <- gen_restrict_credirect_app(scoring_df,all_df,
     flag_credit_next_salary,flag_new_credirect_old_city)
 }
-if(flag_beh==1 & flag_credirect==1 & flag_new_credirect_old_city==0 & 
-   all_df$product_id!=48){
+if(flag_beh==1 & flag_credirect==1 & flag_new_credirect_old_city==0){
   scoring_df <- gen_restrict_credirect_beh(scoring_df,all_df,all_id,
     flag_credit_next_salary)
-}
-if(flag_beh_company==1 & flag_credirect==1 & flag_new_credirect_old_city==0 & 
-   all_df$product_id==48){
-  scoring_df <- gen_restrict_beh_refinance(db_name,all_df,all_id,
-   scoring_df,flag_active)
 }
 if(flag_beh==0 & flag_credirect==0 & all_df$product_id==22){
   scoring_df <- gen_restrict_big_fin_app(scoring_df)
@@ -467,7 +461,7 @@ if(flag_beh==0 & flag_credirect==0 & all_df$product_id==22){
 
 
 # Apply repeat restrictions to City Cash
-if(flag_beh_company==1 & flag_credirect==0 & max(flag_active)==1){
+if(flag_beh_company==1 & max(flag_active)==1){
   scoring_df <- gen_restrict_beh_refinance(db_name,all_df,all_id,
    scoring_df,flag_active)
 }

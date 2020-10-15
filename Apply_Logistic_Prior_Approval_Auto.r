@@ -104,7 +104,7 @@ all_credits <- subset(all_credits, is.na(all_credits$sub_status) |
 
 # Subset based on time difference since deactivation
 all_credits <- subset(all_credits,substring(all_credits$deactivated_at,1,10)==
-  (as.Date(Sys.time())-4))
+   (as.Date(Sys.time())-4))
 
 
 # Get last credit amount
@@ -174,10 +174,6 @@ is_vip_query <- paste(
 is_vip <- suppressWarnings(fetch(dbSendQuery(con, is_vip_query), n=-1))
 select_credits <- merge(select_credits,is_vip,by.x = "client_id",
   by.y = "id", all.x = TRUE)
-
-
-# Select only City Cash criteria
-select_credits <- subset(select_credits,select_credits$company_id==1)
 
 
 # Remove Big Fin and other Ipoteki
@@ -335,7 +331,6 @@ for(i in 1:nrow(po_old)){
 # Change database
 po_not_ok <- subset(po_old,is.infinite(po_old$credit_amount))
 po_ok <- subset(po_old,!(is.infinite(po_old$credit_amount)))
-po_ok <- subset(po_ok,po_ok$max_delay<=200)
 
 if(nrow(po_not_ok)>0){
   po_not_ok$credit_amount <- -999
@@ -351,6 +346,15 @@ if(nrow(po_not_ok)>0){
   suppressMessages(suppressWarnings(dbSendQuery(con,
      gen_string_delete_po_terminated(po_not_ok,po_not_ok$installment_amount,
      "installment_amount_updated",db_name))))
+  po_not_ok_credirect <- subset(po_not_ok,po_not_ok$company_id==2)
+  if(nrow(po_not_ok_credirect)>0){
+    suppressMessages(suppressWarnings(dbSendQuery(con,
+       gen_string_delete_po_terminated(po_not_ok_credirect,
+        po_not_ok_credirect$credit_amount,"credit_amount",db_name))))
+    suppressMessages(suppressWarnings(dbSendQuery(con,
+       gen_string_delete_po_terminated(po_not_ok_credirect,
+       po_not_ok_credirect$installment_amount,"installment_amount",db_name))))
+  }
 }
 
 if(nrow(po_ok)>0){
@@ -365,19 +369,31 @@ if(nrow(po_ok)>0){
   suppressMessages(suppressWarnings(dbSendQuery(con,
     gen_string_delete_po_terminated(po_ok,po_ok$installment_amount,
     "installment_amount_updated",db_name))))
+  po_ok_credirect <- subset(po_ok,po_ok$company_id==2)
+  if(nrow(po_ok_credirect)>0){
+    suppressMessages(suppressWarnings(dbSendQuery(con,
+       gen_string_delete_po_terminated(po_ok_credirect,
+       po_ok_credirect$credit_amount,"credit_amount",db_name))))
+    suppressMessages(suppressWarnings(dbSendQuery(con,
+       gen_string_delete_po_terminated(po_ok_credirect,
+       po_ok_credirect$installment_amount,"installment_amount",db_name))))
+  }
 }
 
 
-# Update at beginning of month
+# Update at beginning of month for City Cash
 if(substring(Sys.time(),9,10)=="01"){
   
   po_sql_query <- paste(
-  "SELECT id, credit_amount, updated_at, installment_amount,
-  credit_amount_updated,installment_amount_updated
+    "SELECT id, credit_amount, updated_at, installment_amount, product_id, 
+  created_at, credit_amount_updated,installment_amount_updated, deleted_at
   FROM ",db_name,".clients_prior_approval_applications
   WHERE deleted_at IS NULL",sep="")
-  po_all <- suppressWarnings(fetch(dbSendQuery(con, po_sql_query), n=-1))
-  
+  po_all <- suppressWarnings(fetch(dbSendQuery(con,po_sql_query),n=-1))
+  po_all <- merge(po_all,company_id,by.x = "product_id",
+    by.y = "id",all.x = TRUE)
+  po_all <- subset(po_all,po_all$company_id==1)
+
   po_all_not_ok <- subset(po_all,po_all$credit_amount_updated==-999)
   if(nrow(po_all_not_ok)>0){
     po_all_not_ok_query <- paste("UPDATE ",db_name,
