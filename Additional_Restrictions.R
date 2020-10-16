@@ -203,19 +203,42 @@ gen_restrict_beh_refinance <- function(db_name,all_df,all_id,
 
   total_terminated <- nrow(subset(all_id_local_raw,all_id_local_raw$status==5))
   
-  scoring_df$color <- 
-    ifelse(scoring_df$score %in% c("NULL"), scoring_df$color,
-    ifelse(total_terminated==0 & passed_paid_installments<0.5,1,
-    ifelse(total_terminated>0 & passed_paid_installments<0.5 
-           & scoring_df$score %in% c("Bad","Indeterminate","Good 1"),1,
-    ifelse(total_terminated>0 & passed_paid_installments<0.45
-           & scoring_df$score %in% c("Bad","Indeterminate","Good 1","Good 2"),1,
-    ifelse(total_terminated>0 & passed_paid_installments<0.4
-           & scoring_df$score %in% c("Bad","Indeterminate","Good 1","Good 2",
-                                     "Good 3"),1,
-    ifelse(total_terminated>0 & passed_paid_installments<0.3,1,
-             scoring_df$color))))))
-  
+  for(i in 1:nrow(scoring_df)){
+    if(total_terminated>0 & passed_paid_installments>=0.5){
+      scoring_df$color <- 
+         ifelse(scoring_df$score %in% c("NULL"),scoring_df$color,
+         ifelse(scoring_df$score %in% c("Bad","Indeterminate"),1,
+         scoring_df$color))
+    } else if(total_terminated>0 & passed_paid_installments<0.5 & 
+       passed_paid_installments>=0.45){
+      scoring_df$color <- 
+        ifelse(scoring_df$score %in% c("NULL"),scoring_df$color,
+        ifelse(scoring_df$score %in% c("Bad","Indeterminate","Good 1"),1,
+        scoring_df$color))
+    } else if(total_terminated>0 & passed_paid_installments<0.45 & 
+              passed_paid_installments>=0.4){
+      scoring_df$color <- 
+        ifelse(scoring_df$score %in% c("NULL"),scoring_df$color,
+        ifelse(scoring_df$score %in% c("Bad","Indeterminate","Good 1",
+                                       "Good 2"),1,
+        scoring_df$color))
+    } else if(total_terminated>0 & passed_paid_installments<0.4 & 
+              passed_paid_installments>=0.3){
+      scoring_df$color <- 
+        ifelse(scoring_df$score %in% c("NULL"),scoring_df$color,
+        ifelse(scoring_df$score %in% c("Bad","Indeterminate","Good 1",
+                                       "Good 2","Good 3"),1,
+        scoring_df$color))
+    } else if(total_terminated>0 & passed_paid_installments<0.3){
+      scoring_df$color <- 
+        ifelse(scoring_df$score %in% c("NULL"),scoring_df$color,
+        ifelse(scoring_df$score %in% c("Bad","Indeterminate","Good 1",
+                                       "Good 2","Good 3","Good 4"),1,
+        scoring_df$color))
+    } else {
+      scoring_df$color <- scoring_df$color
+    }
+  }
   return(scoring_df)
 
 }
