@@ -116,11 +116,10 @@ gen_correction_po_ref <- function(con,db_name,all_df,all_id,
             if(scoring_df$amount[i]<=po_ref$max_amount){
               if(correct_df[correct_df$unique_amounts==scoring_df$amount[i],
               2]==0 & 
-              scoring_df$period[i]==unique(scoring_df$period)[which(abs(unique(
-              scoring_df$period)-(max(scoring_df$period) - min(
-              scoring_df$period)))==min(abs(unique(scoring_df$period)-(
-              max(scoring_df$period)-min(scoring_df$period)))))[1]]){
-              scoring_df$color[i] <- 3}}}
+              scoring_df$period[i]==unique(scoring_df$period)
+              [[ceiling(length(unique(scoring_df$period))/2)]]){
+              scoring_df$color[i] <- 3}
+              }}
         }
         
         scoring_df$color <- ifelse(scoring_df$amount>po_ref$max_amount,1,
