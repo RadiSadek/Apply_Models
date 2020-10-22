@@ -253,6 +253,7 @@ select <- merge(select,result_df,by.x = "id",by.y = "id",all.x = TRUE)
 
 # Select successful offers
 select <- subset(select,!(is.na(select$score_max_amount)))
+select <- select[!duplicated(select$id),]
 
 
 # Get number of terminated credits per client
