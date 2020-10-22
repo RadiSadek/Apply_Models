@@ -398,7 +398,8 @@ for(i in 1:nrow(scoring_df)){
 
 # Subset scoring dataframe according to criteria
 correct_scoring_df <- subset(scoring_df,scoring_df$installment_amount_diff==1 &
-      scoring_df$score %in% c("Good 1","Good 2","Good 3","Good 4"))
+      scoring_df$score %in% c("Indeterminate","Good 1",
+                              "Good 2","Good 3","Good 4"))
 
 
 # Get highest amount of previous credits
@@ -436,14 +437,17 @@ if(get_max_amount>-Inf){
     ifelse(nrow(subset(sub,sub$score=="Good 2"))>0,
       "Good 2",
     ifelse(nrow(subset(sub,sub$score=="Good 1"))>0,
-     "Good 1",NA))))
+     "Good 1",
+    ifelse(nrow(subset(sub,sub$score=="Indeterminate"))>0,
+    "Indeterminate",
+     NA)))))
 } else {
   get_score <- NA
 }
 
 
 # Limit next amount based on score
-allowed_step <- ifelse(is.infinite(get_max_amount),NA, 
+allowed_step <- ifelse(is.infinite(get_max_amount),NA,
   ifelse(get_score %in% c("Good 4"),600,400))
 get_max_amount <- ifelse(is.infinite(get_max_amount),get_max_amount,
    ifelse((get_max_amount-max_prev_amount)>allowed_step,
@@ -460,6 +464,8 @@ if(is.infinite(get_max_amount)){
   scoring_df$installment_amount_diff==1 & scoring_df$amount==get_max_amount])	
 }
 
+
+# Make final list and return result
 final_list <- list(get_max_amount,get_max_installment,get_score,
                    all_df$max_delay)
 return(final_list)
