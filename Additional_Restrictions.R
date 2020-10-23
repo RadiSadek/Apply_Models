@@ -204,7 +204,9 @@ gen_restrict_beh_refinance <- function(db_name,all_df,all_id,
   total_terminated <- nrow(subset(all_id_local_raw,all_id_local_raw$status==5))
   
   for(i in 1:nrow(scoring_df)){
-    if(total_terminated>0 & passed_paid_installments>=0.5){
+    if(total_terminated==0 & passed_paid_installments<0.5){
+      scoring_df$color <- 1
+    } else if(passed_paid_installments>=0.5){
       scoring_df$color <- 
          ifelse(scoring_df$score %in% c("NULL"),scoring_df$color,
          ifelse(scoring_df$score %in% c("Bad","Indeterminate"),1,
