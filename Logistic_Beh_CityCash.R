@@ -52,7 +52,7 @@ gen_beh_citycash <- function(df,scoring_df,products,df_Log_beh_CityCash,period,
   df$purpose <- as.factor(df$purpose_cut)
   
   df$days_diff_last_credit_cut <- ifelse(is.na(df$days_diff_last_credit), 
-     "3_more",ifelse(df$days_diff_last_credit<=2,"less_2","3_more"))
+     "less_2",ifelse(df$days_diff_last_credit<=2,"less_2","3_more"))
   df$days_diff_last_credit <- as.factor(df$days_diff_last_credit_cut)
   
   df$max_delay_cut <- ifelse(df$max_delay<=2,"less_2",
