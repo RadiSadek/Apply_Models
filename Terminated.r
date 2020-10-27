@@ -324,6 +324,11 @@ flag_new_credirect_old_city <- ifelse(flag_credirect==1 & flag_beh==1 &
       & all_id$status %in% c(4,5),])==0, 1, 0)
 
 
+# Get flag if client is dead
+flag_is_dead <- suppressWarnings(fetch(dbSendQuery(con,
+ gen_flag_is_dead (db_name,all_df$client_id)), n=-1))$is_dead
+
+
 
 ############################################################
 ### Apply model coefficients according to type of credit ###
@@ -335,7 +340,7 @@ if (empty_fields>=threshold_empty){
   scoring_df$score <- "NULL"
   scoring_df$color <- 2
   
-} else if (flag_exclusion==1 | flag_varnat==1){
+} else if (flag_exclusion==1 | flag_varnat==1 | flag_is_dead==1){
   
   scoring_df$score <- "Bad"
   scoring_df$color <- 1
@@ -369,6 +374,7 @@ if (empty_fields>=threshold_empty){
                      prev_amount,amount_tab,t_income,disposable_income_adj,
                      flag_credit_next_salary)
 }
+
 
 ######################################
 ### Generate final output settings ###

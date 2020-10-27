@@ -275,5 +275,11 @@ gen_po_refinance_query <- function(db_name,input){
      input,")",sep=""))
 }
 
-
+# Read PO refinance data per client_id
+gen_flag_is_dead <- function(db_name,input){
+  return(paste(
+    "SELECT is_dead
+     FROM ",db_name,".clients
+     WHERE id=",input,sep=""))
+}
 
