@@ -442,7 +442,7 @@ if(nrow(po_ok)>0){
 }
 
 
-if(substring(Sys.time(),9,10) %in% c("23","24","25")){
+if(substring(Sys.time(),9,10) %in% c("01")){
   
   po_sql_query <- paste(
     "SELECT application_id, created_at, deleted_at, product_id, min_amount,
