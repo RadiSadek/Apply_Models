@@ -424,7 +424,7 @@ if(substring(Sys.time(),9,10) %in% c("01")){
   po_all_not_ok <- subset(po_all,po_all$max_amount_updated==-999)
   if(nrow(po_all_not_ok)>0){
     po_all_not_ok_query <- paste("UPDATE ",db_name,
-      ".prior_approval_refinances SET updated_at = '",
+      ".prior_approval_refinances SET status = 4, updated_at = '",
       substring(Sys.time(),1,19),"', deleted_at = '",
       paste(substring(Sys.time(),1,10),"04:00:00",sep=),"'
       WHERE application_id IN ",gen_string_po_refinance(po_all_not_ok), sep="")
