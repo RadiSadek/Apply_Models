@@ -179,11 +179,12 @@ gen_adjust_score <- function(scoring_df,crit){
 
 # Function to apply restrictions to Credirect Installments - Refinance
 gen_restrict_beh_refinance <- function(db_name,all_df,all_id,
-    scoring_df,flag_active){
+    scoring_df,flag_active,application_id){
   
   all_df_local <- get_company_id_prev(db_name,all_df)
   all_id_local <- all_id[all_id$status %in% c(4,5) & 
                          all_id$company_id==all_df_local$company_id,]
+  all_id_local <- all_id_local[all_id_local$id!=application_id,]
   all_id_local <- all_id_local[rev(order(all_id_local$deactivated_at)),]
   all_id_local_raw <- all_id_local
   all_id_local <- all_id_local[1,]
