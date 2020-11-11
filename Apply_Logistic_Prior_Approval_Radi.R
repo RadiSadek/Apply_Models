@@ -52,7 +52,7 @@ product_id <- NA
 # Read credit applications 
 get_actives_sql <- suppressWarnings(dbSendQuery(con, paste("
 SELECT id, status, date, signed_at, product_id, client_id, 
-deactivated_at, sub_status, office_id
+deactivated_at, sub_status, office_id, consultant_id
 FROM ",db_name,".credits_applications 
 WHERE status IN (4,5)",sep="")))
 all_credits <- fetch(get_actives_sql,n=-1)
@@ -74,7 +74,7 @@ all_credits <- subset(all_credits, is.na(all_credits$sub_status) |
 
 # Subset based on time difference since deactivation
 all_credits <- subset(all_credits,substring(all_credits$deactivated_at,1,10)==
-   (as.Date(Sys.time())-4))
+   (as.Date(Sys.time())-10))
 
 
 # Get last credit amount
@@ -216,7 +216,7 @@ offers$installment_amount_updated <- NA
 offers <- offers[,c("id","office_id","client_id","group","product_id",
     "application_id","max_amount","max_installment_amount",
     "credit_amount_updated","installment_amount_updated","hide_until_date",
-    "created_at","updated_at","deleted_at")]
+    "consultant_id","created_at","updated_at","deleted_at")]
 names(offers)[names(offers)=="max_amount"] <- "credit_amount"
 names(offers)[names(offers)=="max_installment_amount"] <- "installment_amount"
 offers[is.na(offers)] <- "NULL"
