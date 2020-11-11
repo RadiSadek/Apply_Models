@@ -368,7 +368,7 @@ flag_new_credirect_old_city <- ifelse(flag_credirect==1 & flag_beh==1 &
 
 # Compute flag if has current active
 if(flag_beh_company==1){
-  flag_active <- gen_flag_if_curr_active(all_id)
+  flag_active <- gen_flag_if_curr_active(all_id,application_id)
 } else {
   flag_active <- cbind(NA,NA)
 }

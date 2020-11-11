@@ -309,13 +309,14 @@ gen_nb_varnat <- function(all_credits){
 }
 
 # Compute flag if has active or hidden active
-gen_flag_if_curr_active <- function(all_id){
+gen_flag_if_curr_active <- function(all_id,application_id){
   
   all_df_local <- get_company_id_prev(db_name,all_df)
-  all_id_local_active <- all_id[all_id$status %in% c(4) & 
-                         all_id$company_id==all_df_local$company_id,]
-  all_id_local_term <- all_id[all_id$status %in% c(5) & 
-                       all_id$company_id==all_df_local$company_id,]
+  all_id_here <- all_id[all_id$id!=application_id,]
+  all_id_local_active <- all_id_here[all_id_here$status %in% c(4) & 
+      all_id_here$company_id==all_df_local$company_id,]
+  all_id_local_term <- all_id_here[all_id_here$status %in% c(5) & 
+      all_id_here$company_id==all_df_local$company_id,]
   if(nrow(all_id_local_term)>0){
     all_id_local_term <- all_id_local_term[rev(order(
       all_id_local_term$deactivated_at)),]
