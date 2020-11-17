@@ -283,3 +283,21 @@ gen_flag_is_dead <- function(db_name,input){
      WHERE id=",input,sep=""))
 }
 
+# Get discount amount per application_id
+gen_discount_amount <- function(db_name,input){
+  return(paste(
+    "SELECT SUM(discount_amount) AS discount_amount
+     FROM ",db_name,".credits_plan_main
+     WHERE application_id=",input,sep=""))
+}
+
+# Get taxes per credit
+gen_discount_amount <- function(db_name,input){
+  return(paste(
+    "SELECT SUM(amount) AS tax_amount
+     FROM ",db_name,".credits_plan_taxes
+     WHERE tax_id NOT IN (4,22) AND 
+     application_id=",input,sep=""))
+}
+
+

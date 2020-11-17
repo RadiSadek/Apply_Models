@@ -246,4 +246,42 @@ gen_restrict_beh_refinance <- function(db_name,all_df,all_id,
 
 }
 
+# Function to apply restrictions to Credirect Installments - Refinance
+gen_restrict_credirect_refinance <- function(db_name,all_id,scoring_df,
+                                             application_id){
+  
+  result <- scoring_df
+  all_id_local <- all_id[all_id$company_id==2 & all_id$status==4,]
+  all_id_local <- all_id_local[all_id_local$id!=application_id,]
+  
+  if(nrow(all_id_local)>0){
+    
+    all_id_local <- all_id_local[rev(order(all_id_local$signed_at)),]
+    all_id_local <- all_id_local[1,]
+    
+    prev_amount_local <- suppressWarnings(fetch(dbSendQuery(con,
+      gen_total_amount_curr_query(db_name,all_id_local$id)), 
+      n=-1))$final_credit_amount
+    prev_paid_amount_local <- sum(suppressWarnings(fetch(dbSendQuery(con,
+      gen_paid_amount_query(all_id_local$id,db_name)), n=-1))$amount)
+    discount_amount <- suppressWarnings(fetch(dbSendQuery(con,
+      gen_discount_amount(db_name,all_id_local$id)), n=-1))$discount_amount
+    tax_amount <- suppressWarnings(fetch(dbSendQuery(con,
+      gen_discount_amount(db_name,all_id_local$id)), n=-1))$tax_amount
+    
+    discount_amount <- ifelse(length(discount_amount)==0,0,discount_amount)
+    tax_amount <- ifelse(length(tax_amount)==0,0,tax_amount)
+    prev_paid_amount_local <- ifelse(length(prev_paid_amount_local)==0,0,
+                                     prev_paid_amount_local)
+    
+    # insert discount amount here 
+    result$left_to_pay <- prev_amount_local - prev_paid_amount_local - 
+      discount_amount +  tax_amount 
+    result$color <- ifelse(result$color>1 & result$amount<result$left_to_pay,
+                           1,result$color)
+    result <- result[ , -which(names(result) %in% c("left_to_pay"))]
+  }
+  return(result)
+}
+
 
