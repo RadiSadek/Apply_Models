@@ -467,7 +467,7 @@ if(flag_beh==0 & flag_credirect==0 & all_df$product_id==22){
 
 
 # Apply repeat restrictions to City Cash
-if(flag_beh_company==1 & max(flag_active)==1){
+if(flag_beh_company==1 & max(flag_active)==1 & flag_credirect==0){
   scoring_df <- gen_restrict_beh_refinance(db_name,all_df,all_id,
    scoring_df,flag_active,application_id)
 }
