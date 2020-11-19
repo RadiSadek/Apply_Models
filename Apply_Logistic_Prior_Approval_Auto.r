@@ -176,10 +176,6 @@ select_credits <- merge(select_credits,is_vip,by.x = "client_id",
   by.y = "id", all.x = TRUE)
 
 
-# Select only City Cash criteria
-select_credits <- subset(select_credits,select_credits$company_id==1)
-
-
 # Remove Big Fin and other Ipoteki
 select_credits <- subset(select_credits,!(select_credits$product_id %in%
    c(22,13,59:65,53,54,51)))
