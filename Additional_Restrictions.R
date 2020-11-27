@@ -179,7 +179,7 @@ gen_adjust_score <- function(scoring_df,crit){
 
 # Function to apply restrictions to Credirect Installments - Refinance
 gen_restrict_beh_refinance <- function(db_name,all_df,all_id,
-    scoring_df,flag_active,application_id){
+    scoring_df,flag_active,application_id,flag_credirect){
   
   all_df_local <- get_company_id_prev(db_name,all_df)
   all_id_local <- all_id[all_id$status %in% c(4,5) & 
@@ -189,6 +189,7 @@ gen_restrict_beh_refinance <- function(db_name,all_df,all_id,
   all_id_local_raw <- all_id_local
   all_id_local <- all_id_local[1,]
   
+  # Compute passed paid installments and total terminated credits
   installments <- suppressWarnings(fetch(
     dbSendQuery(con, gen_last_cred_amount_query(all_id_local$id[1],db_name)),
     n=-1))$installments
@@ -203,52 +204,63 @@ gen_restrict_beh_refinance <- function(db_name,all_df,all_id,
     n=-1))$passed_installments / installments)
 
   total_terminated <- nrow(subset(all_id_local_raw,all_id_local_raw$status==5))
-  
-  for(i in 1:nrow(scoring_df)){
-    if(total_terminated==0 & passed_paid_installments<0.5){
+
+  # Apply for City Cash
+  if(flag_credirect==0){
+    for(i in 1:nrow(scoring_df)){
+      if(total_terminated==0 & passed_paid_installments<0.5){
+        scoring_df$color <- 1
+      } else if(all_df$max_delay>180){
+        scoring_df$color <- 1
+      } else if(passed_paid_installments>=0.5){
+        scoring_df$color <- 
+          ifelse(scoring_df$score %in% c("NULL"),scoring_df$color,
+          ifelse(scoring_df$score %in% c("Bad","Indeterminate"),1,
+                 scoring_df$color))
+      } else if(total_terminated>0 & passed_paid_installments<0.5 & 
+                passed_paid_installments>=0.45){
+        scoring_df$color <- 
+          ifelse(scoring_df$score %in% c("NULL"),scoring_df$color,
+          ifelse(scoring_df$score %in% c("Bad","Indeterminate","Good 1"),1,
+                scoring_df$color))
+      } else if(total_terminated>0 & passed_paid_installments<0.45 & 
+                passed_paid_installments>=0.4){
+        scoring_df$color <- 
+          ifelse(scoring_df$score %in% c("NULL"),scoring_df$color,
+          ifelse(scoring_df$score %in% c("Bad","Indeterminate","Good 1",
+                                         "Good 2"),1,
+                        scoring_df$color))
+      } else if(total_terminated>0 & passed_paid_installments<0.4 & 
+                passed_paid_installments>=0.3){
+        scoring_df$color <- 
+          ifelse(scoring_df$score %in% c("NULL"),scoring_df$color,
+                 ifelse(scoring_df$score %in% c("Bad","Indeterminate","Good 1",
+                                                "Good 2","Good 3"),1,
+                        scoring_df$color))
+      } else if(total_terminated>0 & passed_paid_installments<0.3){
+        scoring_df$color <- 
+          ifelse(scoring_df$score %in% c("NULL"),scoring_df$color,
+                 ifelse(scoring_df$score %in% c("Bad","Indeterminate","Good 1",
+                                                "Good 2","Good 3","Good 4"),1,
+                       scoring_df$color))
+      } else {
+        scoring_df$color <- scoring_df$color
+      }
+    }
+  } else {
+    if(all_df$max_delay>180){
       scoring_df$color <- 1
-    } else if(passed_paid_installments>=0.5){
-      scoring_df$color <- 
-         ifelse(scoring_df$score %in% c("NULL"),scoring_df$color,
-         ifelse(scoring_df$score %in% c("Bad","Indeterminate"),1,
-         scoring_df$color))
-    } else if(total_terminated>0 & passed_paid_installments<0.5 & 
-       passed_paid_installments>=0.45){
-      scoring_df$color <- 
-        ifelse(scoring_df$score %in% c("NULL"),scoring_df$color,
-        ifelse(scoring_df$score %in% c("Bad","Indeterminate","Good 1"),1,
-        scoring_df$color))
-    } else if(total_terminated>0 & passed_paid_installments<0.45 & 
-              passed_paid_installments>=0.4){
-      scoring_df$color <- 
-        ifelse(scoring_df$score %in% c("NULL"),scoring_df$color,
-        ifelse(scoring_df$score %in% c("Bad","Indeterminate","Good 1",
-                                       "Good 2"),1,
-        scoring_df$color))
-    } else if(total_terminated>0 & passed_paid_installments<0.4 & 
-              passed_paid_installments>=0.3){
-      scoring_df$color <- 
-        ifelse(scoring_df$score %in% c("NULL"),scoring_df$color,
-        ifelse(scoring_df$score %in% c("Bad","Indeterminate","Good 1",
-                                       "Good 2","Good 3"),1,
-        scoring_df$color))
-    } else if(total_terminated>0 & passed_paid_installments<0.3){
-      scoring_df$color <- 
-        ifelse(scoring_df$score %in% c("NULL"),scoring_df$color,
-        ifelse(scoring_df$score %in% c("Bad","Indeterminate","Good 1",
-                                       "Good 2","Good 3","Good 4"),1,
-        scoring_df$color))
     } else {
       scoring_df$color <- scoring_df$color
     }
   }
+  
   return(scoring_df)
-
 }
 
 # Function to apply restrictions to Credirect Installments - Refinance
 gen_restrict_credirect_refinance <- function(db_name,all_id,scoring_df,
-                                             application_id){
+    application_id){
   
   result <- scoring_df
   all_id_local <- all_id[all_id$company_id==2 & all_id$status==4,]

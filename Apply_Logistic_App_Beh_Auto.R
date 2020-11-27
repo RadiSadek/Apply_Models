@@ -466,10 +466,10 @@ if(flag_beh==0 & flag_credirect==0 & all_df$product_id==22){
 }
 
 
-# Apply repeat restrictions to City Cash
-if(flag_beh_company==1 & max(flag_active)==1 & flag_credirect==0){
+# Apply repeat restrictions to refinances and with potential refinance
+if(flag_beh_company==1 & max(flag_active)==1){
   scoring_df <- gen_restrict_beh_refinance(db_name,all_df,all_id,
-   scoring_df,flag_active,application_id)
+   scoring_df,flag_active,application_id,flag_credirect)
 }
 
 
@@ -488,6 +488,7 @@ scoring_df <- gen_correction_po(con,db_name,all_df,all_id,
 # Recorrect for prior approvals - refinances
 scoring_df <- gen_correction_po_ref(con,db_name,all_df,all_id,
                                     scoring_df,products,period)
+
 
 # Reselect columns 
 scoring_df <- scoring_df[,c("application_id","amount","period","score","color",

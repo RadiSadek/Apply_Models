@@ -23,7 +23,7 @@ suppressMessages(suppressWarnings(library(openxlsx)))
 # Database
 db_user <- "root"
 db_password <- "123456"
-db_name <- "citycash_db"
+db_name <- "citycash_db2"
 db_host <- "127.0.0.1"
 df_port <- 3306
 con <- dbConnect(MySQL(), user=db_user, password=db_password, 
@@ -37,7 +37,7 @@ main_dir <- "C:\\Projects\\Apply_Scoring\\"
 # Read argument of ID
 args <- commandArgs(trailingOnly = TRUE)
 application_id <- args[1]
-#application_id <- 779415
+#application_id <- 773460
 product_id <- NA
 
 
@@ -422,10 +422,10 @@ if(flag_beh==0 & flag_credirect==0 & all_df$product_id==22){
 }
 
 
-# Apply repeat restrictions to City Cash
-if(flag_beh_company==1 & max(flag_active)==1 & flag_credirect==0){
+# Apply repeat restrictions to refinances and with potential refinance
+if(flag_beh_company==1 & max(flag_active)==1){
   scoring_df <- gen_restrict_beh_refinance(db_name,all_df,all_id,
-   scoring_df,flag_active,application_id)
+   scoring_df,flag_active,application_id,flag_credirect)
 }
 
 
@@ -510,10 +510,10 @@ all_df$installment_amount <- products[
     products$product_id == all_df$product_id, ]$installment_amount
 
 # Read and write
-final_exists <- read.xlsx(paste(main_dir,"results\\scored_credits.xlsx", 
+final_exists <- read.xlsx(paste(main_dir,"Scored_Credits.xlsx", 
                                 sep=""))
 final <- rbind(final_exists, final)
-write.xlsx(final, paste(main_dir,"results\\scored_credits.xlsx", sep=""))
+write.xlsx(final, paste(main_dir,"Scored_Credits.xlsx", sep=""))
 
 
 
