@@ -266,32 +266,48 @@ gen_restrict_credirect_refinance <- function(db_name,all_id,scoring_df,
   all_id_local <- all_id[all_id$company_id==2 & all_id$status==4,]
   all_id_local <- all_id_local[all_id_local$id!=application_id,]
   
+  # Apply restrictions if applicable 
   if(nrow(all_id_local)>0){
     
-    all_id_local <- all_id_local[rev(order(all_id_local$signed_at)),]
-    all_id_local <- all_id_local[1,]
+    # Check if client has current active refinance offer
+    string_sql <- all_id_local$id[1]
+    if(nrow(all_id_local)>1){
+      for(i in 2:nrow(all_id_local)){
+        string_sql <- paste(string_sql,all_id_local$id[i],sep=",")}
+    }
+    check_active_refs_office <- suppressWarnings(fetch(dbSendQuery(con,
+      gen_po_active_refinance_query(db_name,string_sql)), n=-1))
     
-    prev_amount_local <- suppressWarnings(fetch(dbSendQuery(con,
-      gen_total_amount_curr_query(db_name,all_id_local$id)), 
-      n=-1))$final_credit_amount
-    prev_paid_amount_local <- sum(suppressWarnings(fetch(dbSendQuery(con,
-      gen_paid_amount_query(all_id_local$id,db_name)), n=-1))$amount)
-    discount_amount <- suppressWarnings(fetch(dbSendQuery(con,
-      gen_discount_amount(db_name,all_id_local$id)), n=-1))$discount_amount
-    tax_amount <- suppressWarnings(fetch(dbSendQuery(con,
-      gen_discount_amount(db_name,all_id_local$id)), n=-1))$tax_amount
-    
-    discount_amount <- ifelse(length(discount_amount)==0,0,discount_amount)
-    tax_amount <- ifelse(length(tax_amount)==0,0,tax_amount)
-    prev_paid_amount_local <- ifelse(length(prev_paid_amount_local)==0,0,
-                                     prev_paid_amount_local)
-    
-    # insert discount amount here 
-    result$left_to_pay <- prev_amount_local - prev_paid_amount_local - 
-      discount_amount +  tax_amount 
-    result$color <- ifelse(result$color>1 & result$amount<result$left_to_pay,
-                           1,result$color)
-    result <- result[ , -which(names(result) %in% c("left_to_pay"))]
+    if(nrow(check_active_refs_office)==0){
+      all_id_local <- all_id_local[rev(order(all_id_local$signed_at)),]
+      all_id_local <- all_id_local[1,]
+      
+      # Read total amount, tax amount and discount amount of previous
+      prev_amount_local <- suppressWarnings(fetch(dbSendQuery(con,
+        gen_total_amount_curr_query(db_name,all_id_local$id)), 
+        n=-1))$final_credit_amount
+      prev_paid_amount_local <- sum(suppressWarnings(fetch(dbSendQuery(con,
+        gen_paid_amount_query(all_id_local$id,db_name)), n=-1))$amount)
+      discount_amount <- suppressWarnings(fetch(dbSendQuery(con,
+        gen_discount_amount(db_name,all_id_local$id)), n=-1))$discount_amount
+      tax_amount <- suppressWarnings(fetch(dbSendQuery(con,
+        gen_taxes_amount(db_name,all_id_local$id)), n=-1))$tax_amount
+      
+      # Correct total amount, tax amount and discount amount of previous
+      discount_amount <- ifelse(length(discount_amount)==0,0,
+        ifelse(is.na(discount_amount),0,discount_amount))
+      tax_amount <- ifelse(length(tax_amount)==0,0,
+        ifelse(is.na(tax_amount),0,tax_amount))
+      prev_paid_amount_local <- ifelse(length(prev_paid_amount_local)==0,0,
+        ifelse(is.na(prev_paid_amount_local),0,prev_paid_amount_local))
+      
+      # Check if left to pay is lower than the requested amount
+      result$left_to_pay <- prev_amount_local - prev_paid_amount_local - 
+        discount_amount +  tax_amount 
+      result$color <- ifelse(result$color>1 & result$amount<result$left_to_pay,
+                             1,result$color)
+      result <- result[ , -which(names(result) %in% c("left_to_pay"))]
+    }
   }
   return(result)
 }

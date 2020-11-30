@@ -23,7 +23,7 @@ suppressMessages(suppressWarnings(library(openxlsx)))
 # Database
 db_user <- "root"
 db_password <- "123456"
-db_name <- "citycash_db2"
+db_name <- "citycash_db"
 db_host <- "127.0.0.1"
 df_port <- 3306
 con <- dbConnect(MySQL(), user=db_user, password=db_password, 
@@ -37,7 +37,7 @@ main_dir <- "C:\\Projects\\Apply_Scoring\\"
 # Read argument of ID
 args <- commandArgs(trailingOnly = TRUE)
 application_id <- args[1]
-#application_id <- 773460
+#application_id <- 769502
 product_id <- NA
 
 
@@ -444,6 +444,13 @@ scoring_df <- gen_correction_po(con,db_name,all_df,all_id,
 # Recorrect for prior approvals - refinances
 scoring_df <- gen_correction_po_ref(con,db_name,all_df,all_id,
                                     scoring_df,products,period)
+
+
+# Apply restrictions to Credirect refinance
+if(flag_beh_company==1 & max(flag_active)==1 & all_df$product_id==48){
+   scoring_df <- gen_restrict_credirect_refinance(db_name,all_id,scoring_df,
+   application_id)
+}
 
 
 # Reselect columns 

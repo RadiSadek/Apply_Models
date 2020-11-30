@@ -490,6 +490,13 @@ scoring_df <- gen_correction_po_ref(con,db_name,all_df,all_id,
                                     scoring_df,products,period)
 
 
+# Apply restrictions to Credirect refinance
+if(flag_beh_company==1 & max(flag_active)==1 & all_df$product_id==48){
+   scoring_df <- gen_restrict_credirect_refinance(db_name,all_id,scoring_df,
+   application_id)
+}
+
+
 # Reselect columns 
 scoring_df <- scoring_df[,c("application_id","amount","period","score","color",
                             "created_at")]

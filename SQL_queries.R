@@ -292,12 +292,21 @@ gen_discount_amount <- function(db_name,input){
 }
 
 # Get taxes per credit
-gen_discount_amount <- function(db_name,input){
+gen_taxes_amount <- function(db_name,input){
   return(paste(
     "SELECT SUM(amount) AS tax_amount
      FROM ",db_name,".credits_plan_taxes
      WHERE tax_id NOT IN (4,22) AND 
      application_id=",input,sep=""))
+}
+
+# Read ACTIVE PO refinance data per client_id
+gen_po_active_refinance_query <- function(db_name,input){
+  return(paste(
+    "SELECT application_id, max_amount, deleted_at, product_id
+     FROM ",db_name,".prior_approval_refinances 
+     WHERE deleted_at IS NULL AND application_id IN (", 
+    input,")",sep=""))
 }
 
 
