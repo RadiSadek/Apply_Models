@@ -278,7 +278,15 @@ gen_restrict_credirect_refinance <- function(db_name,all_id,scoring_df,
     check_active_refs_office <- suppressWarnings(fetch(dbSendQuery(con,
       gen_po_active_refinance_query(db_name,string_sql)), n=-1))
     
-    if(nrow(check_active_refs_office)==0){
+    check_term_refs_office <- suppressWarnings(fetch(dbSendQuery(con,
+      gen_po_refinance_query(db_name,string_sql)), n=-1))
+    if(nrow(check_term_refs_office)>0){
+      check_term_refs_office$difftime <- 
+        difftime(Sys.time(),check_term_refs_office$deleted_at,units = c("days"))
+      check_term_refs_office <- subset(check_term_refs_office,
+        check_term_refs_office$difftime<=1)
+    }
+    if(nrow(check_active_refs_office)==0 & nrow(check_term_refs_office)==0){
       result$color <- ifelse(result$color>1,1,result$color)
     }
   }
