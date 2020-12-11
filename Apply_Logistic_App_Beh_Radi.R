@@ -37,7 +37,7 @@ main_dir <- "C:\\Projects\\Apply_Scoring\\"
 # Read argument of ID
 args <- commandArgs(trailingOnly = TRUE)
 application_id <- args[1]
-#application_id <- 756229
+#application_id <- 767631
 product_id <- NA
 
 
@@ -63,6 +63,7 @@ source(paste(main_dir,"Apply_Models\\Disposable_Income.r", sep=""))
 source(paste(main_dir,"Apply_Models\\Behavioral_Variables.r", sep=""))
 source(paste(main_dir,"Apply_Models\\Normal_Variables.r", sep=""))
 source(paste(main_dir,"Apply_Models\\CKR_variables.r", sep=""))
+source(paste(main_dir,"Apply_Models\\Generate_Adjust_Score.r", sep=""))
 
 
 # Load predefined libraries
@@ -340,45 +341,13 @@ flag_is_dead <- suppressWarnings(fetch(dbSendQuery(con,
 ### Apply model coefficients according to type of credit ###
 ############################################################
 
-if (empty_fields>=threshold_empty){
-  
-  scoring_df$score <- "NULL"
-  scoring_df$color <- 2
-  
-} else if (flag_exclusion==1 | flag_varnat==1 | flag_is_dead==1){
-  
-  scoring_df$score <- "Bad"
-  scoring_df$color <- 1
-
-} else if (flag_credirect==1 & flag_beh==1 &
-     !is.na(all_df$max_delay) & all_df$max_delay>=180){
-  
-  scoring_df$score <- "Bad"
-  scoring_df$color <- 1
-  
-} else if (flag_beh==1 & flag_credirect==0){
-  scoring_df <- gen_beh_citycash(df,scoring_df,products,df_Log_beh_CityCash,
-                     period,all_id,all_df,prev_amount,amount_tab,
-                     t_income,disposable_income_adj,0)
-} else if (flag_beh==1 & flag_credirect==1){
-  scoring_df <- gen_beh_credirect(df,scoring_df,products,df_Log_beh_Credirect,
-                     period,all_df,prev_amount,amount_tab,t_income,
-                     disposable_income_adj,0,flag_new_credirect_old_city)
-} else if (flag_beh==0 & flag_credirect==0){
-  scoring_df <- gen_app_citycash(df,scoring_df,products,df_Log_CityCash_App,
-                     period,all_df,prev_amount,amount_tab,
-                     t_income,disposable_income_adj)
-} else if (flag_beh==0 & flag_credirect==1 & flag_credit_next_salary==1){
-  scoring_df <- gen_app_credirect_payday(df,scoring_df,products,
-                      df_Log_Credirect_App_payday,period,all_df,prev_amount,
-                      amount_tab,t_income,disposable_income_adj,
-                      flag_credit_next_salary)
-} else {
-  scoring_df <- gen_app_credirect_installments(df,scoring_df,products,
-                      df_Log_Credirect_App_installments,period,all_df,
-                      prev_amount,amount_tab,t_income,disposable_income_adj,
-                      flag_credit_next_salary)
-}
+scoring_df <- gen_apply_score(
+  empty_fields,threshold_empty,flag_exclusion,
+  flag_varnat,flag_is_dead,flag_credit_next_salary,flag_credirect,
+  flag_beh,all_df,scoring_df,df,products,df_Log_beh_CityCash,
+  df_Log_CityCash_App,df_Log_beh_Credirect,df_Log_Credirect_App_installments,
+  df_Log_Credirect_App_payday,period,all_id,prev_amount,amount_tab,
+  t_income,disposable_income_adj,flag_new_credirect_old_city)
 
 
 
@@ -393,33 +362,9 @@ scoring_df <- scoring_df[,c("application_id","amount","period","score","color",
 
 
 # Readjust score when applicable
-if(flag_cession==1 & flag_credirect==1){
-  scoring_df <- gen_adjust_score(scoring_df, c("Bad","Indeterminate","Good 1"))
-}
-if(flag_bad_ckr_citycash==1 & flag_credirect==0){
-  scoring_df <- gen_adjust_score(scoring_df, c("Bad","Indeterminate"))
-}
-if(flag_beh==0 & flag_credirect==0 & all_df$product_id!=22){
-  scoring_df <- gen_restrict_citycash_app(scoring_df)
-}
-if(flag_beh==1 & flag_credirect==0){
-  scoring_df <- gen_restrict_citycash_beh(scoring_df,prev_amount)
-}
-if(flag_beh==0 & flag_credirect==1){
-  scoring_df <- gen_restrict_credirect_app(scoring_df,all_df,
-    flag_credit_next_salary,flag_new_credirect_old_city)
-}
-if(flag_beh==1 & flag_credirect==1 & flag_new_credirect_old_city==1){
-  scoring_df <- gen_restrict_credirect_app(scoring_df,all_df,
-    flag_credit_next_salary,flag_new_credirect_old_city)
-}
-if(flag_beh==1 & flag_credirect==1 & flag_new_credirect_old_city==0){
-  scoring_df <- gen_restrict_credirect_beh(scoring_df,all_df,all_id,
-    flag_credit_next_salary)
-}
-if(flag_beh==0 & flag_credirect==0 & all_df$product_id==22){
-  scoring_df <- gen_restrict_big_fin_app(scoring_df)
-}
+scoring_df <- gen_apply_policy(scoring_df,flag_credirect,flag_cession,
+   flag_bad_ckr_citycash,all_df,all_id,flag_beh,prev_amount,
+   flag_new_credirect_old_city,flag_credit_next_salary)
 
 
 # Apply repeat restrictions to refinances and with potential refinance
@@ -509,12 +454,6 @@ final$amount_fin <- all_df$amount_fin
 final$outs_overdue_fin <- all_df$outs_overdue_fin
 final$ratio_nb_payments_prev <- all_df$ratio_nb_payments_prev
 
-all_df$installment_amount <- products[
-  products$period == unique(products$period)
-  [which.min(abs(all_df$installments - unique(products$period)))] & 		
-    products$amount == unique(products$amount)
-  [which.min(abs(all_df$amount - unique(products$amount)))] & 		
-    products$product_id == all_df$product_id, ]$installment_amount
 
 # Read and write
 final_exists <- read.xlsx(paste(main_dir,"Scored_Credits.xlsx", 
