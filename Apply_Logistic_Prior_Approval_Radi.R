@@ -23,7 +23,7 @@ suppressMessages(suppressWarnings(library(openxlsx)))
 # Database
 db_user <- "root"
 db_password <- "123456"
-db_name <- "citycash_db"
+db_name <- "citycash_db2"
 db_host <- "127.0.0.1"
 df_port <- 3306
 con <- dbConnect(MySQL(), user=db_user, password=db_password, 
@@ -74,7 +74,7 @@ all_credits <- subset(all_credits, is.na(all_credits$sub_status) |
 
 # Subset based on time difference since deactivation
 all_credits <- subset(all_credits,substring(all_credits$deactivated_at,1,10)==
-   (as.Date(Sys.time())-10))
+   (as.Date(Sys.time())-4))
 
 
 # Get last credit amount

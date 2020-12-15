@@ -317,7 +317,7 @@ scoring_df <- gen_apply_score(
   flag_beh,all_df,scoring_df,df,products,df_Log_beh_CityCash,
   df_Log_CityCash_App,df_Log_beh_Credirect,df_Log_Credirect_App_installments,
   df_Log_Credirect_App_payday,period,all_id,prev_amount,amount_tab,
-  t_income,disposable_income_adj,flag_new_credirect_old_city)
+  t_income,disposable_income_adj,flag_new_credirect_old_city,1)
 
 
 ######################################
