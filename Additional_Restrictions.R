@@ -177,7 +177,7 @@ gen_adjust_score <- function(scoring_df,crit){
   return(scoring_df)
 }
 
-# Function to apply restrictions to Credirect Installments - Refinance
+# Function to apply restrictions to refinances for City Cash only
 gen_restrict_beh_refinance <- function(db_name,all_df,all_id,
     scoring_df,flag_active,application_id,flag_credirect){
   
@@ -204,13 +204,18 @@ gen_restrict_beh_refinance <- function(db_name,all_df,all_id,
     n=-1))$passed_installments / installments)
 
   total_terminated <- nrow(subset(all_id_local_raw,all_id_local_raw$status==5))
+  
+  # Compute max delay of credit to be refinanced
+  max_delay_prev <- suppressWarnings(fetch(
+    dbSendQuery(con,gen_plan_main_select_query(db_name,all_id_local$id)),
+    n=-1))$max_delay
 
-  # Apply for City Cash
+  # Apply restrictions
   if(flag_credirect==0){
     for(i in 1:nrow(scoring_df)){
       if(total_terminated==0 & passed_paid_installments<0.5){
         scoring_df$color <- 1
-      } else if(all_df$max_delay>180){
+      } else if(max_delay_prev>180){
         scoring_df$color <- 1
       } else if(passed_paid_installments>=0.5){
         scoring_df$color <- 

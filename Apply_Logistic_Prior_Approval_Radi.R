@@ -23,7 +23,7 @@ suppressMessages(suppressWarnings(library(openxlsx)))
 # Database
 db_user <- "root"
 db_password <- "123456"
-db_name <- "citycash_db2"
+db_name <- "citycash_db"
 db_host <- "127.0.0.1"
 df_port <- 3306
 con <- dbConnect(MySQL(), user=db_user, password=db_password, 
