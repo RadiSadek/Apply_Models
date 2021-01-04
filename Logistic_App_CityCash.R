@@ -85,6 +85,7 @@ gen_app_citycash <- function(df,scoring_df,products,df_Log_CityCash_App,period,
     scoring_df$score[i] <- apply_logit
     scoring_df$score[i] <- gen_group_scores(scoring_df$score[i],
                                             all_df$office_id,0,0,0)
+    scoring_df$pd[i] <- round(apply_logit,3)
     
     # Compute flag of disposable income
     product_tab <- subset(products, products$product_id==all_df$product_id & 

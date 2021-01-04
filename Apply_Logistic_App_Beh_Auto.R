@@ -3,7 +3,7 @@
 ################################################################################
 #               Joint script for Application and Behavioral scoring            #
 #      Apply Logistic Regression on all products (CityCash and Credirect)      #
-#                          Version 6.0 (2020/01/15)                            #
+#                          Version 7.0 (2020/04/08)                            #
 ################################################################################
 
 
@@ -380,7 +380,6 @@ flag_is_dead <- suppressWarnings(fetch(dbSendQuery(con,
  gen_flag_is_dead (db_name,all_df$client_id)), n=-1))$is_dead
 
 
-
 ############################################################
 ### Apply model coefficients according to type of credit ###
 ############################################################
@@ -394,6 +393,11 @@ scoring_df <- gen_apply_score(
   t_income,disposable_income_adj,flag_new_credirect_old_city,0)
 
 
+# Build column PD
+if(!("pd" %in% names(scoring_df))){
+  scoring_df$pd <- NA
+}
+
 
 ######################################
 ### Generate final output settings ###
@@ -402,7 +406,7 @@ scoring_df <- gen_apply_score(
 # Generate scoring dataframe
 scoring_df$created_at <- Sys.time()
 scoring_df <- scoring_df[,c("application_id","amount","period","score","color",
-                            "created_at")]
+                            "pd","created_at")]
 
 
 # Readjust score when applicable
@@ -444,7 +448,7 @@ if(flag_beh_company==1 & flag_active[1]==1 & flag_credirect==1){
 
 # Reselect columns 
 scoring_df <- scoring_df[,c("application_id","amount","period","score","color",
-                            "created_at")]
+                            "pd","created_at")]
 
 
 # Create column for table display
@@ -468,7 +472,8 @@ suppressMessages(dbWriteTable(con, name = "credits_applications_scoring",
   value = scoring_df,
   field.types = c(application_id="numeric", amount="integer", 
   period="integer", score="character(20)",color="integer", 
-  created_at="datetime"),row.names = F, append = T))
+  display_score="character(20)",pd="numeric",created_at="datetime"),
+  row.names = F, append = T))
 
 
 

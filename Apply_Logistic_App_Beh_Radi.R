@@ -37,7 +37,7 @@ main_dir <- "C:\\Projects\\Apply_Scoring\\"
 # Read argument of ID
 args <- commandArgs(trailingOnly = TRUE)
 application_id <- args[1]
-#application_id <- 756708
+#application_id <- 735089
 product_id <- NA
 
 
@@ -336,7 +336,6 @@ flag_is_dead <- suppressWarnings(fetch(dbSendQuery(con,
  gen_flag_is_dead (db_name,all_df$client_id)), n=-1))$is_dead
 
 
-
 ############################################################
 ### Apply model coefficients according to type of credit ###
 ############################################################
@@ -350,6 +349,11 @@ scoring_df <- gen_apply_score(
   t_income,disposable_income_adj,flag_new_credirect_old_city,0)
 
 
+# Build column PD
+if(!("pd" %in% names(scoring_df))){
+  scoring_df$pd <- NA
+}
+
 
 ######################################
 ### Generate final output settings ###
@@ -358,7 +362,7 @@ scoring_df <- gen_apply_score(
 # Generate scoring dataframe
 scoring_df$created_at <- Sys.time()
 scoring_df <- scoring_df[,c("application_id","amount","period","score","color",
-                            "created_at")]
+                            "pd","created_at")]
 
 
 # Readjust score when applicable
@@ -400,7 +404,7 @@ if(flag_beh_company==1 & flag_active[1]==1 & flag_credirect==1){
 
 # Reselect columns 
 scoring_df <- scoring_df[,c("application_id","amount","period","score","color",
-                            "created_at")]
+                            "pd","created_at")]
 
 
 # Create column for table display
@@ -434,7 +438,12 @@ final$highest_score <-
          "Indeterminate",
   ifelse(length(names(table(scoring_df$score))
         [names(table(scoring_df$score)) %in% c("Bad")])!=0,"Bad","NULL"))))))
-         
+
+final$PD <- scoring_df$pd[scoring_df$amount== unique(scoring_df$amount)
+  [which.min(abs(all_df$amount - unique(scoring_df$amount)))]
+      & 
+  scoring_df$period==unique(scoring_df$period)
+  [which.min(abs(all_df$installments - unique(scoring_df$period)))]]
 final$highest_amount <- max(scoring_df$amount)
 final$flag_beh <- flag_beh
 final$flag_credirect <- flag_credirect
