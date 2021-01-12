@@ -327,6 +327,6 @@ gen_flag_if_curr_active <- function(all_id,application_id){
   }
   
   return(cbind(ifelse(nrow(all_id_local_active)>0,1,0),
-    ifelse(nrow(all_id_local_term[all_id_local_term$time_to_now<=2,])>0,1,0)))
+    ifelse(nrow(all_id_local_term[all_id_local_term$time_to_now<1,])>0,1,0)))
 }
 

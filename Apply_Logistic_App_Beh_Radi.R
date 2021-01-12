@@ -37,7 +37,7 @@ main_dir <- "C:\\Projects\\Apply_Scoring\\"
 # Read argument of ID
 args <- commandArgs(trailingOnly = TRUE)
 application_id <- args[1]
-#application_id <- 735089
+#application_id <- 785904
 product_id <- NA
 
 
@@ -372,9 +372,12 @@ scoring_df <- gen_apply_policy(scoring_df,flag_credirect,flag_cession,
 
 
 # Apply repeat restrictions to refinances and with potential refinance
-if(flag_beh_company==1 & max(flag_active)==1){
-  scoring_df <- gen_restrict_beh_refinance(db_name,all_df,all_id,
-   scoring_df,flag_active,application_id,flag_credirect)
+if(flag_beh_company==1){
+  if((max(flag_active)==1 & flag_credirect==0) | 
+     (flag_active[1]==1 & flag_credirect==1)){
+    scoring_df <- gen_restrict_beh_refinance(db_name,all_df,all_id,
+      scoring_df,flag_active,application_id,flag_credirect)
+  }
 }
 
 
@@ -393,13 +396,6 @@ scoring_df <- gen_correction_po(con,db_name,all_df,all_id,
 # Recorrect for prior approvals - refinances
 scoring_df <- gen_correction_po_ref(con,db_name,all_df,all_id,
                                     scoring_df,products,period)
-
-
-# Apply restrictions to Credirect refinance
-if(flag_beh_company==1 & flag_active[1]==1 & flag_credirect==1){
-   scoring_df <- gen_restrict_credirect_refinance(db_name,all_id,scoring_df,
-   application_id)
-}
 
 
 # Reselect columns 

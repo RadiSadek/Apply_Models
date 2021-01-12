@@ -181,94 +181,16 @@ gen_adjust_score <- function(scoring_df,crit){
 gen_restrict_beh_refinance <- function(db_name,all_df,all_id,
     scoring_df,flag_active,application_id,flag_credirect){
   
-  all_df_local <- get_company_id_prev(db_name,all_df)
-  all_id_local <- all_id[all_id$status %in% c(4,5) & 
-                         all_id$company_id==all_df_local$company_id,]
-  all_id_local <- all_id_local[all_id_local$id!=application_id,]
-  all_id_local <- all_id_local[rev(order(all_id_local$deactivated_at)),]
-  all_id_local_raw <- all_id_local
-  all_id_local <- all_id_local[1,]
-  
-  # Compute passed paid installments and total terminated credits
-  installments <- suppressWarnings(fetch(
-    dbSendQuery(con, gen_last_cred_amount_query(all_id_local$id[1],db_name)),
-    n=-1))$installments
-  
-  passed_paid_installments <- ifelse(flag_active[1,1]==1,
-    suppressWarnings(fetch(dbSendQuery(con, 
-    gen_passed_paid_install_before_query(db_name,all_id_local$id[1],
-    Sys.time())), n=-1))$passed_installments / installments, 
-    suppressWarnings(fetch(dbSendQuery(con, 
-    gen_passed_paid_install_before_query(db_name,all_id_local$id[1],
-    as.Date(substring(Sys.time()-3*3600*24,1,10)))), 
-    n=-1))$passed_installments / installments)
-
-  total_terminated <- nrow(subset(all_id_local_raw,all_id_local_raw$status==5))
-  
-  # Compute max delay of credit to be refinanced
-  max_delay_prev <- suppressWarnings(fetch(
-    dbSendQuery(con,gen_plan_main_select_query(db_name,all_id_local$id)),
-    n=-1))$max_delay
-
   # Apply restrictions
-  if(flag_credirect==0){
-    for(i in 1:nrow(scoring_df)){
-      if(total_terminated==0 & passed_paid_installments<0.5){
-        scoring_df$color <- 1
-      } else if(max_delay_prev>180){
-        scoring_df$color <- 1
-      } else if(passed_paid_installments>=0.5){
-        scoring_df$color <- 
-          ifelse(scoring_df$score %in% c("NULL"),scoring_df$color,
-          ifelse(scoring_df$score %in% c("Bad","Indeterminate"),1,
-                 scoring_df$color))
-      } else if(total_terminated>0 & passed_paid_installments<0.5 & 
-                passed_paid_installments>=0.45){
-        scoring_df$color <- 
-          ifelse(scoring_df$score %in% c("NULL"),scoring_df$color,
-          ifelse(scoring_df$score %in% c("Bad","Indeterminate","Good 1"),1,
-                scoring_df$color))
-      } else if(total_terminated>0 & passed_paid_installments<0.45 & 
-                passed_paid_installments>=0.4){
-        scoring_df$color <- 
-          ifelse(scoring_df$score %in% c("NULL"),scoring_df$color,
-          ifelse(scoring_df$score %in% c("Bad","Indeterminate","Good 1",
-                                         "Good 2"),1,
-                        scoring_df$color))
-      } else if(total_terminated>0 & passed_paid_installments<0.4 & 
-                passed_paid_installments>=0.3){
-        scoring_df$color <- 
-          ifelse(scoring_df$score %in% c("NULL"),scoring_df$color,
-                 ifelse(scoring_df$score %in% c("Bad","Indeterminate","Good 1",
-                                                "Good 2","Good 3"),1,
-                        scoring_df$color))
-      } else if(total_terminated>0 & passed_paid_installments<0.3){
-        scoring_df$color <- 
-          ifelse(scoring_df$score %in% c("NULL"),scoring_df$color,
-                 ifelse(scoring_df$score %in% c("Bad","Indeterminate","Good 1",
-                                                "Good 2","Good 3","Good 4"),1,
-                       scoring_df$color))
-      } else {
-        scoring_df$color <- scoring_df$color
-      }
-    }
+  if(flag_credirect==1 & all_df$max_delay>180){
+    scoring_df$color <- ifelse(scoring_df$color>1 & scoring_df$score!=
+     "NULL",1,scoring_df$color)
   } else {
-    if(all_df$max_delay>180){
-      scoring_df$color <- 1
-    } else {
-      scoring_df$color <- scoring_df$color
-    }
+    scoring_df$color <- scoring_df$color
   }
-  
-  return(scoring_df)
-}
-
-# Function to apply restrictions to Credirect Installments - Refinance
-gen_restrict_credirect_refinance <- function(db_name,all_id,scoring_df,
-    application_id){
-  
-  result <- scoring_df
-  all_id_local <- all_id[all_id$company_id==2 & all_id$status==4,]
+    
+  filter_company <- ifelse(flag_credirect==1,2,1)
+  all_id_local <- all_id[all_id$company_id==filter_company,]
   all_id_local <- all_id_local[all_id_local$id!=application_id,]
   
   # Apply restrictions if applicable 
@@ -280,22 +202,28 @@ gen_restrict_credirect_refinance <- function(db_name,all_id,scoring_df,
       for(i in 2:nrow(all_id_local)){
         string_sql <- paste(string_sql,all_id_local$id[i],sep=",")}
     }
-    check_active_refs_office <- suppressWarnings(fetch(dbSendQuery(con,
-      gen_po_active_refinance_query(db_name,string_sql)), n=-1))
     
+    # Active PO refinance offers
+    check_active_refs_office <- suppressWarnings(fetch(dbSendQuery(con,
+        gen_po_active_refinance_query(db_name,string_sql)), n=-1))
+    
+    # Terminated PO refinance offers
     check_term_refs_office <- suppressWarnings(fetch(dbSendQuery(con,
-      gen_po_refinance_query(db_name,string_sql)), n=-1))
+        gen_po_refinance_query(db_name,string_sql)), n=-1))
+    check_term_refs_office <- subset(check_term_refs_office,
+        substring(check_term_refs_office$deleted_at,12,20)!="04:00:00")
+    
+    # Apply criteria if no relevant offer
     if(nrow(check_term_refs_office)>0){
-      check_term_refs_office$difftime <- 
-        difftime(Sys.time(),check_term_refs_office$deleted_at,units = c("days"))
       check_term_refs_office <- subset(check_term_refs_office,
-        check_term_refs_office$difftime<=1)
+        substring(check_term_refs_office$deleted_at,1,7)==
+        substring(Sys.time(),1,7))
     }
     if(nrow(check_active_refs_office)==0 & nrow(check_term_refs_office)==0){
-      result$color <- ifelse(result$color>1,1,result$color)
+      scoring_df$color <- ifelse(scoring_df$color>1 & scoring_df$score!=
+        "NULL",1,scoring_df$color)
     }
   }
-  return(result)
+  return(scoring_df)
 }
-
 

@@ -92,7 +92,7 @@ gen_correction_po_ref <- function(con,db_name,all_df,all_id,
       po_ref <- po_ref[rev(order(po_ref$deleted_at)),]
       po_ref <- po_ref[1,]
       
-      if(po_ref$final_time<=10){
+      if(po_ref$final_time<=7){
         unique_amounts <- unique(scoring_df$amount[
           scoring_df$amount<=po_ref$max_amount])
         count_not_bad <- vector(mode = "double",length(unique_amounts))
