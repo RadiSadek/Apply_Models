@@ -309,4 +309,24 @@ gen_po_active_refinance_query <- function(db_name,input){
     input,")",sep=""))
 }
 
+# Read all phone numbers
+gen_get_phone_numbers <- function(db_name){
+  return(paste(
+    "SELECT client_id 
+    FROM ",db_name,".clients_phones 
+    WHERE number IN (SELECT number
+    FROM ",db_name,".clients_phones
+    WHERE client_id=",all_df$client_id,")",sep=""))
+}
+
+# Read all emails
+gen_get_email <- function(db_name){
+  return(paste(
+    "SELECT id 
+    FROM ",db_name,".clients 
+    WHERE email IN (SELECT email
+    FROM ",db_name,".clients
+    WHERE id=",all_df$client_id,")",sep=""))
+}
+
 

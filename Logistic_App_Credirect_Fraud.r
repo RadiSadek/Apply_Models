@@ -7,8 +7,9 @@
 gen_app_credirect_fraud <- function(df,scoring_df,products,
                              df_Log_Credirect_Fraud,period,
                              all_df,prev_amount,amount_tab,
-                             t_income,disposable_income_adj){
-  # Cut and bin
+                             t_income,disposable_income_adj,db_name){
+  
+  # Apply credirect fraud model 
   df$age_cut <- ifelse(df$age<=28,"28_less","29_more")
   df$age <- as.factor(df$age_cut)
   
@@ -55,5 +56,26 @@ gen_app_credirect_fraud <- function(df,scoring_df,products,
   apply_logit <- predict(df_Log_Credirect_Fraud, newdata=df, type="response")
   fraud_flag  <- gen_group_scores_fraud(apply_logit)
   
+  # Apply check for phone number
+  check_phone <- suppressWarnings(fetch(dbSendQuery(con, 
+    gen_get_phone_numbers(db_name)), n=-1))
+  check_phone <- as.data.frame(check_phone[!duplicated(check_phone$client_id),])
+  if(nrow(check_phone)>1){
+      fraud_flag <- 1
+  }
+  
+  # Apply email criteria
+  check_email <- suppressWarnings(fetch(dbSendQuery(con, 
+    gen_get_email (db_name)), n=-1))
+  check_email <- as.data.frame(check_email[!duplicated(check_email$id),])
+  if(nrow(check_email)>1){
+    fraud_flag <- 1
+  }
+  
+  # Apply age criteria
+  if(all_df$age>=65){
+    fraud_flag <- 1
+  }
+
   return(fraud_flag)
 }

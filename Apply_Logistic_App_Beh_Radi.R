@@ -36,8 +36,8 @@ main_dir <- "C:\\Projects\\Apply_Scoring\\"
 
 # Read argument of ID
 args <- commandArgs(trailingOnly = TRUE)
-application_id <- args[1]
-#application_id <- 785904
+#application_id <- args[1]
+application_id <- 782275
 product_id <- NA
 
 
@@ -385,7 +385,7 @@ if(flag_beh_company==1){
 fraud_flag <- ifelse(flag_credirect==1 & flag_beh==0 & 
    empty_fields<threshold_empty, gen_app_credirect_fraud(
    df,scoring_df,products,df_Log_Credirect_Fraud,period,all_df,
-   prev_amount,amount_tab,t_income,disposable_income_adj), "NULL")
+   prev_amount,amount_tab,t_income,disposable_income_adj,db_name), "NULL")
 
 
 # Recorrect for prior approvals - terminated
