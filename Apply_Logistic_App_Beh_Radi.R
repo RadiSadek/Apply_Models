@@ -37,7 +37,7 @@ main_dir <- "C:\\Projects\\Apply_Scoring\\"
 # Read argument of ID
 args <- commandArgs(trailingOnly = TRUE)
 #application_id <- args[1]
-application_id <- 782275
+application_id <- 782042
 product_id <- NA
 
 
@@ -455,10 +455,13 @@ final$flag_active_hidden <- flag_active[1,2]
 final$status_active_total <- all_df$status_active_total
 final$status_finished_total <- all_df$status_finished_total
 final$outs_overdue_ratio_total <- all_df$outs_overdue_ratio_total
-final$amount_fin <- all_df$amount_fin
-final$outs_overdue_fin <- all_df$outs_overdue_fin
-final$ratio_nb_payments_prev <- all_df$ratio_nb_payments_prev
-
+final$source_entity_count_total <- all_df$source_entity_count_total
+if("viber_registered" %in% names(all_df)){
+  final$viber_registered <- all_df$viber_registered
+} else { final$viber_registered <- NA}
+if("whatsapp_registered " %in% names(all_df)){
+  final$whatsapp_registered  <- all_df$whatsapp_registered 
+} else { final$whatsapp_registered  <- NA}
 
 # Read and write
 final_exists <- read.xlsx(paste(main_dir,"Scored_Credits.xlsx", 

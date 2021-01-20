@@ -45,9 +45,13 @@ gen_app_credirect_installments <- function(df,scoring_df,products,
     ifelse(df$outs_overdue_ratio_total<=1,"0.08_1","more_0.08")))))
   df$outs_overdue_ratio_total <- as.factor(df$outs_overdue_ratio_total_cut)
   
+  # df$viber_registered_cut <- ifelse(is.na(df$viber_registered), "other",
+  #   ifelse(df$viber_registered==0, "False",
+  #   ifelse(df$viber_registered==1, "other", "other")))
+  # df$viber_registered <- as.factor(df$viber_registered_cut)
   df$viber_registered_cut <- ifelse(is.na(df$viber_registered), "other",
-    ifelse(df$viber_registered==0, "False",
-    ifelse(df$viber_registered==1, "other", "other")))
+     ifelse(df$viber_registered==0, "other",
+     ifelse(df$viber_registered==1, "other", "other")))
   df$viber_registered <- as.factor(df$viber_registered_cut)
   
   # Apply logisic regression
