@@ -401,7 +401,7 @@ get_max_amount <- ifelse(is.infinite(get_max_amount),get_max_amount,
 
 
 # Make final list and return 
-final_list <- list(get_max_amount,get_score,all_df$max_delay)
+final_list <- list(get_max_amount,get_score,all_df$max_delay,all_df$product_id)
 return(final_list)
 
 }

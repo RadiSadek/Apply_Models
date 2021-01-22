@@ -217,10 +217,19 @@ select$left_to_pay <- select$final_credit_amount +
   select$tax_amount - select$paid_hitherto - select$discount_amount
 
 
+# Check if client has still VIP status 
+is_vip_query <- paste(
+  "SELECT id, is_vip
+  FROM ",db_name,".clients",sep="")
+is_vip <- suppressWarnings(fetch(dbSendQuery(con, is_vip_query), n=-1))
+select <- merge(select,is_vip,by.x = "client_id",by.y = "id", all.x = TRUE)
+
+
 # Remove Flex credits and other Ipoteki
 select <- subset(select,!(select$product_id %in%
   c(25,36,41,43,50,28,26,37,42,44,49,27,55,58,57,56,22,3,53,54,51,65,12,13,
     62,63,61,64,59,60)))
+
 
 
 #####################
@@ -229,22 +238,31 @@ select <- subset(select,!(select$product_id %in%
 
 # Append score
 if(nrow(select)>0){
-result_df <- select[,1, drop=FALSE]
+result_df <- select[,2, drop=FALSE]
 result_df$max_amount <- NA
 result_df$score_max_amount <- NA
+result_df$product_id <- NA
 for(i in 1:nrow(result_df)){
   suppressWarnings(tryCatch({
     application_id <- result_df$id[i]
+    if(select$product_id[i]==8 & select$is_vip[i]==0){
+      product_id <- 5
+    } else {
+      product_id <- NA
+    }
     calc <- gen_refinance_fct(con,application_id,product_id)
     result_df$max_amount[i] <- calc[[1]]
     result_df$score_max_amount[i] <- calc[[2]]
     result_df$max_delay[i] <- as.numeric(calc[[3]])
+    result_df$product_id[i] <- as.numeric(calc[[4]])
   }, error=function(e){}))
 }
 
 
 # Make final data frame
+select <- select[,-which(names(select) %in% c("product_id"))]
 select <- merge(select,result_df,by.x = "id",by.y = "id",all.x = TRUE)
+
 
 
 #############################

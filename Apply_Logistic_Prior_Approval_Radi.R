@@ -148,7 +148,7 @@ select_credits <- merge(select_credits,is_vip,by.x = "client_id",
 
 # Remove Big Fin and other Ipoteki
 select_credits <- subset(select_credits,!(select_credits$product_id %in%
-   c(22,13,59:65,53,54,51)))
+   c(13,59:65,53,54,51)))
 
 
 #####################

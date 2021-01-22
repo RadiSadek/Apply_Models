@@ -37,7 +37,7 @@ main_dir <- "C:\\Projects\\Apply_Scoring\\"
 # Read argument of ID
 args <- commandArgs(trailingOnly = TRUE)
 #application_id <- args[1]
-application_id <- 782042
+application_id <- 819526
 product_id <- NA
 
 
@@ -459,7 +459,7 @@ final$source_entity_count_total <- all_df$source_entity_count_total
 if("viber_registered" %in% names(all_df)){
   final$viber_registered <- all_df$viber_registered
 } else { final$viber_registered <- NA}
-if("whatsapp_registered " %in% names(all_df)){
+if("whatsapp_registered" %in% names(all_df)){
   final$whatsapp_registered  <- all_df$whatsapp_registered 
 } else { final$whatsapp_registered  <- NA}
 
