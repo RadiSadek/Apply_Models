@@ -312,10 +312,6 @@ select$max_amount <- ifelse(select$max_amount==-Inf,NA,select$max_amount)
 select$next_amount_diff <- select$max_amount - select$left_to_pay
 
 
-# Subset max DPD of 180 days
-select <- subset(select,select$max_delay<=180)
-
-
 # Subset based on if next amount is higher than hitherto due amount
 select <- subset(select,select$next_amount_diff>100)
 
