@@ -59,21 +59,33 @@ gen_apply_score <- function(empty_fields,threshold_empty,flag_exclusion,
 # Function to apply policy rules
 gen_apply_policy <- function(scoring_df,flag_credirect,flag_cession,
      flag_bad_ckr_citycash,all_df,all_id,flag_beh,prev_amount,
-     flag_new_credirect_old_city,flag_credit_next_salary){
+     flag_new_credirect_old_city,flag_credit_next_salary,
+     flag_beh_company){
   
   if(flag_cession==1 & flag_credirect==1){
     scoring_df <- gen_adjust_score(scoring_df, c("Bad","Indeterminate",
                                                  "Good 1"))
   }
+  
+  # Apply if City Cash application
   if(flag_bad_ckr_citycash==1 & flag_credirect==0){
     scoring_df <- gen_adjust_score(scoring_df, c("Bad","Indeterminate"))
   }
-  if(flag_beh==0 & flag_credirect==0 & all_df$product_id!=22){
+  if(flag_beh_company==0 & flag_credirect==0 & all_df$product_id!=22){
     scoring_df <- gen_restrict_citycash_app(scoring_df)
   }
-  if(flag_beh==1 & flag_credirect==0){
+  if(flag_beh_company==0 & flag_credirect==0 & all_df$product_id==22){
+    scoring_df <- gen_restrict_big_fin_app(scoring_df)
+  }
+  if(flag_beh_company==1 & flag_credirect==0 & all_df$product_id!=22){
     scoring_df <- gen_restrict_citycash_beh(scoring_df,prev_amount)
   }
+  if(flag_beh_company==1 & flag_credirect==0 & all_df$product_id==22){
+    scoring_df <- gen_restrict_big_fin_rep(scoring_df,prev_amount)
+  }
+
+  
+  # Apply if Credirect application
   if(flag_beh==0 & flag_credirect==1){
     scoring_df <- gen_restrict_credirect_app(scoring_df,all_df,
         flag_credit_next_salary,flag_new_credirect_old_city)
@@ -86,9 +98,7 @@ gen_apply_policy <- function(scoring_df,flag_credirect,flag_cession,
     scoring_df <- gen_restrict_credirect_beh(scoring_df,all_df,all_id,
         flag_credit_next_salary)
   }
-  if(flag_beh==0 & flag_credirect==0 & all_df$product_id==22){
-    scoring_df <- gen_restrict_big_fin_app(scoring_df)
-  }
+
   
   return(scoring_df)
   

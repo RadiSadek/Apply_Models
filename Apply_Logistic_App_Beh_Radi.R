@@ -36,8 +36,8 @@ main_dir <- "C:\\Projects\\Apply_Scoring\\"
 
 # Read argument of ID
 args <- commandArgs(trailingOnly = TRUE)
-#application_id <- args[1]
-application_id <- 819526
+application_id <- args[1]
+#application_id <- 716582
 product_id <- NA
 
 
@@ -368,7 +368,7 @@ scoring_df <- scoring_df[,c("application_id","amount","period","score","color",
 # Readjust score when applicable
 scoring_df <- gen_apply_policy(scoring_df,flag_credirect,flag_cession,
    flag_bad_ckr_citycash,all_df,all_id,flag_beh,prev_amount,
-   flag_new_credirect_old_city,flag_credit_next_salary)
+   flag_new_credirect_old_city,flag_credit_next_salary,flag_beh_company)
 
 
 # Apply repeat restrictions to refinances and with potential refinance
@@ -442,6 +442,7 @@ final$PD <- scoring_df$pd[scoring_df$amount== unique(scoring_df$amount)
   [which.min(abs(all_df$installments - unique(scoring_df$period)))]]
 final$highest_amount <- max(scoring_df$amount)
 final$flag_beh <- flag_beh
+final$flag_beh_company <- flag_beh_company
 final$flag_credirect <- flag_credirect
 final$flag_next_salary <- flag_credit_next_salary
 final$flag_exclusion <- flag_exclusion

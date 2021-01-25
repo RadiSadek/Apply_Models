@@ -412,7 +412,7 @@ scoring_df <- scoring_df[,c("application_id","amount","period","score","color",
 # Readjust score when applicable
 scoring_df <- gen_apply_policy(scoring_df,flag_credirect,flag_cession,
    flag_bad_ckr_citycash,all_df,all_id,flag_beh,prev_amount,
-   flag_new_credirect_old_city,flag_credit_next_salary)
+   flag_new_credirect_old_city,flag_credit_next_salary,flag_beh_company)
 
 
 # Apply repeat restrictions to refinances and with potential refinance

@@ -168,6 +168,25 @@ gen_restrict_big_fin_app <- function(scoring_df){
   return(scoring_df)
 }
 
+
+# Function to apply restrictions for Big Fin repeats
+gen_restrict_big_fin_rep <- function(scoring_df,prev_amount){
+  scoring_df$color <- 
+    ifelse(scoring_df$score %in% c("NULL"),scoring_df$color,
+    ifelse(scoring_df$score %in% c("Good 2","Good 3","Good 4"),
+           scoring_df$color,1))
+    
+  criteria <- length(names(table(scoring_df$score))
+    [names(table(scoring_df$score)) %in% 
+    c("Good 3","Good 4")])
+  scoring_df$color <- ifelse(scoring_df$score %in% c("NULL"),scoring_df$color,
+    ifelse(criteria==0 & scoring_df$amount>prev_amount$amount,1,
+    scoring_df$color))
+  
+  return(scoring_df)
+}
+
+
 # Readjust score if necessary for certain cases
 gen_adjust_score <- function(scoring_df,crit){
   for(i in 1:nrow(scoring_df)){
