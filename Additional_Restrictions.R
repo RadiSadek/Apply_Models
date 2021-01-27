@@ -234,9 +234,10 @@ gen_restrict_beh_refinance <- function(db_name,all_df,all_id,
     
     # Apply criteria if no relevant offer
     if(nrow(check_term_refs_office)>0){
+      check_term_refs_office$difftime <- difftime(Sys.time(),
+        check_term_refs_office$deleted_at,units = c("days"))
       check_term_refs_office <- subset(check_term_refs_office,
-        substring(check_term_refs_office$deleted_at,1,7)==
-        substring(Sys.time(),1,7))
+        check_term_refs_office$difftime<=120)
       check_term_refs_office <- check_term_refs_office[rev(
         order(check_term_refs_office$deleted_at)),]
       check_term_refs_office <- check_term_refs_office[!duplicated(
