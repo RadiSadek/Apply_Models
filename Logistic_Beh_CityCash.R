@@ -23,7 +23,7 @@ gen_beh_citycash <- function(df,scoring_df,products,df_Log_beh_CityCash,period,
   df$education <- as.factor(df$education_cut)
   
   df$status_work_cut <- ifelse(is.na(df$status_work), "other",
-     ifelse(df$status_work %in% c(5,10) ,"5_10","other"))
+     ifelse(df$status_work %in% c(5,10,9,12) ,"5_10","other"))
   df$status_work <- as.factor(df$status_work_cut)
   
   df$experience_employer_cut <- 
