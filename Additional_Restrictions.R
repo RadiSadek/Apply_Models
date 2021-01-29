@@ -240,8 +240,7 @@ gen_restrict_beh_refinance <- function(db_name,all_df,all_id,
         check_term_refs_office$difftime<=120)
       check_term_refs_office <- check_term_refs_office[rev(
         order(check_term_refs_office$deleted_at)),]
-      check_term_refs_office <- check_term_refs_office[!duplicated(
-        check_term_refs_office$application_id),]
+      check_term_refs_office <- check_term_refs_office[1,]
       all_id_local_left <- subset(all_id_local,
         all_id_local$signed_at>=check_term_refs_office$deleted_at)
     } else {

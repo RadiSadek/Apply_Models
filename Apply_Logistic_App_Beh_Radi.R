@@ -234,13 +234,6 @@ all_df$ratio_nb_payments_prev <- ifelse(flag_beh==1,prev_paid_days/
        total_amount$installments,NA)
 
 
-#  Get SEON variables 
-all_df$viber_registered <- ifelse(nrow(gen_seon_phones(
-  db_name,7,application_id))>=1,gen_seon_phones(db_name,7,application_id),NA)
-all_df$whatsapp_registered <- ifelse(nrow(gen_seon_phones(
-  db_name,8,application_id))>=1,gen_seon_phones(db_name,8,application_id),NA)
-
-
 # Compute and rework CKR variables, suitable for model application
 all_df <- gen_ckr_variables(all_df,flag_beh,flag_credirect)
 
@@ -457,12 +450,7 @@ final$status_active_total <- all_df$status_active_total
 final$status_finished_total <- all_df$status_finished_total
 final$outs_overdue_ratio_total <- all_df$outs_overdue_ratio_total
 final$source_entity_count_total <- all_df$source_entity_count_total
-if("viber_registered" %in% names(all_df)){
-  final$viber_registered <- all_df$viber_registered
-} else { final$viber_registered <- NA}
-if("whatsapp_registered" %in% names(all_df)){
-  final$whatsapp_registered  <- all_df$whatsapp_registered 
-} else { final$whatsapp_registered  <- NA}
+final$viber_registered <- all_df$has_viber
 
 # Read and write
 final_exists <- read.xlsx(paste(main_dir,"Scored_Credits.xlsx", 

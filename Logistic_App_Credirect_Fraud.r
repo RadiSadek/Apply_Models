@@ -43,25 +43,13 @@ gen_app_credirect_fraud <- function(df,scoring_df,products,
     ifelse(df$outs_overdue_ratio_total<=0.08,"0.03_0.08","more_0.08_missing"))))
   df$outs_overdue_ratio_total <- as.factor(df$outs_overdue_ratio_total_cut)
   
-  # df$whatsapp_registered_cut <- ifelse(is.na(df$whatsapp_registered), "other",
-  #     ifelse(df$whatsapp_registered=="False", "other",
-  #     ifelse(df$whatsapp_registered=="True", "True", "other")))
-  # df$whatsapp_registered <- as.factor(df$whatsapp_registered_cut)
-  df$whatsapp_registered_cut <- ifelse(is.na(df$whatsapp_registered), "other",
-       ifelse(df$whatsapp_registered=="False", "other",
-       ifelse(df$whatsapp_registered=="True", "other", "other")))
-  df$whatsapp_registered <- as.factor(df$whatsapp_registered_cut)
-  
-  # df$viber_registered_cut <- ifelse(is.na(df$viber_registered), "other",
-  #     ifelse(df$viber_registered=="False", "False",
-  #     ifelse(df$viber_registered=="True", "other", "other")))
-  # df$viber_registered <- as.factor(df$viber_registered_cut)
-  df$viber_registered_cut <- ifelse(is.na(df$viber_registered), "other",
-       ifelse(df$viber_registered=="False", "other",
-       ifelse(df$viber_registered=="True", "other", "other")))
+  df$viber_registered_cut <- ifelse(is.na(df$has_viber), "other",
+     ifelse(df$has_viber==0, "False",
+     ifelse(df$has_viber==1, "other", "other")))
   df$viber_registered <- as.factor(df$viber_registered_cut)
   
-  
+  df$whatsapp_registered_cut <- "other"
+  df$whatsapp_registered <- as.factor(df$whatsapp_registered_cut)
   
   apply_logit <- predict(df_Log_Credirect_Fraud, newdata=df, type="response")
   fraud_flag  <- gen_group_scores_fraud(apply_logit)

@@ -14,6 +14,7 @@ big_sql_query <- paste("SELECT
 ",db_name,".credits_applications_clients.household_total,
 ",db_name,".credits_applications_clients.on_address,
 ",db_name,".credits_applications_clients.marital_status,
+",db_name,".credits_applications_clients.has_viber,
 ",db_name,".credits_applications_data_other.purpose,
 ",db_name,".credits_applications_clients_work.experience_employer,
 ",db_name,".credits_applications_clients_work.status AS status_work,

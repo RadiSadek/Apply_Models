@@ -278,13 +278,6 @@ all_df$ratio_nb_payments_prev <- ifelse(flag_beh==1,prev_paid_days/
        total_amount$installments,NA)
 
 
-#  Get SEON variables 
-all_df$viber_registered <- ifelse(nrow(gen_seon_phones(
-  db_name,7,application_id))>=1,gen_seon_phones(db_name,7,application_id),NA)
-all_df$whatsapp_registered <- ifelse(nrow(gen_seon_phones(
-  db_name,8,application_id))>=1,gen_seon_phones(db_name,8,application_id),NA)
-
-
 # Compute and rework CKR variables, suitable for model application
 all_df <- gen_ckr_variables(all_df,flag_beh,flag_credirect)
 

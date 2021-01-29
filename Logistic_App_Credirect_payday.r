@@ -66,22 +66,12 @@ gen_app_credirect_payday <- function(df,scoring_df,products,
       "0.02_0.06","more_0.06")))))
   df$outs_overdue_ratio_total <- as.factor(df$outs_overdue_ratio_total_cut)
   
-  # df$viber_registered_cut <- ifelse(is.na(df$viber_registered), "other",
-  #   ifelse(df$viber_registered==0, "False",
-  #   ifelse(df$viber_registered==1, "other", "other")))
-  # df$viber_registered <- as.factor(df$viber_registered_cut)
-  df$viber_registered_cut <- ifelse(is.na(df$viber_registered), "other",
-     ifelse(df$viber_registered==0, "other",
-     ifelse(df$viber_registered==1, "other", "other")))
+  df$viber_registered_cut <- ifelse(is.na(df$has_viber), "other",
+    ifelse(df$has_viber==0, "False",
+    ifelse(df$has_viber==1, "other", "other")))
   df$viber_registered <- as.factor(df$viber_registered_cut)
   
-  # df$whatsapp_registered_cut <- ifelse(is.na(df$whatsapp_registered), "other",
-  #    ifelse(df$whatsapp_registered==0, "other",
-  #    ifelse(df$whatsapp_registered==1, "True", "other")))
-  # df$whatsapp_registered <- as.factor(df$whatsapp_registered_cut)
-  df$whatsapp_registered_cut <- ifelse(is.na(df$whatsapp_registered), "other",
-      ifelse(df$whatsapp_registered==0, "other",
-      ifelse(df$whatsapp_registered==1, "other", "other")))
+  df$whatsapp_registered_cut <- "other"
   df$whatsapp_registered <- as.factor(df$whatsapp_registered_cut)
   
   # Apply logisic regression
