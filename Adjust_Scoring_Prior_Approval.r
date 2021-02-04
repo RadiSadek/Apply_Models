@@ -89,7 +89,7 @@ gen_correction_po_ref <- function(con,db_name,all_df,all_id,
       po_ref$final_time <- ifelse(is.na(po_ref$deleted_at),0,
         ifelse(substring(po_ref$deleted_at,12,20)!="04:00:00",
         difftime(Sys.time(),po_ref$deleted_at,units=c("days")),999))
-      po_ref <- po_ref[rev(order(po_ref$deleted_at)),]
+      po_ref <- po_ref[order(po_ref$final_time),]
       po_ref <- po_ref[1,]
       
       if(po_ref$final_time<=7){
