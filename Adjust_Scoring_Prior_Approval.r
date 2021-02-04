@@ -86,9 +86,9 @@ gen_correction_po_ref <- function(con,db_name,all_df,all_id,
                 gen_po_refinance_query(db_name,string_sql_update)), n=-1))
     
     if(nrow(po_ref)>0){
-      po_ref$final_time <- ifelse(!is.na(po_ref$deleted_at) &
-              substring(po_ref$deleted_at,12,20)!="04:00:00",
-              difftime(Sys.time(),po_ref$deleted_at,units=c("days")),999)
+      po_ref$final_time <- ifelse(is.na(po_ref$deleted_at),0,
+        ifelse(substring(po_ref$deleted_at,12,20)!="04:00:00",
+        difftime(Sys.time(),po_ref$deleted_at,units=c("days")),999))
       po_ref <- po_ref[rev(order(po_ref$deleted_at)),]
       po_ref <- po_ref[1,]
       
