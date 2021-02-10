@@ -36,8 +36,8 @@ main_dir <- "C:\\Projects\\Apply_Scoring\\"
 
 # Read argument of ID
 args <- commandArgs(trailingOnly = TRUE)
-#application_id <- args[1]
-application_id <- 809596
+application_id <- args[1]
+#application_id <- 709933
 
 
 # Load other r files
@@ -154,18 +154,14 @@ taxes <- fetch(taxes_sql,n=-1)
 taxes_raw <- taxes
 taxes <- taxes[taxes$application_id %in% daily$application_id,]
 if(nrow(taxes)==0){
-  taxes_agg <- as.data.frame(cbind(application_id,0))
+  taxes_agg <- 0
 } else {
-  taxes_agg <- aggregate(taxes$amount-taxes$paid_amount,
-                         by=list(taxes$application_id),FUN=sum)
+  taxes_agg <- sum(taxes$amount) - sum(taxes$paid_amount)
 }
-names(taxes_agg) <- c("application_id","tax_amount")
 
 
 # Get discounts
-discount_agg <- aggregate(daily_raw$discount_amount,
-      list(daily_raw$application_id),FUN=sum)
-names(discount_agg) <- c("application_id","discount_amount")
+discount_agg <- sum(daily_raw$discount_amount)
 
 
 # Get all payments for each credit
@@ -185,20 +181,12 @@ FROM ",db_name,".products_periods_and_amounts",sep=""))), n=-1)
 
 
 # Get hitherto payments and ratios
-paid_agg <- as.data.frame(cbind(application_id,sum(paid$amount)))
-names(paid_agg) <- c("application_id","paid_hitherto")
-select <- merge(select ,paid_agg,by.x = "id",
-  by.y = "application_id",all.x = TRUE)
-select <- merge(select,taxes_agg,by.x = "id",
-  by.y = "application_id", all.x = TRUE)
-select <- merge(select,discount_agg,by.x = "id",
-  by.y = "application_id", all.x = TRUE)
-select$paid_hitherto <- as.numeric(ifelse(is.na(select$paid_hitherto),0,
-  select$paid_hitherto))
-select$tax_amount <- as.numeric(ifelse(is.na(select$tax_amount),0,
- select$tax_amount))
-select$discount_amount <- as.numeric(ifelse(is.na(select$discount_amount),0,
- select$discount_amount))
+sum_paid_agg  <- sum(paid$amount)
+sum_taxes_agg  <- taxes_agg
+sum_discount_agg  <- discount_agg
+select$paid_hitherto <- sum_paid_agg
+select$tax_amount <- sum_taxes_agg
+select$discount_amount <- sum_discount_agg
 select$left_to_pay <- select$final_credit_amount + 
   select$tax_amount - select$paid_hitherto - select$discount_amount
 
