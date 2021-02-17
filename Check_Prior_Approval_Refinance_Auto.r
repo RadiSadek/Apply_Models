@@ -201,7 +201,7 @@ discount_agg <- sum(daily_raw$discount_amount)
 paid <- fetch(suppressWarnings(dbSendQuery(con, paste("
 SELECT object_id, amount, pay_date 
 FROM ",db_name,".cash_flow
-WHERE nomenclature_id in (90,100,101) AND object_id =",application_id,
+WHERE nomenclature_id in (90,100,101,102) AND object_id =",application_id,
 " AND deleted_at IS NULL AND object_type=4",sep=""))), n=-1)
 paid_raw <- paid
 paid <- paid[paid$object_id %in% daily$application_id,]
@@ -222,6 +222,9 @@ select$tax_amount <- sum_taxes_agg
 select$discount_amount <- sum_discount_agg
 select$left_to_pay <- select$final_credit_amount + 
   select$tax_amount - select$paid_hitherto - select$discount_amount
+if(!is.na(select$left_to_pay) & select$left_to_pay==0){
+  quit()
+}
 
 
 # Check if client has still VIP status 
