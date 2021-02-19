@@ -37,7 +37,7 @@ main_dir <- "C:\\Projects\\Apply_Scoring\\"
 # Read argument of ID
 args <- commandArgs(trailingOnly = TRUE)
 #application_id <- args[1]
-application_id <- 812003
+application_id <- 767610
 
 
 # Load other r files
@@ -74,6 +74,12 @@ select <- merge(all_credits,company_id,by.x = "product_id",
 select$time_since <- round(difftime(as.Date(substring(Sys.time(),1,10)),
     select$date,units=c("days")),0)
 select <- subset(select,select$time_since<=200)
+
+
+# Check if credit is terminated
+if(select$status[1] %in% c(1,2,3,5)){
+  quit()
+}
 
 
 # Remove if client already an offer 

@@ -109,6 +109,12 @@ select$time_since <- round(difftime(as.Date(substring(Sys.time(),1,10)),
 select <- subset(select,select$time_since<=200)
 
 
+# Check if credit is terminated
+if(select$status[1] %in% c(1,2,3,5)){
+  quit()
+}
+
+
 # Remove if client already an offer 
 po_sql_query <- paste(
   "SELECT application_id, created_at, deleted_at, product_id, min_amount
