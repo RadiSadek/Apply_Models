@@ -123,11 +123,11 @@ gen_sql_string_po_terminated <- function(input,inc){
 gen_sql_string_po_refinance <- function(input,inc){
    return(paste("(",input$application_id[inc],",",
      input$product_id[inc],",",input$min_amount[inc],",",
-     input$max_amount[inc],",",input$max_amount_updated[inc],",",
-     input$ref_application_id[inc],",",
-     input$status[inc],",",input$processed_by[inc],",'",
-     input$created_at[inc],"',",input$updated_at[inc],",",
-     input$deleted_at[inc],")",
+     input$max_amount[inc],",",input$max_installment[inc],",",
+     input$max_amount_updated[inc],",",input$max_installment_updated[inc],",",
+     input$ref_application_id[inc],",",input$status[inc],",",
+     input$processed_by[inc],",'",input$created_at[inc],"',",
+     input$updated_at[inc],",",input$deleted_at[inc],")",
      sep=""))
 }
 

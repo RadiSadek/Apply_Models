@@ -212,6 +212,7 @@ result_df <- select[,2, drop=FALSE]
 result_df$max_amount <- NA
 result_df$score_max_amount <- NA
 result_df$product_id <- NA
+result_df$max_installment <- NA
 for(i in 1:nrow(result_df)){
   suppressWarnings(tryCatch({
     application_id <- result_df$id[i]
@@ -225,6 +226,7 @@ for(i in 1:nrow(result_df)){
     result_df$score_max_amount[i] <- calc[[2]]
     result_df$max_delay[i] <- as.numeric(calc[[3]])
     result_df$product_id[i] <- as.numeric(calc[[4]])
+    result_df$max_installment[i] <- as.numeric(calc[[5]])
   }, error=function(e){}))
 }
 
@@ -286,13 +288,6 @@ select$next_amount_diff <- select$max_amount - select$left_to_pay
 select <- subset(select,select$next_amount_diff>100)
 
 
-# Limit next amount based on score
-select$allowed_step  <- ifelse(select$score_max_amount %in% c("Good 4"),600,400)
-select$max_amount <- ifelse((select$max_amount-select$credit_amount)>
- select$allowed_step,select$credit_amount + select$allowed_step,
-                    select$max_amount)
-
-
 
 #########################################################
 ### Work on final credit offer amount and write in DB ###
@@ -320,8 +315,10 @@ select$created_at <- Sys.time()
 select$updated_at <- NA
 select$deleted_at <- NA
 select$max_amount_updated <- NA
+select$max_installment_updated <- NA
 select <- select[,c("id","product_id","min_amount","max_amount",
-    "max_amount_updated","ref_application_id","status","processed_by",
+    "max_installment","max_amount_updated","max_installment_updated",
+    "ref_application_id","status","processed_by",
     "created_at","updated_at","deleted_at")]
 names(select)[1] <- "application_id"
 
@@ -377,6 +374,7 @@ po_old <- po_old[!(po_old$application_id %in% po_to_remove$application_id),]
 # Append score
 po_old$max_amount <- NA
 po_old$score_max_amount <- NA
+po_old$max_installment <- NA
 for(i in 1:nrow(po_old)){
   suppressWarnings(tryCatch({
     application_id <- po_old$application_id[i]
@@ -384,6 +382,7 @@ for(i in 1:nrow(po_old)){
     po_old$max_amount[i] <- calc[[1]]
     po_old$score_max_amount[i] <- calc[[2]]
     po_old$max_delay[i] <- as.numeric(calc[[3]])
+    po_old$max_installment[i] <- as.numeric(calc[[5]])
   }, error=function(e){}))
 }
 
@@ -403,7 +402,7 @@ if(nrow(po_to_remove)>0){
       gen_string_po_terminated(po_to_remove), sep="")
   suppressMessages(suppressWarnings(dbSendQuery(con,po_not_ok_query)))
   suppressMessages(suppressWarnings(dbSendQuery(con,
-      gen_string_delete_po_refinance (po_to_remove,po_to_remove$max_amount,
+      gen_string_delete_po_refinance(po_to_remove,po_to_remove$max_amount,
       "max_amount_updated",db_name))))
 }
 
@@ -428,6 +427,9 @@ if(nrow(po_ok)>0){
   suppressMessages(suppressWarnings(dbSendQuery(con,
     gen_string_delete_po_refinance (po_ok,po_ok$max_amount,"max_amount_updated",
     db_name))))
+  suppressMessages(suppressWarnings(dbSendQuery(con,
+    gen_string_delete_po_refinance (po_ok,po_ok$max_installment,
+    "max_installment_updated",db_name))))
 }
 
 
@@ -435,7 +437,7 @@ if(substring(Sys.time(),9,10) %in% c("01")){
   
   po_sql_query <- paste(
     "SELECT application_id, created_at, deleted_at, product_id, min_amount,
-    max_amount, max_amount_updated
+    max_amount, max_amount_updated, max_installment_updated
     FROM ",db_name,".prior_approval_refinances",sep="")
   po_all <- suppressWarnings(fetch(dbSendQuery(con, po_sql_query), n=-1))
   po_all <- subset(po_all,is.na(po_all$deleted_at))
@@ -452,6 +454,7 @@ if(substring(Sys.time(),9,10) %in% c("01")){
 
   po_all <- subset(po_all,po_all$max_amount_updated!=-999)
   if(nrow(po_all)>0){
+    po_all[is.na(po_all)] <- "NULL"
     po_change_query <- paste("UPDATE ",db_name,
       ".prior_approval_refinances SET updated_at = '",
       substring(Sys.time(),1,19),"' WHERE application_id IN",
@@ -460,6 +463,9 @@ if(substring(Sys.time(),9,10) %in% c("01")){
     suppressMessages(suppressWarnings(dbSendQuery(con,
       gen_string_delete_po_refinance(po_all,po_all$max_amount_updated,
       "max_amount",db_name))))
+    suppressMessages(suppressWarnings(dbSendQuery(con,
+      gen_string_delete_po_refinance(po_all,po_all$max_installment_updated,
+      "max_installment",db_name))))
   }
 }
 

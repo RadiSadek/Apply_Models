@@ -258,6 +258,7 @@ result_df <- select[,2, drop=FALSE]
 result_df$max_amount <- NA
 result_df$score_max_amount <- NA
 result_df$product_id <- NA
+result_df$max_installment <- NA
 for(i in 1:nrow(result_df)){
   suppressWarnings(tryCatch({
     application_id <- result_df$id[i]
@@ -271,6 +272,7 @@ for(i in 1:nrow(result_df)){
     result_df$score_max_amount[i] <- calc[[2]]
     result_df$max_delay[i] <- as.numeric(calc[[3]])
     result_df$product_id[i] <- as.numeric(calc[[4]])
+    result_df$max_installment[i] <- as.numeric(calc[[5]])
   }, error=function(e){}))
 }
 
@@ -333,13 +335,6 @@ select$next_amount_diff <- select$max_amount - select$left_to_pay
 select <- subset(select,select$next_amount_diff>100)
 
 
-# Limit next amount based on score
-select$allowed_step  <- ifelse(select$score_max_amount %in% c("Good 4"),600,400)
-select$max_amount <- ifelse((select$max_amount-select$credit_amount)>
- select$allowed_step,select$credit_amount + select$allowed_step,
-                    select$max_amount)
-
-
 
 #########################################################
 ### Work on final credit offer amount and write in DB ###
@@ -367,8 +362,10 @@ select$created_at <- Sys.time()
 select$updated_at <- NA
 select$deleted_at <- NA
 select$max_amount_updated <- NA
+select$max_installment_updated <- NA
 select <- select[,c("id","product_id","min_amount","max_amount",
-    "max_amount_updated","ref_application_id","status","processed_by",
+    "max_installment","max_amount_updated","max_installment_updated",
+    "ref_application_id","status","processed_by",
     "created_at","updated_at","deleted_at")]
 names(select)[1] <- "application_id"
 

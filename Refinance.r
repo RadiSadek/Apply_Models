@@ -339,7 +339,7 @@ scoring_df <- gen_apply_score(
   flag_beh,all_df,scoring_df,df,products,df_Log_beh_CityCash,
   df_Log_CityCash_App,df_Log_beh_Credirect,df_Log_Credirect_App_installments,
   df_Log_Credirect_App_payday,period,all_id,prev_amount,amount_tab,
-  t_income,disposable_income_adj,flag_new_credirect_old_city,0)
+  t_income,disposable_income_adj,flag_new_credirect_old_city,1)
 
 
 
@@ -400,8 +400,18 @@ get_max_amount <- ifelse(is.infinite(get_max_amount),get_max_amount,
    max(subset(scoring_df,scoring_df$amount<=get_max_amount)$amount))
 
 
+# Get maximum installment
+if(is.infinite(get_max_amount)){	
+  get_max_installment <- NA
+} else {	
+  get_max_installment <- max(scoring_df$installment_amount[	
+    scoring_df$color>2 & scoring_df$amount==get_max_amount])	
+}
+
+
 # Make final list and return 
-final_list <- list(get_max_amount,get_score,all_df$max_delay,all_df$product_id)
+final_list <- list(get_max_amount,get_score,all_df$max_delay,all_df$product_id,
+                   get_max_installment)
 return(final_list)
 
 }

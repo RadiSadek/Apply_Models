@@ -53,7 +53,7 @@ gen_app_citycash <- function(df,scoring_df,products,df_Log_CityCash_App,period,
     period_tab <- as.numeric(scoring_df$period[i])
     amount_tab <- as.numeric(scoring_df$amount[i])
     if(df$total_income<100 | is.na(df$total_income)){
-      ratio_tab <- 0.08}
+      ratio_tab <- 0.08} 
     else {
       ratio_tab <- products[products$period == period_tab & 
             products$amount == amount_tab & 
@@ -106,5 +106,3 @@ gen_app_citycash <- function(df,scoring_df,products,df_Log_CityCash_App,period,
 }
 
 
-  
-  

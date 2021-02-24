@@ -97,6 +97,7 @@ gen_correction_po_ref <- function(con,db_name,all_df,all_id,
           scoring_df$amount<=po_ref$max_amount])
         count_not_bad <- vector(mode = "double",length(unique_amounts))
         
+        # Allow scoring dataframe accoring to PO offer
         for(i in 1:length(unique_amounts)){
           amount_df <- scoring_df[scoring_df$amount==unique_amounts[i],]
           count_not_bad[i] <- nrow(amount_df[amount_df$color>=2,])
@@ -122,8 +123,20 @@ gen_correction_po_ref <- function(con,db_name,all_df,all_id,
               }}
         }
         
+        # Restrict scoring dataframe to max amount and max installment amount
         scoring_df$color <- ifelse(scoring_df$amount>po_ref$max_amount,1,
-                                   scoring_df$color)}
+            scoring_df$color)
+        
+        if(!is.na(po_ref$max_installment)){
+          scoring_df <- merge(scoring_df,
+            products[,c("amount","period","installment_amount")],
+            by.x = c("amount","period"),by.y = c("amount","period"),
+            all.x = TRUE)
+          scoring_df$color <- ifelse(
+            scoring_df$amount==po_ref$max_amount & 
+            scoring_df$installment_amount>po_ref$max_installment &
+            scoring_df$score!="NULL",1,scoring_df$color)}
+        }
    }
   }
   return(scoring_df)
