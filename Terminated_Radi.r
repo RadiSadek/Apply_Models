@@ -200,7 +200,8 @@ all_df <- suppressWarnings(
 all_df$max_delay <- ifelse(!(is.na(data_plan_main_select_def)), 
       data_plan_main_select_def[1], ifelse(flag_credirect==0, 60, 10))
 all_df$credits_cum <- nrow(all_id)
-all_df$days_diff_last_credit <- 3
+all_df$days_diff_last_credit <- round(as.numeric(difftime(Sys.time(),
+      all_df$deactivated_at,units = c("days"))))
 
 
 # Get flag if credit is behavioral or not
@@ -239,7 +240,7 @@ all_df <- gen_prev_online(db_name,all_id,all_df,max(all_id$id)+1)
 # Get flag if credit is behavioral but with same company
 flag_beh_company <- ifelse(
   nrow(all_id[all_id$company_id==
-       all_id$company_id[all_id$id==application_id],])>1,1,0)
+       all_id$company_id[all_id$id==application_id],])>0,1,0)
 
 
 # Compute flag if last paid credit is maybe hidden refinance
