@@ -117,6 +117,43 @@ all_credit$credit_amount <- credit_amount$credit_amount
 ### Apply selection criteria for credits to offer ###
 #####################################################
 
+# Subset based on sub_status
+if(!(all_credit$sub_status %in% c(123,128))){
+  quit()
+}
+
+
+# Select based on product_id
+if(all_credit$product_id %in% c(13,59:65,53,54,51)){
+  quit()
+}
+
+
+# Remove according to criteria of passed installments
+get_main_sql <- suppressWarnings(dbSendQuery(con, paste(
+"SELECT pay_day
+FROM ",db_name,".credits_plan_main 
+WHERE application_id = ",application_id, sep="")))
+plan_main <-  fetch(get_main_sql,n=-1)
+all_credit$tot_installments <- nrow(plan_main)
+all_credit$passed_installments <- length(plan_main[
+  plan_main$pay_day<=Sys.time(),])
+get_period_sql <- suppressWarnings(dbSendQuery(con, paste(
+"SELECT period 
+FROM ",db_name,".products 
+WHERE id= ",all_credit$product_id,sep="")))
+all_credit$period <- fetch(get_period_sql,n=-1)$period
+flag_credit_next_salary <- ifelse(all_credit$product_id %in% 
+    c(25:28,36,37,41:44,49,50,55:58), 1, 0)
+if((flag_credit_next_salary==1 & all_credit$passed_installments==0) |
+   (flag_credit_next_salary!=1 & all_credit$period==3 & 
+    all_credit$passed_installments<2 & all_credit$tot_installments<4) |
+   (flag_credit_next_salary!=1 & all_credit$passed_installments<4 & 
+    all_credit$tot_installments>=4)){
+  quit()
+}
+
+
 # Remove if more than 1 "varnat"
 get_status_sql <- suppressWarnings(dbSendQuery(con, paste("
 SELECT id, status, sub_status, product_id
@@ -164,10 +201,6 @@ is_vip <- suppressWarnings(fetch(dbSendQuery(con, is_vip_query), n=-1))
 all_credit <- merge(all_credit,is_vip,by.x = "client_id",
   by.y = "id", all.x = TRUE)
 
-
-# Remove Big Fin and other Ipoteki
-all_credit <- subset(all_credit,!(all_credit$product_id %in% 
-  c(13,59:65,53,54,51)))
 
 
 #####################
