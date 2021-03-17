@@ -71,7 +71,6 @@ select <- subset(all_credits,all_credits$status %in% c(4))
 # Apply time window criteria
 select$time_since <- round(difftime(as.Date(substring(Sys.time(),1,10)),
     select$date,units=c("days")),0)
-select <- subset(select,select$time_since<=200)
 
 
 # Remove credits with already an offer 

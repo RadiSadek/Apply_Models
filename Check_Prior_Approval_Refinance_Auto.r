@@ -106,7 +106,6 @@ select <- merge(all_credits,company_id,by.x = "product_id",
 # Apply time window criteria
 select$time_since <- round(difftime(as.Date(substring(Sys.time(),1,10)),
     select$date,units=c("days")),0)
-select <- subset(select,select$time_since<=200)
 
 
 # Check if credit is terminated
