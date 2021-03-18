@@ -244,7 +244,8 @@ flag_beh_company <- ifelse(
 
 
 # Compute flag if last paid credit is maybe hidden refinance
-all_df$flag_high_last_paid <- 0
+all_df <- gen_ratio_last_amount_paid(db_name,all_id,all_df,application_id,
+   products_desc,nrow_all_id,cash_flow,total_amount)
 
 
 # Compute amount differential 
