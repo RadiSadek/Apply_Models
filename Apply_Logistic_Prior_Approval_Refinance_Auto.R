@@ -242,6 +242,7 @@ result_df$max_amount <- NA
 result_df$score_max_amount <- NA
 result_df$product_id <- NA
 result_df$max_installment <- NA
+result_df$days_delay <- NA
 for(i in 1:nrow(result_df)){
   suppressWarnings(tryCatch({
     application_id <- result_df$id[i]
@@ -256,6 +257,7 @@ for(i in 1:nrow(result_df)){
     result_df$max_delay[i] <- as.numeric(calc[[3]])
     result_df$product_id[i] <- as.numeric(calc[[4]])
     result_df$max_installment[i] <- as.numeric(calc[[5]])
+    result_df$days_delay[i] <- as.numeric(calc[[6]])
   }, error=function(e){}))
 }
 
@@ -273,6 +275,10 @@ select <- merge(select,result_df,by.x = "id",by.y = "id",all.x = TRUE)
 # Select successful offers
 select <- subset(select,!(is.na(select$score_max_amount)))
 select <- select[!duplicated(select$id),]
+
+
+# Subset based on current DPD
+select <- subset(select,select$days_delay<=300)
 
 
 # Get number of terminated credits per client
@@ -404,6 +410,7 @@ po_old <- po_old[!(po_old$application_id %in% po_to_remove$application_id),]
 po_old$max_amount <- NA
 po_old$score_max_amount <- NA
 po_old$max_installment <- NA
+po_old$days_delay <- NA
 for(i in 1:nrow(po_old)){
   suppressWarnings(tryCatch({
     application_id <- po_old$application_id[i]
@@ -412,6 +419,7 @@ for(i in 1:nrow(po_old)){
     po_old$score_max_amount[i] <- calc[[2]]
     po_old$max_delay[i] <- as.numeric(calc[[3]])
     po_old$max_installment[i] <- as.numeric(calc[[5]])
+    po_old$days_delay[i] <- as.numeric(calc[[6]])
   }, error=function(e){}))
 }
 
@@ -420,7 +428,7 @@ for(i in 1:nrow(po_old)){
 po_not_ok <- subset(po_old,is.infinite(po_old$max_amount) | 
                     po_old$max_amount<po_old$min_amount)
 po_ok <- subset(po_old,!(is.infinite(po_old$max_amount)))
-po_ok <- subset(po_ok,po_ok$max_delay<=200)
+po_ok <- subset(po_ok,po_ok$days_delay<=300)
 po_ok <- subset(po_ok,po_ok$max_amount>=po_ok$min_amount)
 
 if(nrow(po_to_remove)>0){

@@ -258,6 +258,7 @@ result_df$max_amount <- NA
 result_df$score_max_amount <- NA
 result_df$product_id <- NA
 result_df$max_installment <- NA
+result_df$days_delay <- NA
 for(i in 1:nrow(result_df)){
   suppressWarnings(tryCatch({
     application_id <- result_df$id[i]
@@ -272,6 +273,7 @@ for(i in 1:nrow(result_df)){
     result_df$max_delay[i] <- as.numeric(calc[[3]])
     result_df$product_id[i] <- as.numeric(calc[[4]])
     result_df$max_installment[i] <- as.numeric(calc[[5]])
+    result_df$days_delay[i] <- as.numeric(calc[[6]])
   }, error=function(e){}))
 }
 
@@ -289,6 +291,12 @@ select <- merge(select,result_df,by.x = "id",by.y = "id",all.x = TRUE)
 # Select successful offers
 select <- subset(select,!(is.na(select$score_max_amount)))
 select <- select[!duplicated(select$id),]
+
+
+# Subset based on current DPD
+if(nrow(select[!is.na(select$days_delay) & select$days_delay>300,])>0){
+  quit()
+}
 
 
 # Get number of terminated credits for the client

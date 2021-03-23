@@ -409,9 +409,14 @@ if(is.infinite(get_max_amount)){
 }
 
 
+# Get maximum DPD on current credit
+days_delay <- suppressWarnings(fetch(dbSendQuery(con,
+    gen_plan_main_select_query(db_name,application_id)), n=-1))
+
+
 # Make final list and return 
 final_list <- list(get_max_amount,get_score,all_df$max_delay,all_df$product_id,
-                   get_max_installment)
+                   get_max_installment,days_delay)
 return(final_list)
 
 }
