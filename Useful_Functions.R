@@ -103,6 +103,15 @@ flag_bad_office <- function(var_off){
       ))))
 }
 
+# Gen flag bad office
+flag_real_office <- function(var_off){
+  return(ifelse(
+    var_off %in% c("6","19","20","37","38","39","40","45","60","62","65","66",
+                   "67","89","101","123","126","138","141","143"
+       ), 0, 1))
+  
+}
+
 # Define cutoffs application for credirect fraud
 gen_group_scores_fraud <- function(var){
   results <- ifelse(var>cu_app_cred_frauds,1,0)

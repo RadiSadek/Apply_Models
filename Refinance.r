@@ -414,9 +414,13 @@ days_delay <- suppressWarnings(fetch(dbSendQuery(con,
     gen_plan_main_select_query(db_name,application_id)), n=-1))
 
 
+# Get if third side
+third_side <- ifelse(is.na(all_df$third_side_date),0,1)
+
+
 # Make final list and return 
 final_list <- list(get_max_amount,get_score,all_df$max_delay,all_df$product_id,
-                   get_max_installment,days_delay)
+                   get_max_installment,days_delay,all_df$office_id,third_side)
 return(final_list)
 
 }

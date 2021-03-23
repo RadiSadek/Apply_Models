@@ -213,6 +213,8 @@ result_df$score_max_amount <- NA
 result_df$product_id <- NA
 result_df$max_installment <- NA
 result_df$days_delay <- NA
+result_df$office_id <- NA
+result_df$third_side <- NA
 for(i in 1:nrow(result_df)){
   suppressWarnings(tryCatch({
     application_id <- result_df$id[i]
@@ -228,6 +230,8 @@ for(i in 1:nrow(result_df)){
     result_df$product_id[i] <- as.numeric(calc[[4]])
     result_df$max_installment[i] <- as.numeric(calc[[5]])
     result_df$days_delay[i] <- as.numeric(calc[[6]])
+    result_df$office_id[i] <- as.numeric(calc[[7]])
+    result_df$third_side[i] <- as.numeric(calc[[8]])
   }, error=function(e){}))
 }
 
@@ -249,6 +253,15 @@ select <- select[!duplicated(select$id),]
 
 # Subset based on current DPD
 select <- subset(select,select$days_delay<=300)
+
+
+# Subset based on not real offices
+select$ok_office <- ifelse(flag_real_office(select$office_id)==1,1,0)
+select <- subset(select,select$ok_office==1)
+
+
+# Subset based on if on third side 
+select <- subset(select,select$third_side==0)
 
 
 # Get number of terminated credits per client
@@ -381,6 +394,8 @@ po_old$max_amount <- NA
 po_old$score_max_amount <- NA
 po_old$max_installment <- NA
 po_old$days_delay <- NA
+po_old$office_id <- NA
+po_old$third_side <- NA
 for(i in 1:nrow(po_old)){
   suppressWarnings(tryCatch({
     application_id <- po_old$application_id[i]
@@ -390,16 +405,18 @@ for(i in 1:nrow(po_old)){
     po_old$max_delay[i] <- as.numeric(calc[[3]])
     po_old$max_installment[i] <- as.numeric(calc[[5]])
     po_old$days_delay[i] <- as.numeric(calc[[6]])
+    po_old$office_id[i] <- as.numeric(calc[[7]])
+    po_old$third_side[i] <- as.numeric(calc[[8]])
   }, error=function(e){}))
 }
+po_old$ok_office <- ifelse(flag_real_office(po_old$office_id)==1,1,0)
 
 
 # Change database
 po_not_ok <- subset(po_old,is.infinite(po_old$max_amount) | 
-                    po_old$max_amount<po_old$min_amount)
-po_ok <- subset(po_old,!(is.infinite(po_old$max_amount)))
-po_ok <- subset(po_ok,po_ok$days_delay<=300)
-po_ok <- subset(po_ok,po_ok$max_amount>=po_ok$min_amount)
+  po_old$max_amount<po_old$min_amount | po_old$days_delay>300 |
+  po_old$ok_office==0 | po_old$third_side==1)
+po_ok <- po_old[!(po_old$application_id %in% po_not_ok$application_id),]
 
 if(nrow(po_to_remove)>0){
   po_to_remove$max_amount <- -999
