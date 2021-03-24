@@ -51,8 +51,7 @@ gen_correction_po <- function(con,db_name,all_df,all_id,
             all.x = TRUE)
         scoring_df$color <- ifelse(
           scoring_df$amount<=po$credit_amount & 
-            scoring_df$installment_amount<=po$installment_amount &
-            scoring_df$score %in% c("Bad","Indeterminate"),3,
+            scoring_df$installment_amount<=po$installment_amount,3,
             scoring_df$color)
         scoring_df <-  scoring_df[,-which(names(scoring_df) %in% 
                                             c("installment_amount"))]}
