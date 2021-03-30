@@ -207,7 +207,7 @@ for(i in 1:nrow(select_credits)){
     }
     client_id <- select_credits$client_id[i]
     last_id <- select_credits$id[i]
-    calc <- gen_terminated_fct(con,client_id,product_id,last_id)
+    calc <- gen_terminated_fct(con,client_id,product_id,last_id,0)
     select_credits$max_amount[i] <- calc[[1]]
     select_credits$max_installment_amount[i] <- calc[[2]]
     select_credits$score_max_amount[i] <- calc[[3]]
@@ -325,7 +325,7 @@ for(i in 1:nrow(po_old)){
   }
   client_id <- po_old$client_id[i]
   last_id <- po_old$last_id[i]
-  calc <- gen_terminated_fct(con,client_id,product_id,last_id)
+  calc <- gen_terminated_fct(con,client_id,product_id,last_id,0)
   po_old$credit_amount[i] <- calc[[1]]
   po_old$installment_amount[i] <- calc[[2]]
   po_old$max_delay[i] <- as.numeric(calc[[4]])

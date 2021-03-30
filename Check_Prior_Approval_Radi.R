@@ -122,6 +122,10 @@ if((flag_credit_next_salary==1 & all_credit$passed_installments==0) |
 }
 
 
+# Flag is terminated before maturing
+flag_limit_offer <- ifelse(all_credit$sub_status==123,1,0)
+
+
 # Remove if more than 1 "varnat"
 get_status_sql <- suppressWarnings(dbSendQuery(con, paste("
 SELECT id, status, sub_status, product_id
@@ -192,7 +196,8 @@ for(i in 1:nrow(all_credit)){
     }
     client_id <- all_credit$client_id[i]
     last_id <- all_credit$id[i]
-    calc <- gen_terminated_fct(con,client_id,product_id,last_id)
+    calc <- gen_terminated_fct(con,client_id,product_id,last_id,
+                               flag_limit_offer)
     all_credit$max_amount[i] <- calc[[1]]
     all_credit$max_installment_amount[i] <- calc[[2]]
     all_credit$score_max_amount[i] <- calc[[3]]

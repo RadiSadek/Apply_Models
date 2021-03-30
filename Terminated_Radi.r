@@ -1,5 +1,6 @@
 
-gen_terminated_fct <- function(con,client_id,product_id,last_id){
+gen_terminated_fct <- function(con,client_id,product_id,last_id,
+                               flag_limit_offer){
 
   
 # Set working directory for input (R data for logistic regression) and output #
@@ -51,6 +52,7 @@ all_df <- suppressWarnings(fetch(dbSendQuery(con,
               gen_big_sql_query(db_name,application_id)), n=-1))
 all_df$date <- ifelse(all_df$status %in% c(4,5), all_df$signed_at, 
                       all_df$created_at)
+curr_amount <- all_df$amount
 
 
 # Apply some checks to main credit dataframe
@@ -331,6 +333,15 @@ scoring_df <- gen_apply_score(
 scoring_df <- gen_apply_policy(scoring_df,flag_credirect,flag_cession,
    flag_bad_ckr_citycash,all_df,all_id,flag_beh,prev_amount,
    flag_new_credirect_old_city,flag_credit_next_salary,flag_beh_company)
+
+
+# Apply criteria according to when the last credit was terminated
+if(flag_limit_offer==1){
+  scoring_df$score <- ifelse(scoring_df$amount>curr_amount,"Bad",
+                             scoring_df$score)
+  scoring_df$color <- ifelse(scoring_df$amount>curr_amount,1,
+                             scoring_df$score)
+}
 
 
 # Compute previous installment amount and if acceptable differential
