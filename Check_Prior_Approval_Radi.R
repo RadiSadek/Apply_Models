@@ -92,7 +92,7 @@ if(!(all_credit$sub_status %in% c(123,128))){
 
 
 # Select based on product_id
-if(all_credit$product_id %in% c(13,59:65,53,54,51)){
+if(all_credit$product_id %in% c(12,13,59:65,53,54,51)){
   quit()
 }
 
