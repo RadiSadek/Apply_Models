@@ -255,7 +255,10 @@ all_credit <- subset(all_credit,all_credit$max_delay<=200)
 #############################################
 
 # Read current database
-id_max <- max(po_raw$id)+1
+id_max_query <- paste(
+  "SELECT MAX(id) as max_id
+  FROM ",db_name,".clients_prior_approval_applications",sep="")
+id_max <- suppressWarnings(fetch(dbSendQuery(con,id_max_query), n=-1))$max_id+1
 
 if(nrow(all_credit)>0){
 
