@@ -286,6 +286,15 @@ gen_flag_is_dead <- function(db_name,input){
      WHERE id=",input,sep=""))
 }
 
+
+# Read PO refinance data per client_id
+gen_flag_gdpr <- function(db_name,input){
+  return(paste(
+    "SELECT gdpr_marketing_messages
+     FROM ",db_name,".clients
+     WHERE id=",input,sep=""))
+}
+
 # Get discount amount per application_id
 gen_discount_amount <- function(db_name,input){
   return(paste(

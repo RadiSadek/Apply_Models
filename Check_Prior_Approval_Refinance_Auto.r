@@ -108,6 +108,17 @@ select$time_since <- round(difftime(as.Date(substring(Sys.time(),1,10)),
     select$date,units=c("days")),0)
 
 
+# Get flagged GDPR marketing campaigns
+flag_gdpr <- suppressWarnings(fetch(dbSendQuery(con,
+  gen_flag_gdpr(db_name,select$client_id)), n=-1))$gdpr_marketing_messages
+
+
+# Subset based on flagged GDPR
+if(flag_gdpr==1 & !is.na(flag_gdpr)){
+  quit()
+}
+
+
 # Check if credit is terminated
 if(select$status[1] %in% c(1,2,3,5)){
   quit()

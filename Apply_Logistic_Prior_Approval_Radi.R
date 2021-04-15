@@ -396,6 +396,38 @@ if(substring(Sys.time(),9,10)=="01"){
 }
 
 
+#######################################################
+### Check for special cases and deleted immediately ###
+#######################################################
+
+# Read special cases (deceased and gdrk marketing clients) 
+get_special_sql <- suppressWarnings(dbSendQuery(con, paste("
+SELECT id
+FROM ",db_name,".clients
+WHERE gdpr_marketing_messages=1 OR is_dead=1",sep="")))
+special <- fetch(get_special_sql,n=-1)
+
+# Remove special cases if has offer
+po_get_special_query <- paste(
+  "SELECT id, client_id
+  FROM ",db_name,".clients_prior_approval_applications
+  WHERE deleted_at IS NULL",sep="")
+po_special <- suppressWarnings(fetch(dbSendQuery(con, po_get_special_query), 
+                                     n=-1))
+po_special <- po_special[po_special$client_id %in% special$id,]
+
+if(nrow(po_special)>0){
+  po_special_query <- paste("UPDATE ",db_name,
+   ".clients_prior_approval_applications SET updated_at = '",
+   substring(Sys.time(),1,19),"', deleted_at = '",
+   paste(substring(Sys.time(),1,10),"04:00:00",sep=),"'
+   WHERE id IN",gen_string_po_terminated(po_special), sep="")
+  suppressMessages(suppressWarnings(dbSendQuery(con,po_special_query)))
+}
+
+
+
+
 ###########
 ### End ###
 ###########

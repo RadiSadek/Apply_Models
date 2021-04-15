@@ -37,7 +37,7 @@ main_dir <- "C:\\Projects\\Apply_Scoring\\"
 # Read argument of ID
 args <- commandArgs(trailingOnly = TRUE)
 #application_id <- args[1]
-application_id <- 483217
+application_id <- 426970
 
 
 # Load other r files
@@ -80,6 +80,11 @@ credit_amount <- fetch(credit_amount_sql,n=-1)
 all_credit$credit_amount <- credit_amount$credit_amount
 
 
+# Get flagged GDPR marketing campaigns
+flag_gdpr <- suppressWarnings(fetch(dbSendQuery(con,
+  gen_flag_gdpr(db_name,all_credit$client_id)), n=-1))$gdpr_marketing_messages
+
+
 
 #####################################################
 ### Apply selection criteria for credits to offer ###
@@ -87,6 +92,12 @@ all_credit$credit_amount <- credit_amount$credit_amount
 
 # Subset based on sub_status
 if(!(all_credit$sub_status %in% c(123,128))){
+  quit()
+}
+
+
+# Subset based on flagged GDPR
+if(flag_gdpr==1 & !is.na(flag_gdpr)){
   quit()
 }
 

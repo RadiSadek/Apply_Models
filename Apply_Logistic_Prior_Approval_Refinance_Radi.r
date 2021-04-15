@@ -495,6 +495,39 @@ if(substring(Sys.time(),9,10) %in% c("01")){
 
 
 
+#######################################################
+### Check for special cases and deleted immediately ###
+#######################################################
+
+# Read special cases (deceased and gdrk marketing clients) 
+get_special_sql <- suppressWarnings(dbSendQuery(con, paste("
+SELECT id
+FROM ",db_name,".clients
+WHERE gdpr_marketing_messages=1 OR is_dead=1",sep="")))
+special <- fetch(get_special_sql,n=-1)
+
+# Remove special cases if has offer
+po_special_sql_query <- paste(
+  "SELECT application_id, created_at
+  FROM ",db_name,".prior_approval_refinances
+  WHERE deleted_at IS NULL",sep="")
+po_special <- suppressWarnings(fetch(dbSendQuery(con, po_special_sql_query), 
+  n=-1))
+po_special <- merge(po_special,all_credits[,c("id","client_id")],
+                    by.x = "application_id",by.y = "id",all.x = TRUE)
+po_special <- po_special[po_special$client_id %in% special$id,]
+
+if(nrow(po_special)>0){
+  po_special_query <- paste("UPDATE ",db_name,
+     ".prior_approval_refinances SET status = 4, updated_at = '",
+     substring(Sys.time(),1,19),"', deleted_at = '",
+     paste(substring(Sys.time(),1,10),"04:00:00",sep=),"'
+     WHERE application_id IN ",gen_string_po_refinance(po_special), sep="")
+  suppressMessages(suppressWarnings(dbSendQuery(con,po_special_query)))
+}
+
+
+
 #########
 ## END ##
 #########
