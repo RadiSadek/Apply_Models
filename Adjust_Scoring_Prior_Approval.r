@@ -71,6 +71,12 @@ gen_correction_po_ref <- function(con,db_name,all_df,all_id,
   input <- all_id[all_id$status %in% c(4) & 
                   all_id$company_id==all_df_local$company_id,]
   
+  # Append installment amount and period
+  scoring_df <- merge(scoring_df,
+     products[,c("amount","period","installment_amount")],
+    by.x = c("amount","period"),by.y = c("amount","period"),
+     all.x = TRUE)
+  
   string_sql_update <- input$id[1]
   if(nrow(input)>1){
     for(i in 1:nrow(input)){
@@ -91,7 +97,15 @@ gen_correction_po_ref <- function(con,db_name,all_df,all_id,
       po_ref <- po_ref[order(po_ref$final_time),]
       po_ref <- po_ref[1,]
       
-      if(po_ref$final_time<=7){
+      if(po_ref$final_time<=7 & !is.na(po_ref$max_installment)){
+        scoring_df$color <- ifelse(
+          scoring_df$amount<=po_ref$max_amount & 
+          scoring_df$installment_amount<=po_ref$max_installment,3,
+          scoring_df$color)
+      }
+      
+      if(po_ref$final_time<=7 & is.na(po_ref$max_installment)){
+        
         unique_amounts <- unique(scoring_df$amount[
           scoring_df$amount<=po_ref$max_amount])
         count_not_bad <- vector(mode = "double",length(unique_amounts))
@@ -127,10 +141,6 @@ gen_correction_po_ref <- function(con,db_name,all_df,all_id,
             scoring_df$color)
         
         if(!is.na(po_ref$max_installment)){
-          scoring_df <- merge(scoring_df,
-            products[,c("amount","period","installment_amount")],
-            by.x = c("amount","period"),by.y = c("amount","period"),
-            all.x = TRUE)
           scoring_df$color <- ifelse(
             scoring_df$amount==po_ref$max_amount & 
             scoring_df$installment_amount>po_ref$max_installment &

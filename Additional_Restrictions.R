@@ -77,54 +77,72 @@ gen_restrict_credirect_beh <- function(scoring_df,all_df,all_id,
 
   # Get company ID to filter past credits only for Credirect and credit amounts
   all_df_local <- get_company_id_prev(db_name,all_df)
-  all_id_local <- all_id[all_id$status %in% c(4,5) & 
+  all_id_local <- all_id[all_id$status %in% c(5) & 
                          all_id$company_id==all_df_local$company_id,]
-  all_id_local <- subset(all_id_local, is.na(all_id_local$sub_status) | 
-      all_id_local$sub_status %in% c(123,126,128))
+  all_id_local_active <- all_id[all_id$status %in% c(4) & 
+                           all_id$company_id==all_df_local$company_id,]
+  all_id_local <- subset(all_id_local, all_id_local$sub_status %in% 
+                         c(123,126,128))
+  all_id_local <- subset(all_id_local,all_id_local$id!=application_id)
+  all_id_local_active <- subset(all_id_local_active,
+                                all_id_local_active$id!=application_id)
   
-  # Get nb passed installments at deactivation
+  # Get amounts of previous credits
   if(nrow(all_id_local)>0){
     for(i in 1:nrow(all_id_local)){
       all_id_local$amount[i] <- fetch(dbSendQuery(con,
-       gen_last_cred_amount_query(all_id_local$id[i],db_name)), n=-1)$amount
-    }
+       gen_last_cred_amount_query(all_id_local$id[i],db_name)), n=-1)$amount}
+  }
+  if(nrow(all_id_local_active)>0){
+    for(i in 1:nrow(all_id_local_active)){
+      all_id_local_active$amount[i] <- fetch(dbSendQuery(con,
+       gen_last_cred_amount_query(all_id_local_active$id[i],db_name)), 
+       n=-1)$amount}
   }
   
-  ratio_passed_installments_prev <- ifelse(nrow(all_id_local)==0,-999,
-     ifelse(is.na(gen_prev_deactiv_date(db_name,all_df_local,all_id_local)),999,
-        gen_prev_deactiv_date(db_name,all_df_local,all_id_local)))
+  # Get nb passed installments at deactivation
+  max_step_prev <- gen_prev_deactiv_date(db_name,all_df_local,all_id_local)
 
   # Apply policy rules for Credirect Installments
   if(flag_credit_next_salary==0){
     
-       scoring_df$allowed_amount_app <- 
-         ifelse(scoring_df$score %in% c("NULL","Bad","Indeterminate"),0,
-         ifelse(scoring_df$score %in% c("Good 4"),1000,600))
+    scoring_df$allowed_amount_app <- 
+      ifelse(scoring_df$score %in% c("NULL","Bad","Indeterminate"),0,
+             ifelse(scoring_df$score %in% c("Good 4"),1000,600))
     
-       if(ratio_passed_installments_prev>0.5){
-         scoring_df$allowed_amount_rep <- 
-           ifelse(scoring_df$score %in% c("Bad","Indeterminate","Good 1","NULL"),
-                  max(all_id_local$amount) + 0,
-           ifelse(scoring_df$score %in% c("Good 2"),
-                  max(all_id_local$amount) + 200,
-           ifelse(scoring_df$score %in% c("Good 3"),
-                  max(all_id_local$amount) + 400, 
-                  max(all_id_local$amount) + 1000)))
-         for (i in 1:nrow(scoring_df)){
-           scoring_df$allowed_amount[i] <- max(scoring_df$allowed_amount_rep[i],
-                                               scoring_df$allowed_amount_app[i])
-         }
-         scoring_df$color <- ifelse(scoring_df$amount>scoring_df$allowed_amount,
-                1,scoring_df$color)
-       } else if(ratio_passed_installments_prev!=-999) {
-         for (i in 1:nrow(scoring_df)){
-           scoring_df$allowed_amount[i] <- max(scoring_df$allowed_amount_app[i],
-             max(all_id_local$amount))}
-       } else {
-         scoring_df$allowed_amount <- scoring_df$allowed_amount_app
+    # If has at least 1 terminated 
+    if(nrow(all_id_local)>0){
+
+      scoring_df$allowed_amount_rep <- 
+        ifelse(scoring_df$score %in% c("Bad","Indeterminate","Good 1","NULL"),
+               max(all_id_local$amount) + min(0,max_step_prev),
+        ifelse(scoring_df$score %in% c("Good 2"),
+               max(all_id_local$amount) + min(200,max_step_prev),
+        ifelse(scoring_df$score %in% c("Good 3"),
+               max(all_id_local$amount) + min(400,max_step_prev), 
+               max(all_id_local$amount) + min(1000,max_step_prev))))
+      
+      for (i in 1:nrow(scoring_df)){
+        scoring_df$allowed_amount[i] <- max(scoring_df$allowed_amount_rep[i],
+                scoring_df$allowed_amount_app[i])
       }
       scoring_df$color <- ifelse(scoring_df$amount>scoring_df$allowed_amount,
-        1,scoring_df$color)
+                1,scoring_df$color)
+    } 
+    
+    # If only has at least 1 active (no terminated)
+    else if(nrow(all_id_local_active)>0){
+      for (i in 1:nrow(scoring_df)){
+        scoring_df$allowed_amount[i] <- max(scoring_df$allowed_amount_app[i],
+                  max(all_id_local_active$amount))}
+    
+    # Precaution condition
+    } else {
+      scoring_df$allowed_amount <- scoring_df$allowed_amount_app
+    }
+    
+    scoring_df$color <- ifelse(scoring_df$amount>scoring_df$allowed_amount,
+                               1,scoring_df$color)
     
   # Apply policy rules for Pay Day
   } else {
@@ -132,15 +150,15 @@ gen_restrict_credirect_beh <- function(scoring_df,all_df,all_id,
         ifelse(scoring_df$score %in% c("NULL","Bad","Indeterminate"),0,
         ifelse(scoring_df$score %in% c("Good 4"),800,600))
       
-      if(ratio_passed_installments_prev!=-999){
+      if(nrow(all_id_local)>0){
         scoring_df$allowed_amount_rep <- 
           ifelse(scoring_df$score %in% c("Bad","Indeterminate","Good 1","NULL"),
-             max(all_id_local$amount) + 0,
+             max(all_id_local$amount) + min(0,max_step_prev),
           ifelse(scoring_df$score %in% c("Good 2"),
-             max(all_id_local$amount) + 200,
+             max(all_id_local$amount) + min(200,max_step_prev),
           ifelse(scoring_df$score %in% c("Good 3"),
-             max(all_id_local$amount) + 400, 
-             max(all_id_local$amount) + 1000)))
+             max(all_id_local$amount) + min(400,max_step_prev), 
+             max(all_id_local$amount) + min(1000,max_step_prev))))
         
         for (i in 1:nrow(scoring_df)){
           scoring_df$allowed_amount[i] <- max(scoring_df$allowed_amount_rep[i],
@@ -196,7 +214,7 @@ gen_adjust_score <- function(scoring_df,crit){
   return(scoring_df)
 }
 
-# Function to apply restrictions to refinances for City Cash only
+# Function to apply restrictions to refinances
 gen_restrict_beh_refinance <- function(db_name,all_df,all_id,
     scoring_df,flag_active,application_id,flag_credirect){
   

@@ -296,26 +296,29 @@ gen_prev_deactiv_date <- function(db_name,all_df,all_id){
   
   all_id_local <- subset(all_id,all_id$company_id==suppressWarnings(fetch(
     dbSendQuery(con,gen_products_query_desc(db_name,all_df))))$company_id)
-  all_id_local$next_salary <- ifelse(all_id_local$product_id %in% 
-    c(25:28,36,37,41:44,49,50,55:58), 1, 0)
-  all_id_local <- subset(all_id_local,all_id_local$status %in% c(5))
-  all_id_local <- subset(all_id_local,all_id_local$next_salary==0)
   
   if(nrow(all_id_local)>0){
     all_id_local <- all_id_local[order(all_id_local$deactivated_at),]
     all_id_local <- all_id_local[nrow(all_id_local),]
+    all_id_local$next_salary <- ifelse(all_id_local$product_id %in% 
+      c(25:28,36,37,41:44,49,50,55:58), 1, 0)
     
     passed_install_at_pay <- fetch(dbSendQuery(con,
        gen_passed_install_before_query(db_name,
        all_id_local$id,all_id_local$deactivated_at)))$passed_installments
-    total_installments <- gen_last_total_amount(
-       rbind(all_id_local,all_id_local))$installments
     
-    ratio_passed_install_at_pay <- passed_install_at_pay / total_installments
+    max_step_prev <- ifelse(passed_install_at_pay!=-999,
+       (ifelse(all_id_local$next_salary==0,
+       (ifelse(passed_install_at_pay==0,100,
+        ifelse(passed_install_at_pay==1,200,
+        ifelse(passed_install_at_pay==2,300,
+        ifelse(passed_install_at_pay==3,400,Inf))))),
+        (ifelse(passed_install_at_pay==0,100,Inf)))),NA)
+    
   } else {
-    ratio_passed_install_at_pay <- NA
+    max_step_prev <- NA
   }
-  return(ratio_passed_install_at_pay)
+  return(max_step_prev)
 }
 
 # Compute if number of varnat >=2 and before 6 months
