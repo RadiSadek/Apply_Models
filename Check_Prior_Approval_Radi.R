@@ -36,8 +36,8 @@ main_dir <- "C:\\Projects\\Apply_Scoring\\"
 
 # Read argument of ID
 args <- commandArgs(trailingOnly = TRUE)
-#application_id <- args[1]
-application_id <- 426970
+application_id <- args[1]
+#application_id <- 426970
 
 
 # Load other r files
@@ -85,6 +85,11 @@ flag_gdpr <- suppressWarnings(fetch(dbSendQuery(con,
   gen_flag_gdpr(db_name,all_credit$client_id)), n=-1))$gdpr_marketing_messages
 
 
+# Get max DPD on current credit
+max_dpd <- suppressWarnings(fetch(dbSendQuery(con,
+  gen_plan_main_select_query(db_name,application_id)), n=-1))$max_delay
+
+
 
 #####################################################
 ### Apply selection criteria for credits to offer ###
@@ -92,6 +97,12 @@ flag_gdpr <- suppressWarnings(fetch(dbSendQuery(con,
 
 # Subset based on sub_status
 if(!(all_credit$sub_status %in% c(123,128))){
+  quit()
+}
+
+
+# Subset based on max DPD
+if(max_dpd>14 & !is.na(max_dpd)){
   quit()
 }
 
