@@ -170,7 +170,7 @@ FROM ",db_name,".credits_plan_taxes", sep ="")))
 taxes <- fetch(taxes_sql,n=-1)
 taxes_raw <- taxes
 taxes <- taxes[taxes$application_id %in% daily$application_id,]
-taxes_agg <- aggregate(taxes$amount-taxes$paid_amount,
+taxes_agg <- aggregate(taxes$amount,
                        by=list(taxes$application_id),FUN=sum)
 names(taxes_agg) <- c("application_id","tax_amount")
 

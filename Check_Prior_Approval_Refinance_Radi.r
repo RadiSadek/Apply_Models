@@ -37,7 +37,7 @@ main_dir <- "C:\\Projects\\Apply_Scoring\\"
 # Read argument of ID
 args <- commandArgs(trailingOnly = TRUE)
 #application_id <- args[1]
-application_id <- 898137
+application_id <- 724695
 
 
 # Load other r files
@@ -172,7 +172,7 @@ taxes <- taxes[taxes$application_id %in% daily$application_id,]
 if(nrow(taxes)==0){
   taxes_agg <- 0
 } else {
-  taxes_agg <- sum(taxes$amount) - sum(taxes$paid_amount)
+  taxes_agg <- sum(taxes$amount)
 }
 
 
