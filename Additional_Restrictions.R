@@ -26,6 +26,38 @@ gen_restrict_citycash_app <- function(scoring_df){
   return(scoring_df)
 }
 
+# Function to apply restrictions for City Cash applications
+gen_restrict_cashpoint_app <- function(scoring_df){
+  
+  score_df_800 <- subset(scoring_df,scoring_df$amount>800)
+  criteria_800 <- length(names(table(score_df_800$score))
+     [names(table(score_df_800$score)) %in% c("Good 4")])
+  
+  score_df_600 <- subset(scoring_df,scoring_df$amount>600)
+  criteria_600 <- length(names(table(score_df_600$score))
+     [names(table(score_df_600$score)) %in% c("Good 3","Good 4")])
+  
+  score_df_400 <- subset(scoring_df,scoring_df$amount>400)
+  criteria_400 <- length(names(table(score_df_400$score))
+     [names(table(score_df_400$score)) %in% c("Good 2",
+     "Good 3","Good 4")])
+  
+  score_df_0 <- subset(scoring_df,scoring_df$amount>0)
+  criteria_0 <- length(names(table(score_df_0$score))
+     [names(table(score_df_400$score)) %in% c("Good 1","Good 2",
+     "Good 3","Good 4")])
+  
+  scoring_df$color <- ifelse(scoring_df$score %in% c("NULL"),scoring_df$color,
+    ifelse(scoring_df$amount>1000,1,
+    ifelse(criteria_800==0 & scoring_df$amount>800,1,
+    ifelse(criteria_600==0 & scoring_df$amount>600,1,
+    ifelse(criteria_400==0 & scoring_df$amount>400,1,
+    ifelse(criteria_0==0 & scoring_df$amount>0,1,scoring_df$color))))))
+  
+  return(scoring_df)
+}
+
+
 # Function to apply restrictions for City Cash repeats
 gen_restrict_citycash_beh <- function(scoring_df,prev_amount){
   

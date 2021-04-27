@@ -236,6 +236,10 @@ flag_credit_next_salary <- ifelse(all_df$product_id %in%
 flag_credirect <- ifelse(products_desc$company_id==2, 1, 0)
 
 
+# Compute flag if product is cashpoint
+flag_cashpoint <- ifelse(products_desc$company_id==5, 1, 0)
+
+
 # Compute flag if client has previous otpisan or tsediran
 flag_exclusion <- ifelse(length(which(names(
   table(all_id$sub_status)) %in% c(124,133)))>0, 1,
@@ -405,7 +409,8 @@ scoring_df <- scoring_df[,c("application_id","amount","period","score","color",
 # Readjust score when applicable
 scoring_df <- gen_apply_policy(scoring_df,flag_credirect,flag_cession,
    flag_bad_ckr_citycash,all_df,all_id,flag_beh,prev_amount,
-   flag_new_credirect_old_city,flag_credit_next_salary,flag_beh_company)
+   flag_new_credirect_old_city,flag_credit_next_salary,flag_beh_company,
+   flag_cashpoint)
 
 
 # Apply repeat restrictions to refinances and with potential refinance
