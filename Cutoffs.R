@@ -24,7 +24,7 @@ cu_beh_city <- c(0.4,0.3,0.225,0.15,0.075)
 cu_app_cred_flex <- c(0.15,0.125,0.08,0.05,0.035)
 
 # Application Credirect Installments
-cu_app_cred_user <- c(0.58,0.535,0.5,0.4,0.325)
+cu_app_cred_user <- c(0.6,0.535,0.5,0.4,0.325)
 
 # Repeat all Credirect
 cu_beh_cred <- c(0.575,0.325,0.225,0.15,0.1)
