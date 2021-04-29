@@ -166,7 +166,7 @@ gen_last_cred_amount_query <- function(var,db){
   WHERE application_id=", var, sep =""))
 }
 
-# Define query to get address 
+# Define query to get expenses according to city
 gen_address_query <- function(var,arg){
   return(paste("SELECT 
     c.household, c.child, c.pensioner
@@ -175,6 +175,16 @@ gen_address_query <- function(var,arg){
     WHERE a.addressable_type = '",arg,"'
     AND a.addressable_id = ",var," AND a.type = 2", sep =""))
 }
+
+# Define query to get address 
+gen_complete_address_query <- function(db_name,application_id){
+  return(paste("SELECT type, city_id, neighborhood_id, neighborhood_text, 
+  street,number, block, entrance, floor , apartment FROM addresses
+  WHERE addressable_type=
+  'App\\\\Models\\\\Credits\\\\Applications\\\\Application'
+  AND addressable_id=",application_id, sep =""))
+}
+
 
 # Define query to get company id (credirect or city cash) 
 gen_get_company_id_query <- function(db_name){
@@ -218,8 +228,13 @@ gen_query_ckr <- function(all_df,all_credits,type_of){
     result_df$date_diff <- difftime(result_df$date_curr, result_df$date, 
                                     units=c("days"))
     result_df <- result_df[order(result_df$date_diff),]
-    result_df <- result_df[!duplicated(result_df$client_id),]
-    return(result_df[,names_col])}
+    result_final <- as.data.frame(matrix(nrow = 1, 
+                                         ncol = ncol(result_df)))
+    names(result_final) <- names(result_df)
+    for(i in 1:ncol(result_final)){
+      result_final[1,i] <- result_df[which(!is.na(result_df[,i]))[1],i]
+    }
+    return(result_final[,names_col])}
 }
 
 # Define query for SEON phone variables
