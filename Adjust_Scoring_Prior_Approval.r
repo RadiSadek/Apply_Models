@@ -22,16 +22,23 @@ gen_correction_po <- function(con,db_name,all_df,all_id,
     po <- subset(po,po$company_id==all_df_local$company_id)
     
     if(nrow(po)>=1){
+      
+      # Check if has credit after po offer
       po <- po[rev(order(po$deleted_at)),]
       po <- po[!duplicated(po$client_id),]
+      last_po <- subset(po,!is.na(po$deleted_at))
+      if(nrow(last_po)>0){
+        last_po_date <- last_po$deleted_at
+      } else {
+        last_po_date <- NA
+      }
       all_id_local <- subset(all_id,all_id$status %in% c(4,5))
       all_id_local <- subset(all_id_local,
-                             all_id_local$company_id==po$company_id & 
-                             all_id_local$created_at>=po$created_at)
+         all_id_local$company_id==po$company_id & 
+         all_id_local$created_at>=(as.POSIXct(last_po_date) + 3600))
       po$final_time <- ifelse(!is.na(po$deleted_at) &
-                              substring(po$deleted_at,12,20)!="04:00:00",
-              difftime(Sys.time(),po$deleted_at,units=c("days")),
-              999)
+         substring(po$deleted_at,12,20)!="04:00:00",
+         difftime(Sys.time(),po$deleted_at,units=c("days")),999)
             
       # Correct scoring for terminated prior approval
       if(nrow(all_id_local)==0 & po$final_time<=4){
