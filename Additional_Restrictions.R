@@ -44,7 +44,7 @@ gen_restrict_cashpoint_app <- function(scoring_df){
   
   score_df_0 <- subset(scoring_df,scoring_df$amount>0)
   criteria_0 <- length(names(table(score_df_0$score))
-     [names(table(score_df_400$score)) %in% c("Good 1","Good 2",
+     [names(table(score_df_0$score)) %in% c("Good 1","Good 2",
      "Good 3","Good 4")])
   
   scoring_df$color <- ifelse(scoring_df$score %in% c("NULL"),scoring_df$color,
