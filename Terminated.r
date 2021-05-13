@@ -360,7 +360,7 @@ scoring_df <- gen_apply_score(
 
 # Readjust score when applicable
 scoring_df <- gen_apply_policy(scoring_df,flag_credirect,flag_cession,
-   flag_bad_ckr_citycash,all_df,all_id,flag_beh,prev_amount,
+   flag_bad_ckr_citycash,all_df,all_id,flag_beh,prev_amount,products,
    flag_new_credirect_old_city,flag_credit_next_salary,flag_beh_company,
    flag_cashpoint)
 
