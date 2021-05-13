@@ -284,9 +284,7 @@ gen_installment_ratio <- function(db_name,all_id,all_df){
              1*gen_prev_max_installment(db_name,all_id_local_not_ok,all_df)))))                          
          
   } else {
-    final_prev_installment_amount <- ifelse(nrow(all_id_local_activ_not_ok)>0,
-      0.6*gen_prev_max_installment(db_name,all_id_local2,all_df),
-      1.1*gen_prev_max_installment(db_name,all_id_local2,all_df))
+    final_prev_installment_amount <- Inf
   }
   return(final_prev_installment_amount)
 }
