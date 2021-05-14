@@ -128,8 +128,14 @@ gen_beh_citycash <- function(df,scoring_df,products,df_Log_beh_CityCash,period,
         products$amount==as.numeric(amount_tab))
     
     scoring_df$color[i] <- 0
+    
+    if(product_tab$installment_amount> gen_installment_ratio(
+      db_name,all_id,all_df)){
+      scoring_df$color[i] <- 1 
+    }
+    
     scoring_df$color[i] <- 
-          ifelse(scoring_df$score[i]=="Bad", 1, 
+          ifelse(scoring_df$color[i]==1 | scoring_df$score[i]=="Bad", 1, 
           ifelse(scoring_df$score[i]=="Indeterminate", 2,
           ifelse(scoring_df$score[i]=="Good 1", 3,
           ifelse(scoring_df$score[i]=="Good 2", 4,

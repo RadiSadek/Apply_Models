@@ -59,28 +59,14 @@ gen_restrict_cashpoint_app <- function(scoring_df){
 
 
 # Function to apply restrictions for City Cash repeats
-gen_restrict_citycash_beh <- function(scoring_df,prev_amount,products){
+gen_restrict_citycash_beh <- function(scoring_df,prev_amount){
   
-  # Check if has Good 1 at least somewhere in table
   criteria <- length(names(table(scoring_df$score))
     [names(table(scoring_df$score)) %in% 
         c("Good 1","Good 2","Good 3","Good 4")])
   scoring_df$color <- ifelse(scoring_df$score %in% c("NULL"),scoring_df$color,
     ifelse(criteria==0 & scoring_df$amount>prev_amount$amount,1,
            scoring_df$color))
-  
-  # Check if installment ratio is OK
-  if(!("installment_amount" %in% names(scoring_df))){
-    scoring_df <- merge(scoring_df,products[,c("amount","period",
-      "installment_amount")],
-      by.x = c("amount","period"),by.y = c("amount","period"),all.x = TRUE)
-  }
-  allowed_installment <- gen_installment_ratio(db_name,all_id,all_df)
-  for(i in 1:nrow(scoring_df)){
-    if(scoring_df$installment_amount[i]>allowed_installment){
-      scoring_df$color[i] <- 1
-    }
-  }
   
   return(scoring_df)
 }
