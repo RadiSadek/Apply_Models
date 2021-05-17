@@ -59,14 +59,30 @@ gen_restrict_cashpoint_app <- function(scoring_df){
 
 
 # Function to apply restrictions for City Cash repeats
-gen_restrict_citycash_beh <- function(scoring_df,prev_amount){
+gen_restrict_citycash_beh <- function(scoring_df,prev_amount,products,all_id,
+                                      all_df,db_name){
   
+  # Check if has Good 1 at least somewhere in table
   criteria <- length(names(table(scoring_df$score))
     [names(table(scoring_df$score)) %in% 
         c("Good 1","Good 2","Good 3","Good 4")])
   scoring_df$color <- ifelse(scoring_df$score %in% c("NULL"),scoring_df$color,
     ifelse(criteria==0 & scoring_df$amount>prev_amount$amount,1,
            scoring_df$color))
+  
+  # Check if installment ratio is OK
+  if(!("installment_amount" %in% names(scoring_df))){
+    scoring_df <- merge(scoring_df,products[,c("amount","period",
+       "installment_amount")],
+       by.x = c("amount","period"),by.y = c("amount","period"),all.x = TRUE)
+  }
+  allowed_installment <- gen_installment_ratio(db_name,all_id,all_df)
+  for(i in 1:nrow(scoring_df)){
+    if(scoring_df$installment_amount[i]>allowed_installment){
+      scoring_df$color[i] <- 1
+    }
+  }
+  
   
   return(scoring_df)
 }
@@ -104,7 +120,7 @@ gen_restrict_credirect_app <- function(scoring_df,all_df,
 }
 
 # Function to apply restrictions for Credirect behavioral
-gen_restrict_credirect_beh <- function(scoring_df,all_df,all_id,
+gen_restrict_credirect_beh <- function(scoring_df,all_df,all_id,application_id,
        flag_credit_next_salary){
 
   # Get company ID to filter past credits only for Credirect and credit amounts
@@ -115,9 +131,9 @@ gen_restrict_credirect_beh <- function(scoring_df,all_df,all_id,
                            all_id$company_id==all_df_local$company_id,]
   all_id_local <- subset(all_id_local, all_id_local$sub_status %in% 
                          c(123,126,128))
-  all_id_local <- subset(all_id_local,all_id_local$id!=application_id)
-  all_id_local_active <- subset(all_id_local_active,
-                                all_id_local_active$id!=application_id)
+  # all_id_local <- subset(all_id_local,all_id_local$id!=application_id)
+  # all_id_local_active <- subset(all_id_local_active,
+  #                               all_id_local_active$id!=application_id)
   
   # Get amounts of previous credits
   if(nrow(all_id_local)>0){
@@ -133,7 +149,8 @@ gen_restrict_credirect_beh <- function(scoring_df,all_df,all_id,
   }
   
   # Get nb passed installments at deactivation
-  max_step_prev <- gen_prev_deactiv_date(db_name,all_df_local,all_id_local)
+  max_step_prev <- gen_prev_deactiv_date(db_name,all_df,all_id,
+                                         application_id)
 
   # Apply policy rules for Credirect Installments
   if(flag_credit_next_salary==0){
