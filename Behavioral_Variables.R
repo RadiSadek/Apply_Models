@@ -290,7 +290,7 @@ gen_installment_ratio <- function(db_name,all_id,all_df){
 }
 
 # Get ratio of passed installments at time of deactivation
-gen_prev_deactiv_date <- function(db_name,all_df,all_id,application_id){
+gen_prev_deactiv_date <- function(db_name,all_df,all_id){
   
   all_id_local <- subset(all_id,all_id$company_id==suppressWarnings(fetch(
     dbSendQuery(con,gen_products_query_desc(db_name,all_df))))$company_id)
@@ -301,9 +301,6 @@ gen_prev_deactiv_date <- function(db_name,all_df,all_id,application_id){
     all_id_local <- all_id_local[nrow(all_id_local),]
     all_id_local$next_salary <- ifelse(all_id_local$product_id %in% 
       c(25:28,36,37,41:44,49,50,55:58), 1, 0)
-    if(is.na(all_id_local$deactivated_at)){
-      all_id_local$deactivated_at <- Sys.time()
-    }
     
     passed_install_at_pay <- fetch(dbSendQuery(con,
        gen_passed_install_before_query(db_name,
@@ -315,7 +312,7 @@ gen_prev_deactiv_date <- function(db_name,all_df,all_id,application_id){
         ifelse(passed_install_at_pay==1,200,
         ifelse(passed_install_at_pay==2,300,
         ifelse(passed_install_at_pay==3,400,Inf))))),
-        (ifelse(passed_install_at_pay==0,100,Inf)))),100)
+        (ifelse(passed_install_at_pay==0,100,Inf)))),NA)
     
   } else {
     max_step_prev <- NA
