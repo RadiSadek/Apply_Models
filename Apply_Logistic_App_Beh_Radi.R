@@ -36,8 +36,8 @@ main_dir <- "C:\\Projects\\Apply_Scoring\\"
 
 # Read argument of ID
 args <- commandArgs(trailingOnly = TRUE)
-application_id <- args[1]
-#application_id <- 716582
+#application_id <- args[1]
+application_id <- 926952
 product_id <- NA
 
 
@@ -364,9 +364,9 @@ scoring_df <- scoring_df[,c("application_id","amount","period","score","color",
 
 # Readjust score when applicable
 scoring_df <- gen_apply_policy(scoring_df,flag_credirect,flag_cession,
-   flag_bad_ckr_citycash,all_df,all_id,flag_beh,prev_amount,
-   flag_new_credirect_old_city,flag_credit_next_salary,flag_beh_company,
-   flag_cashpoint)
+   flag_bad_ckr_citycash,all_df,all_id,flag_beh,prev_amount,products,
+   application_id,flag_new_credirect_old_city,flag_credit_next_salary,
+   flag_beh_company,flag_cashpoint)
 
 
 # Apply repeat restrictions to refinances and with potential refinance
@@ -384,6 +384,11 @@ fraud_flag <- ifelse(flag_credirect==1 & flag_beh==0 &
    empty_fields<threshold_empty, gen_app_credirect_fraud(
    df,scoring_df,products,df_Log_Credirect_Fraud,period,all_df,
    prev_amount,amount_tab,t_income,disposable_income_adj,db_name), "NULL")
+
+
+# Reselect columns 
+scoring_df <- scoring_df[,c("application_id","amount","period","score","color",
+                            "pd","created_at")]
 
 
 # Recorrect for prior approvals - terminated

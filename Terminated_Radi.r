@@ -335,9 +335,9 @@ scoring_df <- gen_apply_score(
 
 # Readjust score when applicable
 scoring_df <- gen_apply_policy(scoring_df,flag_credirect,flag_cession,
-   flag_bad_ckr_citycash,all_df,all_id,flag_beh,prev_amount,
-   flag_new_credirect_old_city,flag_credit_next_salary,flag_beh_company,
-   flag_cashpoint)
+  flag_bad_ckr_citycash,all_df,all_id,flag_beh,prev_amount,products,
+  application_id,flag_new_credirect_old_city,flag_credit_next_salary,
+  flag_beh_company,flag_cashpoint)
 
 
 # Apply criteria according to when the last credit was terminated
@@ -349,22 +349,8 @@ if(flag_limit_offer==1){
 }
 
 
-# Compute previous installment amount and if acceptable differential
-for(i in 1:nrow(scoring_df)){
-  period_tab <- as.numeric(scoring_df$period[i])
-  amount_tab <- as.numeric(scoring_df$amount[i])
-  product_tab <- subset(products, products$product_id==all_df$product_id & 
-                          products$period==as.numeric(period_tab) &
-                          products$amount==as.numeric(amount_tab))
-  installment_amount <- products$installment_amount[
-    products$period==period_tab & products$amount==amount_tab]
-  scoring_df$installment_amount_diff[i] <- ifelse(
-    installment_amount>gen_installment_ratio(db_name,all_id,all_df), 0, 1)
-}
-
-
 # Subset scoring dataframe according to criteria
-correct_scoring_df <- subset(scoring_df,scoring_df$installment_amount_diff==1 &
+correct_scoring_df <- subset(scoring_df,scoring_df$color!=1 &
       scoring_df$score %in% c("Indeterminate","Good 1",
                               "Good 2","Good 3","Good 4"))
 
@@ -387,13 +373,13 @@ if(is.infinite(get_max_amount)){
   get_max_installment <- -Inf	
 } else {	
   get_max_installment <- max(scoring_df$installment_amount[
-    scoring_df$installment_amount_diff==1 & scoring_df$amount==get_max_amount])	
+    scoring_df$color!=1 & scoring_df$amount==get_max_amount])	
 }
 
 
 # Get score of highest amount
 if(get_max_amount>-Inf){
-  sub <- subset(scoring_df,scoring_df$installment_amount_diff==1 &
+  sub <- subset(scoring_df,scoring_df$color!=1 &
                   scoring_df$installment_amount==get_max_installment & 
                   scoring_df$amount==get_max_amount)
   get_score <- 
@@ -428,7 +414,7 @@ if(is.infinite(get_max_amount)){
   get_max_installment <- -Inf	
 } else {	
   get_max_installment <- max(scoring_df$installment_amount[	
-  scoring_df$installment_amount_diff==1 & scoring_df$amount==get_max_amount])	
+  scoring_df$color!=1 & scoring_df$amount==get_max_amount])	
 }
 
 
