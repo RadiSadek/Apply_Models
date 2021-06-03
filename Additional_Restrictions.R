@@ -53,6 +53,9 @@ gen_restrict_cashpoint_app <- function(scoring_df){
     ifelse(criteria_600==0 & scoring_df$amount>600,1,
     ifelse(criteria_400==0 & scoring_df$amount>400,1,
     ifelse(criteria_0==0 & scoring_df$amount>0,1,scoring_df$color))))))
+  
+  scoring_df$color <- ifelse(scoring_df$score %in% c("Bad","Indeterminate"),
+    1, scoring_df$color)   
 
   return(scoring_df)
 }
