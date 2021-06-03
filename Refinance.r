@@ -323,8 +323,7 @@ flag_cession <- ifelse(flag_credirect==1 & df$amount_cession_total>0, 1, 0)
 
 # Compute flag if new credirect but old citycash
 flag_new_credirect_old_city <- ifelse(flag_credirect==1 & flag_beh==1 &
- nrow(all_id[all_id$company_id==2 & all_id$id!=application_id
-      & all_id$status %in% c(4,5),])==0, 1, 0)
+ nrow(all_id[all_id$company_id==2 & all_id$status %in% c(4,5),])==0, 1, 0)
 
 
 # Get flag if client is dead

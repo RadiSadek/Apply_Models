@@ -294,7 +294,7 @@ gen_prev_deactiv_date <- function(db_name,all_df,all_id,application_id){
   
   all_id_local <- subset(all_id,all_id$company_id==suppressWarnings(fetch(
     dbSendQuery(con,gen_products_query_desc(db_name,all_df))))$company_id)
-  all_id_local <- all_id_local[all_id_local$id!=application_id,]
+  all_id_local <- subset(all_id_local,all_id_local$status %in% c(4,5))
   
   if(nrow(all_id_local)>0){
     all_id_local <- all_id_local[order(all_id_local$deactivated_at),]

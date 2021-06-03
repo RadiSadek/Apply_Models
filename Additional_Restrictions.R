@@ -134,9 +134,6 @@ gen_restrict_credirect_beh <- function(scoring_df,all_df,all_id,application_id,
                            all_id$company_id==all_df_local$company_id,]
   all_id_local <- subset(all_id_local, all_id_local$sub_status %in% 
                          c(123,126,128))
-  # all_id_local <- subset(all_id_local,all_id_local$id!=application_id)
-  # all_id_local_active <- subset(all_id_local_active,
-  #                               all_id_local_active$id!=application_id)
   
   # Get amounts of previous credits
   if(nrow(all_id_local)>0){
