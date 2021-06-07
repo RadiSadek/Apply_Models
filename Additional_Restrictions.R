@@ -27,8 +27,9 @@ gen_restrict_citycash_app <- function(scoring_df){
 }
 
 # Function to apply restrictions for City Cash applications
-gen_restrict_cashpoint_app <- function(scoring_df){
+gen_restrict_cashpoint_app <- function(scoring_df,all_df,flag_beh){
   
+  # Apply policy accroding to score 
   score_df_800 <- subset(scoring_df,scoring_df$amount>800)
   criteria_800 <- length(names(table(score_df_800$score))
      [names(table(score_df_800$score)) %in% c("Good 4")])
@@ -54,12 +55,20 @@ gen_restrict_cashpoint_app <- function(scoring_df){
     ifelse(criteria_400==0 & scoring_df$amount>400,1,
     ifelse(criteria_0==0 & scoring_df$amount>0,1,scoring_df$color))))))
   
+  # No Indeterminates
   scoring_df$color <- ifelse(scoring_df$score %in% c("Bad","Indeterminate"),
-    1, scoring_df$color)   
+    1, scoring_df$color)  
 
+  # Take only one third of Good 1 for certain offices
+  if(all_df$office_id %in% c("150") & !is.na(scoring_df$pd[1])){
+    if(flag_beh==0){
+      scoring_df$color <- ifelse(scoring_df$pd>0.275,1,scoring_df$color)  
+    } else {
+      scoring_df$color <- ifelse(scoring_df$pd>0.275,1,scoring_df$color)
+    }
+  }
   return(scoring_df)
 }
-
 
 # Function to apply restrictions for City Cash repeats
 gen_restrict_citycash_beh <- function(scoring_df,prev_amount,products,all_id,
@@ -86,7 +95,19 @@ gen_restrict_citycash_beh <- function(scoring_df,prev_amount,products,all_id,
     }
   }
   
-  
+  # Limit based on maximum amount differential
+  for(i in 1:nrow(all_id)){
+     all_id$amount[i] <- suppressWarnings(fetch(dbSendQuery(con,
+      gen_big_sql_query(db_name,all_id$id[i])), n=-1))$amount
+  }
+  max_prev_amount <- max(all_id$amount[
+     all_id$company_id==all_id$company_id[all_id$id==application_id]])
+  scoring_df$color <- ifelse(scoring_df$score %in% c("Good 4") & 
+     scoring_df$amount>(max_prev_amount+600),1,
+     ifelse(scoring_df$score %in% c("Good 1","Good 2","Good 3","Good 4",
+     "Indeterminate") & scoring_df$amount>(max_prev_amount+400),1,
+     scoring_df$color))
+
   return(scoring_df)
 }
 

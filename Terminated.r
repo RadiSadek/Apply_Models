@@ -269,9 +269,9 @@ all_df <- gen_prev_online(db_name,all_id,all_df,max(all_id$id)+1)
 
 
 # Get flag if credit is behavioral but with same company
-flag_beh_company <- ifelse(
-  nrow(all_id[all_id$company_id==
-       all_id$company_id[all_id$id==application_id],])>0,1,0)
+flag_beh_company <- ifelse(flag_credirect==0,1,
+  ifelse(nrow(all_id[all_id$company_id==
+       all_id$company_id[all_id$id==application_id],])>1,1,0))
 
 
 # Compute flag if last paid credit is maybe hidden refinance
@@ -421,16 +421,6 @@ if(get_max_amount>-Inf){
 } else {
   get_score <- NA
 }
-
-
-# Limit next amount based on score
-allowed_step <- ifelse(is.infinite(get_max_amount),NA,
-  ifelse(get_score %in% c("Good 4"),600,400))
-get_max_amount <- ifelse(is.infinite(get_max_amount),get_max_amount,
-   ifelse((get_max_amount-max_prev_amount)>allowed_step,
-   max_prev_amount + allowed_step,get_max_amount))
-get_max_amount <- ifelse(is.infinite(get_max_amount),get_max_amount,
-   max(subset(scoring_df,scoring_df$amount<=get_max_amount)$amount))
 
 
 # Get maximum installment
