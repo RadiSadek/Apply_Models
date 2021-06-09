@@ -37,7 +37,7 @@ main_dir <- "C:\\Projects\\Apply_Scoring\\"
 # Read argument of ID
 args <- commandArgs(trailingOnly = TRUE)
 application_id <- args[1]
-#application_id <- 716582
+#application_id <- 947671
 product_id <- NA
 
 
@@ -134,7 +134,8 @@ all_id <- subset(all_credits, all_credits$id==application_id |
     (!(all_credits$sub_status %in% c(129,122,133)) | 
        is.na(all_credits$sub_status)) & 
      all_credits$client_id==all_df$client_id))
-all_id <- subset(all_id, all_id$date<=all_id$date[all_id$id==application_id])
+all_id <- subset(all_id, all_id$created_at<=
+                 all_id$created_at[all_id$id==application_id])
 
 
 # Select for max delay if past AND active: must have at least 30 days of passed
@@ -461,6 +462,7 @@ final$status_finished_total <- all_df$status_finished_total
 final$outs_overdue_ratio_total <- all_df$outs_overdue_ratio_total
 final$source_entity_count_total <- all_df$source_entity_count_total
 final$viber_registered <- all_df$has_viber
+final$office <- all_df$office_id
 
 # Read and write
 final_exists <- read.xlsx(paste(main_dir,"Scored_Credits.xlsx", 

@@ -61,11 +61,10 @@ gen_restrict_cashpoint_app <- function(scoring_df,all_df,flag_beh){
 
   # Take only one third of Good 1 for certain offices
   if(all_df$office_id %in% c("150") & !is.na(scoring_df$pd[1])){
-    if(flag_beh==0){
+    scoring_df$color <- ifelse(scoring_df$pd>0.275,1,scoring_df$color)
+  }
+  if(flag_beh==1 & !is.na(scoring_df$pd[1])){
       scoring_df$color <- ifelse(scoring_df$pd>0.275,1,scoring_df$color)  
-    } else {
-      scoring_df$color <- ifelse(scoring_df$pd>0.275,1,scoring_df$color)
-    }
   }
   return(scoring_df)
 }
@@ -298,6 +297,7 @@ gen_restrict_beh_refinance <- function(db_name,all_df,all_id,
     
   filter_company <- ifelse(flag_credirect==1,2,1)
   all_id_local <- all_id[all_id$company_id==filter_company,]
+  all_id_local_active <- subset(all_id_local,all_id_local$status==4)
   all_id_local <- all_id_local[all_id_local$id!=application_id,]
   
   # Apply restrictions if applicable 
@@ -325,7 +325,7 @@ gen_restrict_beh_refinance <- function(db_name,all_df,all_id,
       check_term_refs_office$difftime <- difftime(Sys.time(),
         check_term_refs_office$deleted_at,units = c("days"))
       check_term_refs_office <- subset(check_term_refs_office,
-        check_term_refs_office$difftime<=120)
+        check_term_refs_office$difftime<=3)
       check_term_refs_office <- check_term_refs_office[rev(
         order(check_term_refs_office$deleted_at)),]
       if(nrow(check_term_refs_office)>0){
@@ -339,17 +339,35 @@ gen_restrict_beh_refinance <- function(db_name,all_df,all_id,
       all_id_local_left <- as.data.frame(NA)
     }
     
+    # Application for refinance is rejected if no offer for refinance
     if(nrow(check_active_refs_office)==0 & nrow(check_term_refs_office)==0){
       scoring_df$color <- ifelse(scoring_df$color>1 & scoring_df$score!=
         "NULL",1,scoring_df$color)
     }
+    
+    # Application for refinance is rejected if offer but credit after offer
     if(nrow(check_active_refs_office)==0 & 
        nrow(check_term_refs_office)>0 & nrow(all_id_local_left)>0){
        scoring_df$color <- ifelse(scoring_df$color>1 & scoring_df$score!=
              "NULL",1,scoring_df$color)
     }
-    
   }
+  
+  # Application for refinance is rejected if dpd >300 days
+  if(nrow(all_id_local_active)>0){
+    string_sql <- all_id_local_active$id[1]
+    if(nrow(all_id_local_active)>1){
+      for(i in 2:nrow(all_id_local_active)){
+        string_sql <- paste(string_sql,all_id_local_active$id[i],sep=",")}
+    }
+    max_dpd <- max(suppressWarnings(fetch(dbSendQuery(con,
+        gen_plan_main_select_query(db_name,string_sql)), n=-1))$max_delay)
+    if(max_dpd>=300){
+      scoring_df$color <- ifelse(scoring_df$color>1 & scoring_df$score!=
+                                   "NULL",1,scoring_df$color)
+    }
+  }
+
   return(scoring_df)
 }
 
