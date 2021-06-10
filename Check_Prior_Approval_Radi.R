@@ -114,7 +114,7 @@ if(flag_gdpr==1 & !is.na(flag_gdpr)){
 
 
 # Select based on product_id
-if(all_credit$product_id %in% c(12,13,59:65,53,54,51)){
+if(all_credit$product_id %in% c(12,13,59:65,53,54,51,22)){
   quit()
 }
 

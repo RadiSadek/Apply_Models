@@ -78,6 +78,24 @@ gen_correction_po_ref <- function(con,db_name,all_df,all_id,
   input <- all_id[all_id$status %in% c(4) & 
                   all_id$company_id==all_df_local$company_id,]
   
+  # Get those who were deactivated from not so long 
+  input2 <- all_id[all_id$status %in% c(5) & 
+                   all_id$company_id==all_df_local$company_id,]
+  if(nrow(input2)>0){
+    input2$time_since_deactiv <- difftime(Sys.time(),input2$deactivated_at,
+                                          units=c("days"))
+    input2 <- subset(input2,input2$time_since_deactiv<=3)
+    if(nrow(input2)>0){
+      input2 <- input2[order(input2$time_since_deactiv),]
+      input2 <- input2[1,]
+      input2 <- input2[ , -which(names(input2) %in% c("time_since_deactiv"))]
+      if(nrow(input)>0){
+        input <- rbind(input,input2)
+      } else {
+        input <- input2}
+    }
+  }
+  
   # Append installment amount and period
   scoring_df <- merge(scoring_df,
      products[,c("amount","period","installment_amount")],
@@ -86,7 +104,7 @@ gen_correction_po_ref <- function(con,db_name,all_df,all_id,
   
   string_sql_update <- input$id[1]
   if(nrow(input)>1){
-    for(i in 1:nrow(input)){
+    for(i in 2:nrow(input)){
       string_sql_update <- paste(string_sql_update,input$id[i],sep=",")
       }
   }

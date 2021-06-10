@@ -289,7 +289,7 @@ gen_installment_ratio <- function(db_name,all_id,all_df){
   return(final_prev_installment_amount)
 }
 
-# Get ratio of passed installments at time of deactivation
+# Get step according to number of paid installments at termination (Credirect)
 gen_prev_deactiv_date <- function(db_name,all_df,all_id,application_id){
   
   all_id_local <- subset(all_id,all_id$company_id==suppressWarnings(fetch(
@@ -312,10 +312,10 @@ gen_prev_deactiv_date <- function(db_name,all_df,all_id,application_id){
     max_step_prev <- ifelse(passed_install_at_pay!=-999,
        (ifelse(all_id_local$next_salary==0,
        (ifelse(passed_install_at_pay==0,100,
-        ifelse(passed_install_at_pay==1,200,
-        ifelse(passed_install_at_pay==2,300,
-        ifelse(passed_install_at_pay==3,400,Inf))))),
-        (ifelse(passed_install_at_pay==0,100,Inf)))),100)
+        ifelse(passed_install_at_pay==1,300,
+        ifelse(passed_install_at_pay==2,500,
+        ifelse(passed_install_at_pay==3,700,Inf))))),
+        (ifelse(passed_install_at_pay==0,200,Inf)))),200)
     
   } else {
     max_step_prev <- NA
