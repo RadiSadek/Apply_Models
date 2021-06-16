@@ -183,9 +183,9 @@ gen_restrict_credirect_beh <- function(scoring_df,all_df,all_id,application_id,
     if(nrow(all_id_local)>0){
 
       scoring_df$allowed_amount_rep <- 
-        ifelse(scoring_df$score %in% c("Bad","Indeterminate","NULL"),
+        ifelse(scoring_df$score %in% c("Bad","NULL"),
                max(all_id_local$amount) + min(0,max_step_prev),
-        ifelse(scoring_df$score %in% c("Good 1"),
+        ifelse(scoring_df$score %in% c("Good 1","Indeterminate"),
                max(all_id_local$amount) + min(200,max_step_prev),
         ifelse(scoring_df$score %in% c("Good 2"),
                max(all_id_local$amount) + min(400,max_step_prev),
@@ -223,9 +223,9 @@ gen_restrict_credirect_beh <- function(scoring_df,all_df,all_id,application_id,
       
       if(nrow(all_id_local)>0){
         scoring_df$allowed_amount_rep <- 
-          ifelse(scoring_df$score %in% c("Bad","Indeterminate","NULL"),
+          ifelse(scoring_df$score %in% c("Bad","NULL"),
              max(all_id_local$amount) + min(0,max_step_prev),
-          ifelse(scoring_df$score %in% c("Good 1"),
+          ifelse(scoring_df$score %in% c("Good 1","Indeterminate"),
              max(all_id_local$amount) + min(200,max_step_prev),
           ifelse(scoring_df$score %in% c("Good 2"),
              max(all_id_local$amount) + min(400,max_step_prev),
