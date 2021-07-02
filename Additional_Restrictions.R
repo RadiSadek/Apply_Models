@@ -71,7 +71,7 @@ gen_restrict_cashpoint_app <- function(scoring_df,all_df,flag_beh){
 
 # Function to apply restrictions for City Cash repeats
 gen_restrict_citycash_beh <- function(scoring_df,prev_amount,products,all_id,
-                                      all_df,db_name){
+                                      all_df,db_name,application_id){
   
   # Check if has Good 1 at least somewhere in table
   criteria <- length(names(table(scoring_df$score))

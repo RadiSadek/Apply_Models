@@ -37,7 +37,7 @@ main_dir <- "C:\\Projects\\Apply_Scoring\\"
 # Read argument of ID
 args <- commandArgs(trailingOnly = TRUE)
 application_id <- args[1]
-#application_id <- 947671
+#application_id <- 950524
 product_id <- NA
 
 
@@ -47,6 +47,7 @@ setwd(main_dir)
 
 # Load other r files
 source(paste(main_dir,"Apply_Models\\Additional_Restrictions.r", sep=""))
+source(paste(main_dir,"Apply_Models\\Addresses.r", sep=""))
 source(paste(main_dir,"Apply_Models\\Adjust_Scoring_Prior_Approval.r", sep=""))
 source(paste(main_dir,"Apply_Models\\Logistic_App_CityCash.r", sep=""))
 source(paste(main_dir,"Apply_Models\\Logistic_App_Credirect_installments.r", 
@@ -73,6 +74,10 @@ load("rdata\\credirect_installments.rdata")
 load("rdata\\credirect_payday.rdata")
 load("rdata\\credirect_repeat.rdata")
 load("rdata\\credirect_app_fraud.rdata")
+
+
+# Load Risky Coordinates
+risky_address <- read.csv("risky_coordinates\\risky_coordinates.csv",sep=";")
 
 
 ####################################
@@ -180,6 +185,11 @@ if(nrow(addresses)==0){
 }
 
 
+# Get if office is self approval
+all_df$self_approval <- suppressWarnings(fetch(dbSendQuery(con, 
+  gen_self_approval_office_query(db_name,all_df$office_id)), n=-1))$self_approve
+
+
 ############################################
 ### Compute and rework additional fields ###
 ############################################
@@ -232,6 +242,19 @@ all_df <- gen_other_rep(nrow_all_id,all_id,all_df,flag_credirect,
 # Get flag if credit is behavioral or not
 flag_beh <- ifelse(all_df$credits_cum==0, 0, 1)
 flag_rep <- ifelse(nrow(subset(all_id,all_id$status==5))>0,1,0)
+
+
+# Correct days since last default if necessary
+if(flag_beh==1){
+  flag_app_quickly <- gen_all_days_since_credit(df_name,all_credits,all_df)
+  all_df$days_diff_last_credit2 <- 
+    ifelse(is.na(all_df$days_diff_last_credit),all_df$days_diff_last_credit,
+    ifelse(flag_app_quickly==1 & flag_credirect==1,0,
+    all_df$days_diff_last_credit))
+} else {
+  all_df$days_diff_last_credit2 <- NA
+  flag_app_quickly <- NA
+}
 
 
 # Compute ratio of number of payments
@@ -330,8 +353,15 @@ if(flag_beh_company==1){
 
 
 # Get flag if client is dead
-flag_is_dead <- suppressWarnings(fetch(dbSendQuery(con,
- gen_flag_is_dead (db_name,all_df$client_id)), n=-1))$is_dead
+flag_is_dead <- ifelse(is.na(suppressWarnings(fetch(dbSendQuery(con,
+ gen_flag_is_dead(db_name,all_df$client_id)), n=-1))$dead_at),0,1)
+
+
+# Get flag if client is in a risky address
+flag_risky_address <- gen_flag_risky_address(db_name,application_id,
+                                             risky_address,all_df)
+df$risky_address <- flag_risky_address$flag_risky_address
+
 
 
 ############################################################
@@ -457,12 +487,19 @@ final$flag_varnat <- flag_varnat
 final$flag_cession <- flag_cession
 final$flag_active <- flag_active[1,1]
 final$flag_active_hidden <- flag_active[1,2]
+final$flag_risky_address <- flag_risky_address$flag_risky_address
+final$lat <- flag_risky_address$lat
+final$lon <- flag_risky_address$lon
+final$type <- flag_risky_address$hierarchy
+final$precision <- flag_risky_address$location_precision
 final$status_active_total <- all_df$status_active_total
 final$status_finished_total <- all_df$status_finished_total
 final$outs_overdue_ratio_total <- all_df$outs_overdue_ratio_total
 final$source_entity_count_total <- all_df$source_entity_count_total
-final$viber_registered <- all_df$has_viber
 final$office <- all_df$office_id
+final$days_diff <- all_df$days_diff_last_credit
+final$days_diff2 <- all_df$days_diff_last_credit2
+final$flag_app_quickly <- flag_app_quickly
 
 # Read and write
 final_exists <- read.xlsx(paste(main_dir,"Scored_Credits.xlsx", 

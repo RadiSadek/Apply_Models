@@ -176,13 +176,22 @@ gen_address_query <- function(var,arg){
     AND a.addressable_id = ",var," AND a.type = 2", sep =""))
 }
 
-# Define query to get address 
-gen_complete_address_query <- function(db_name,application_id){
-  return(paste("SELECT type, city_id, neighborhood_id, neighborhood_text, 
-  street,number, block, entrance, floor , apartment FROM addresses
+# Define query to get coordinates of address (per application)
+gen_address_coordinates_query <- function(db_name,application_id){
+  return(paste("SELECT lat, lon, type, location_precision
+  FROM ",db_name,".addresses 
   WHERE addressable_type=
   'App\\\\Models\\\\Credits\\\\Applications\\\\Application'
-  AND addressable_id=",application_id, sep =""))
+  AND addressable_id=",application_id," AND type IN (1,2,3)",sep =""))
+}
+
+# Define query to get coordinates of address (per client)
+gen_address_client_coordinates_query <- function(db_name,all_df){
+  return(paste("SELECT lat, lon, type, location_precision
+  FROM ",db_name,".addresses 
+  WHERE addressable_type=
+  'App\\\\Models\\\\Clients\\\\Client'
+  AND addressable_id=",all_df$client_id," AND type IN (1,2,3)",sep =""))
 }
 
 
@@ -296,7 +305,7 @@ gen_po_refinance_query <- function(db_name,input){
 # Read PO refinance data per client_id
 gen_flag_is_dead <- function(db_name,input){
   return(paste(
-    "SELECT is_dead
+    "SELECT dead_at
      FROM ",db_name,".clients
      WHERE id=",input,sep=""))
 }
@@ -354,6 +363,15 @@ gen_get_email <- function(db_name){
     WHERE email IN (SELECT email
     FROM ",db_name,".clients
     WHERE id=",all_df$client_id,")",sep=""))
+}
+
+# Get if office is self approval 
+gen_self_approval_office_query <- function(db_name,input){
+  return(paste(
+    "SELECT self_approve
+     FROM ",db_name,".structure_offices 
+     WHERE id IN (", 
+    input,")",sep=""))
 }
 
 

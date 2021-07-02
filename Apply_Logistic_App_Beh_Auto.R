@@ -75,6 +75,7 @@ suppressWarnings(fetch(dbSendQuery(con, sqlMode),
 
 # Load other r files
 source(file.path(base_dir,"Additional_Restrictions.r"))
+source(file.path(base_dir,"Addresses.r"))
 source(file.path(base_dir,"Adjust_Scoring_Prior_Approval.r"))
 source(file.path(base_dir,"Logistic_App_CityCash.r"))
 source(file.path(base_dir,"Logistic_App_Credirect_installments.r"))
@@ -117,6 +118,11 @@ load(rdata5)
 rdata6 <- file.path(base_dir, "rdata", 
                     "credirect_app_fraud.rdata")
 load(rdata6)
+
+
+# Load Risky Coordinates
+risky_address <- read.csv(file.path(base_dir, "risky_coordinates", 
+                    "risky_coordinates.csv"),sep=";")
 
 
 ####################################
@@ -224,6 +230,11 @@ if(nrow(addresses)==0){
 }
 
 
+# Get if office is self approval
+all_df$self_approval <- suppressWarnings(fetch(dbSendQuery(con, 
+  gen_self_approval_office_query(db_name,all_df$office_id)), n=-1))$self_approve
+
+
 ############################################
 ### Compute and rework additional fields ###
 ############################################
@@ -276,6 +287,16 @@ all_df <- gen_other_rep(nrow_all_id,all_id,all_df,flag_credirect,
 # Get flag if credit is behavioral or not
 flag_beh <- ifelse(all_df$credits_cum==0, 0, 1)
 flag_rep <- ifelse(nrow(subset(all_id,all_id$status==5))>0,1,0)
+
+
+# Correct days since last default if necessary
+if(flag_beh==1){
+  flag_app_quickly <- gen_all_days_since_credit(df_name,all_credits,all_df)
+  all_df$days_diff_last_credit <- 
+    ifelse(is.na(all_df$days_diff_last_credit),all_df$days_diff_last_credit,
+    ifelse(flag_app_quickly==1 & flag_credirect==1,0,
+    all_df$days_diff_last_credit))
+}
 
 
 # Compute ratio of number of payments
@@ -374,8 +395,15 @@ if(flag_beh_company==1){
 
 
 # Get flag if client is dead
-flag_is_dead <- suppressWarnings(fetch(dbSendQuery(con,
- gen_flag_is_dead (db_name,all_df$client_id)), n=-1))$is_dead
+flag_is_dead <- ifelse(is.na(suppressWarnings(fetch(dbSendQuery(con,
+ gen_flag_is_dead(db_name,all_df$client_id)), n=-1))$dead_at),0,1)
+
+
+# Get flag if client is in a risky address
+flag_risky_address <- gen_flag_risky_address(db_name,application_id,
+                                             risky_address,all_df)
+df$risky_address <- flag_risky_address$flag_risky_address
+
 
 
 ############################################################

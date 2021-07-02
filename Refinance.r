@@ -30,6 +30,7 @@ suppressWarnings(fetch(dbSendQuery(con, sqlMode),
 
 # Load other r files
 source(file.path(base_dir,"Additional_Restrictions.r"))
+source(file.path(base_dir,"Addresses.r"))
 source(file.path(base_dir,"Logistic_App_CityCash.r"))
 source(file.path(base_dir,"Logistic_App_Credirect_installments.r"))
 source(file.path(base_dir,"Logistic_App_Credirect_payday.r"))
@@ -58,6 +59,11 @@ load(rdata)
 rdata4 <- file.path(base_dir, "rdata", 
                    "credirect_repeat.rdata")
 load(rdata4)
+
+
+# Load Risky Coordinates
+risky_address <- read.csv(file.path(base_dir, "risky_coordinates", 
+                                    "risky_coordinates.csv"),sep=";")
 
 
 ####################################
@@ -172,6 +178,11 @@ if(nrow(addresses)==0){
   gen_address_query(all_df$client_id,
   "App\\\\Models\\\\Credits\\\\Applications\\\\Application")), n=-1))
 }
+
+
+# Get if office is self approval
+all_df$self_approval <- suppressWarnings(fetch(dbSendQuery(con, 
+  gen_self_approval_office_query(db_name,all_df$office_id)), n=-1))$self_approve
 
 
 ############################################
@@ -327,9 +338,14 @@ flag_new_credirect_old_city <- ifelse(flag_credirect==1 & flag_beh==1 &
 
 
 # Get flag if client is dead
-flag_is_dead <- suppressWarnings(fetch(dbSendQuery(con,
- gen_flag_is_dead (db_name,all_df$client_id)), n=-1))$is_dead
+flag_is_dead <- ifelse(is.na(suppressWarnings(fetch(dbSendQuery(con,
+ gen_flag_is_dead(db_name,all_df$client_id)), n=-1))$dead_at),0,1)
 
+
+# Get flag if client is in a risky address
+flag_risky_address <- gen_flag_risky_address(db_name,application_id,
+                                             risky_address,all_df)
+df$risky_address <- flag_risky_address$flag_risky_address
 
 
 ############################################################

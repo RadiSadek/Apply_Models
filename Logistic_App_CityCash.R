@@ -7,46 +7,45 @@ gen_app_citycash <- function(df,scoring_df,products,df_Log_CityCash_App,period,
                              all_df,prev_amount,amount_tab,
                              t_income,disposable_income_adj){
   # Cut and bin
-  df$ownership <- ifelse(is.na(df$ownership),-999,df$ownership)
-  df$ownership <- ifelse(df$ownership %in% c(1,3,-999), "1_3", "2_4")
-  df$ownership <- as.factor(df$ownership)
-  df$education <- ifelse(is.na(df$education),-999,df$education)
-  df$education <- ifelse(df$education %in% c(2,3,-999),"2_3", df$education)
-  df$education <- as.factor(df$education)
-  df$marital_status <- ifelse(is.na(df$marital_status), -999, 
-     df$marital_status)
-  df$marital_status <- ifelse(df$marital_status %in% c(2,3,-999),"2_3", 
-     ifelse(df$marital_status %in% c(1,4), "1_4", "5"))      
+  df$marital_status <- ifelse(is.na(df$marital_status),"2_3", 
+    ifelse(df$marital_status %in% c(2,3), "2_3",
+    ifelse(df$marital_status==4,"1_4",
+    ifelse(df$marital_status==1,"1_4",
+    ifelse(df$marital_status==5,"5","2_3")))))
   df$marital_status <- as.factor(df$marital_status)
-  df$gender <- as.factor(df$gender)
-  df$status_work <- ifelse(is.na(df$status_work),-999,df$status_work)
-  df$status_work <- ifelse(df$status_work %in% c(5,9), "5_9",
-     ifelse(df$status_work %in% c(2,3,7,8,11,-999),
-     "2_3_7_8_11","1_4_6_10"))
-  df$status_work <- as.factor(df$status_work)
-  df$purpose <- ifelse(is.na(df$purpose),-999,df$purpose)
-  df$purpose <- ifelse(df$purpose %in% c(2,3), "2_3","other")
-  df$purpose <- as.factor(df$purpose)
-  df$age <- ifelse(df$age<=32,"32_less","32_more")
+  df$age <- ifelse(df$age<=26,"less_26",
+    ifelse(df$age<=33,"27_33",
+    ifelse(df$age<=45,"34_45",
+    ifelse(df$age<=57,"46_57","more_58"))))
   df$age <- as.factor(df$age)
-  df$experience_employer <- ifelse(is.na(df$experience_employer), 12, 
-        df$experience_employer)
-  df$experience_employer_cut <- ifelse(df$experience_employer<=5,"0_5",
-        ifelse(df$experience_employer<=72,"6_72","more_72"))
-  df$experience_employer <- as.factor(df$experience_employer_cut)
-  df$maturity <- ifelse(df$maturity<=3,"3_less",
-        ifelse(df$maturity<=4,"4","5_more"))
-  df$maturity <- as.factor(df$maturity)
-  df$status_active_total <- ifelse(is.na(df$status_active_total), -999, 
-        df$status_active_total)
-  df$status_active_total <- ifelse(df$status_active_total==0,"0",
-        ifelse(df$status_active_total %in% 
-        c(-1,-999,71,72,73),"no_cred_ckr_71_72_73","74_75"))
+  df$gender <- as.factor(df$gender)
+  df$education <- ifelse(is.na(df$education), "2",
+    ifelse(df$education==1,"1",
+    ifelse(df$education==2,"2","3_4")))   
+  df$education <- as.factor(df$education)
+  df$status_work <- ifelse(is.na(df$status_work), "other",
+    ifelse(df$status_work %in% c(5,9),"5_9","other"))
+  df$status_work <- as.factor(df$status_work)
+  df$experience_employer <- ifelse(is.na(df$experience_employer),"9_72",
+    ifelse(df$experience_employer<=9,"9_less",
+    ifelse(df$experience_employer<=72,"9_72","72_more")))
+  df$experience_employer <- as.factor(df$experience_employer)
+  df$on_address <- ifelse(is.na(df$on_address),"36_335",
+    ifelse(df$on_address<=35,"1_35",
+    ifelse(df$on_address<=335,"36_335","more_336")))
+  df$on_address <- as.factor(df$on_address)
+  df$status_active_total <- ifelse(is.na(df$status_active_total),"other",
+    ifelse(df$status_active_total==0,"0",
+    ifelse(df$status_active_total %in% c(74,75), "74_75","other")))
   df$status_active_total <- as.factor(df$status_active_total)
-  df$cred_count_total <- ifelse(is.na(df$cred_count_total), -999, 
-        df$cred_count_total)
-  df$cred_count_total <- ifelse(df$cred_count_total==1,"1","not_1")
-  df$cred_count_total <- as.factor(df$cred_count_total)
+  df$flag_location_curr <- ifelse(is.na(df$risky_address), "other",
+    ifelse(df$risky_address==1,"1","other"))
+  df$flag_location_curr <- as.factor(df$flag_location_curr)
+  df$self_approval_cut <- 
+    ifelse(is.na(df$self_approval), "other",
+    ifelse(df$self_approval==1,"1","other"))
+  df$self_approval <- as.factor(df$self_approval_cut)
+  
   
   # Apply logisic regression
   for(i in 1:nrow(scoring_df)){
@@ -68,16 +67,17 @@ gen_app_citycash <- function(df,scoring_df,products,df_Log_CityCash_App,period,
     ratio_tab <- as.numeric(ratio_tab)
     df$ratio_installment_income <- ifelse(is.na(ratio_tab), 999, 
            ratio_tab)
-    df$ratio_installment_income <- ifelse(df$ratio_installment_income<=0.05,
-          "0.05_less",
-          ifelse(df$ratio_installment_income<=0.08,"0.05_0.08","more_0.08"))
+    df$ratio_installment_income <- ifelse(
+      is.na(df$ratio_installment_income),"other",
+      ifelse(df$ratio_installment_income<=0.05,"less_0.05",
+      ifelse(df$ratio_installment_income<=0.11,"0.05_0.11","more_0.11")))
     df$ratio_installment_income <- as.factor(df$ratio_installment_income)
     
     # Compute correct maturity for each amount and product_id
     current_maturity <- ifelse(period==1, period_tab*7/30, 
                                ifelse(period==2, period_tab*14/30, period_tab))
-    df$maturity <- ifelse(current_maturity<=3,"3_less",
-                          ifelse(current_maturity<=4,"4","5_more"))
+    df$maturity <- ifelse(current_maturity<=3, "less_3",
+                          ifelse(current_maturity<=6,"4_5","more_6"))
     df$maturity <- as.factor(df$maturity)
     
     # Apply logistic model to each amount and installment

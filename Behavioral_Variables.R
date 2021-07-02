@@ -361,3 +361,55 @@ gen_flag_if_curr_active <- function(all_id,application_id){
     ifelse(nrow(all_id_local_term[all_id_local_term$time_to_now<1,])>0,1,0)))
 }
 
+# Get time since last credit even for past applications
+gen_all_days_since_credit <- function(df_name,all_credits,all_df){
+  
+  all_credits_here <- all_credits[order(all_credits$date),]
+  
+  # Get last terminated credit
+  last_credit <- subset(all_credits_here,all_credits_here$status %in% c(4,5))
+  last_credit$deactivated_at <- as.POSIXlt(last_credit$deactivated_at)
+  last_credit <- last_credit[rev(order(last_credit$deactivated_at)),]
+  last_credit <- last_credit[1,]
+  
+  # Get all applications which are not yet credits 
+  all_credits_here <- subset(all_credits_here,
+                             all_credits_here$status %in% c(1,2,3))
+  
+  if(nrow(all_credits_here)>0){
+    
+    for(i in 1:nrow(all_credits_here)){
+      all_credits_here$difftime[i] <- 
+        ifelse(!is.na(last_credit$deactivated_at[1]),
+               
+          # If last credit has been terminated (no active credit) : 
+          # we check time difference between application and last deactivation
+          floor(difftime(all_credits_here$date[i],last_credit$deactivated_at,
+             units = c("days"))),
+          
+          # If last credit is still active : 
+          # we check if application has been made in the last 7 days 
+          ifelse(floor(difftime(Sys.time(),all_credits_here$date[i],
+             units = c("days")))<=7,0,8)
+          )
+    }
+    
+    # We check when was the last credit terminated deactivated
+    time_since <- ifelse(!is.na(last_credit$deactivated_at),
+       floor(difftime(Sys.time(),last_credit$deactivated_at,units = c("days"))),
+       0)
+    
+    # Filter those applications which are deemed quick after termination or 
+    # during active credit 
+    all_credits_here <- subset(all_credits_here,
+                               all_credits_here$difftime %in% c(0:1))
+    
+    flag_app_quickly <- ifelse(nrow(all_credits_here)>0 & time_since<=7,1,0)
+  } else {
+    flag_app_quickly <- 0
+  }
+  
+  return(flag_app_quickly)
+}
+
+

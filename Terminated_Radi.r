@@ -10,6 +10,7 @@ setwd(main_dir)
 
 # Load other r files
 source(paste(main_dir,"Apply_Models\\Additional_Restrictions.r", sep=""))
+source(paste(main_dir,"Apply_Models\\Addresses.r", sep=""))
 source(paste(main_dir,"Apply_Models\\Logistic_App_CityCash.r", sep=""))
 source(paste(main_dir,"Apply_Models\\Logistic_App_Credirect_installments.r", 
              sep=""))
@@ -35,6 +36,10 @@ load("rdata\\credirect_installments.rdata")
 load("rdata\\credirect_payday.rdata")
 load("rdata\\credirect_repeat.rdata")
 load("rdata\\credirect_app_fraud.rdata")
+
+
+# Load Risky Coordinates
+risky_address <- read.csv("risky_coordinates\\risky_coordinates.csv",sep=";")
 
 
 ####################################
@@ -159,6 +164,11 @@ if(nrow(addresses)==0){
 }
 
 
+# Get if office is self approval
+all_df$self_approval <- suppressWarnings(fetch(dbSendQuery(con, 
+  gen_self_approval_office_query(db_name,all_df$office_id)), n=-1))$self_approve
+
+
 # Compute flag if credit is up to next salary
 flag_credit_next_salary <- ifelse(all_df$product_id %in% 
                                     c(25:28,36,37,41:44,49,50,55:58), 1, 0)
@@ -213,6 +223,16 @@ all_df$days_diff_last_credit <- round(as.numeric(difftime(Sys.time(),
 # Get flag if credit is behavioral or not
 flag_beh <- ifelse(all_df$credits_cum==0, 0, 1)
 flag_rep <- ifelse(nrow(subset(all_id,all_id$status==5))>0,1,0)
+
+
+# Correct days since last default if necessary
+if(flag_beh==1){
+  flag_app_quickly <- gen_all_days_since_credit(df_name,all_credits,all_df)
+  all_df$days_diff_last_credit <- 
+    ifelse(is.na(all_df$days_diff_last_credit),all_df$days_diff_last_credit,
+    ifelse(flag_app_quickly==1 & flag_credirect==1,0,
+    all_df$days_diff_last_credit))
+}
 
 
 # Compute ratio of number of payments
@@ -309,9 +329,14 @@ flag_new_credirect_old_city <- ifelse(flag_credirect==1 & flag_beh==1 &
 
 
 # Get flag if client is dead
-flag_is_dead <- suppressWarnings(fetch(dbSendQuery(con,
- gen_flag_is_dead (db_name,all_df$client_id)), n=-1))$is_dead
+flag_is_dead <- ifelse(is.na(suppressWarnings(fetch(dbSendQuery(con,
+ gen_flag_is_dead(db_name,all_df$client_id)), n=-1))$dead_at),0,1)
 
+
+# Get flag if client is in a risky address
+flag_risky_address <- gen_flag_risky_address(db_name,application_id,
+                                             risky_address,all_df)
+df$risky_address <- flag_risky_address$flag_risky_address
 
 
 ############################################################
