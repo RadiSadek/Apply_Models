@@ -8,10 +8,10 @@
 ############# City Cash 
 
 # Application City Cash - worst Offices
-cu_app_city_bad_offices <- c(0.39,0.32,0.25,0.2,0.15)
+cu_app_city_bad_offices <- c(0.39,0.35,0.3,0.22,0.17)
 
 # Application City Cash - normal Offices
-cu_app_city_norm_offices <- c(0.46,0.32,0.25,0.2,0.15)
+cu_app_city_norm_offices <- c(0.46,0.35,0.3,0.22,0.17)
 
 # Repeat City Cash
 cu_beh_city <- c(0.4,0.3,0.225,0.15,0.075)
