@@ -9,7 +9,8 @@ gen_apply_score <- function(empty_fields,threshold_empty,flag_exclusion,
   flag_beh,all_df,scoring_df,df,products,df_Log_beh_CityCash,
   df_Log_CityCash_App,df_Log_beh_Credirect,df_Log_Credirect_App_installments,
   df_Log_Credirect_App_payday,period,all_id,prev_amount,amount_tab,
-  t_income,disposable_income_adj,flag_new_credirect_old_city,criteria_po){
+  t_income,disposable_income_adj,flag_new_credirect_old_city,api_df,
+  criteria_po){
   
   # Apply model coefficients according to type of credit 
   if (empty_fields>=threshold_empty){
@@ -44,12 +45,12 @@ gen_apply_score <- function(empty_fields,threshold_empty,flag_exclusion,
     scoring_df <- gen_app_credirect_payday(df,scoring_df,products,
       df_Log_Credirect_App_payday,period,all_df,prev_amount,
       amount_tab,t_income,disposable_income_adj,
-      flag_credit_next_salary)
+      flag_credit_next_salary,api_df)
   } else {
     scoring_df <- gen_app_credirect_installments(df,scoring_df,products,
       df_Log_Credirect_App_installments,period,all_df,
       prev_amount,amount_tab,t_income,disposable_income_adj,
-      flag_credit_next_salary)
+      flag_credit_next_salary,api_df)
   }
   
   return(scoring_df)

@@ -229,4 +229,50 @@ gen_string_delete_po_refinance <- function(input,var,var_name,db_name){
           var_name," = CASE ",iterate_string," ELSE ",var_name," END;",sep=""))
 }
 
+# Function to make dataframe out of json data
+gen_dataframe_json <- function(input){
+  
+  return(as.data.frame(do.call(rbind,lapply(input, 
+      function(j) as.list(unlist(fromJSON(j, flatten=TRUE)))))))
+  
+}
+
+# Treat API dataframe
+gen_treat_api_df <- function(input){
+  
+  # Read and correct fields to make nice dataframe 
+  if(!(is.na(input[[1]]))){
+    api_payment_method <- ifelse(is.null(input$payment.method[[1]]),NA,
+      input$payment.method[[1]])                    
+    api_amount <- ifelse(is.null(input$amount[[1]]),NA,input$amount[[1]])
+    api_referral_source <- ifelse(is.null(input$referral_source[[1]]),NA,
+      input$referral_source[[1]])
+    api_user_agent <- ifelse(is.null(input$user_agent[[1]]),NA,
+      input$user_agent[[1]])
+    api_email <- ifelse(is.null(input$client.email[[1]]),NA,
+      input$client.email[[1]])
+    api_period <- ifelse(is.null(api_df$period[[1]]),NA,api_df$period[[1]])
+    
+  } else {
+    api_payment_method <- NA
+    api_amount <- NA
+    api_referral_source <- NA
+    api_user_agent <- NA
+    api_email <- NA
+    api_period <- NA
+  }
+  
+  # Finalize output dataframe
+  output <- as.data.frame(matrix(NA,ncol=6,nrow=1))
+  names(output) <- c("payment_method","amount","referral_source","user_agent",
+                     "email","period")
+  output$payment_method <- api_payment_method
+  output$amount <- api_amount
+  output$referral_source <- api_referral_source
+  output$user_agent <- api_user_agent
+  output$email <- api_email
+  output$period <- api_period
+  
+  return(output)
+}
 

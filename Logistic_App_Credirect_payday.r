@@ -5,74 +5,101 @@
 
 gen_app_credirect_payday <- function(df,scoring_df,products,
   df_Log_Credirect_App_payday,period,all_df,prev_amount,amount_tab,
-  t_income,disposable_income_adj,flag_credit_next_salary){
+  t_income,disposable_income_adj,flag_credit_next_salary,api_df){
   
   # Cut and bin
-  df$age_cut <- ifelse(df$age<=22,"22_less",
-     ifelse(df$age<=29,"23_29",
-     ifelse(df$age<=35,"30_35",
-     ifelse(df$age<=50,"36_50","more_50"))))
-  df$age <- as.factor(df$age_cut)
-  
-  df$education_cut <- ifelse(is.na(df$education),"2",
-     ifelse(df$education %in% c(3,4), "3_4",
-     ifelse(df$education==1, "1", "2")))
-  df$education <- as.factor(df$education_cut)
+  df$age <- ifelse(df$age<=20,"20_less",
+                       ifelse(df$age<=23,"21_23","more_24"))
+  df$age <- as.factor(df$age)
   
   df$gender <- as.factor(df$gender)
   
-  df$ownership_cut <- ifelse(df$ownership %in% c(1), "1", "not_1")
-  df$ownership <- as.factor(df$ownership_cut)
+  df$ownership <- ifelse(df$ownership %in% c(1), "1", 
+      ifelse(is.na(df$ownership), "not_1", "not_1"))
+  df$ownership <- as.factor(df$ownership)
   
-  df$status_work_cut <- ifelse(is.na(df$status_work), "other",
-      ifelse(df$status_work %in% c(4,9), "4_9",
-      ifelse(df$status_work %in% c(5),"5","other")))   
-  df$status_work <- as.factor(df$status_work_cut)
+  df$education <- ifelse(is.na(df$education),"2",
+      ifelse(df$education==1,"1",
+      ifelse(df$education %in% c(3,4), "3_4", "2")))
+  df$education <- as.factor(df$education)
   
-  df$purpose_cut <- ifelse(is.na(df$purpose), "other",
-      ifelse(df$purpose %in% c(5), "5", "other"))
-  df$purpose <- as.factor(df$purpose_cut)
+  df$status_work <- ifelse(is.na(df$status_work), "other",
+      ifelse(df$status_work %in% c(1,4,5,9,10,12), "1_4_5_9_10_12","other"))
+  df$status_work <- as.factor(df$status_work)
   
-  df$experience_employer_cut <- ifelse(is.na(df$experience_employer), "2_more",
-      ifelse(df$experience_employer<=1,"0_1","2_more"))
-  df$experience_employer <- as.factor(df$experience_employer_cut)
+  df$experience_employer <- ifelse(is.na(df$experience_employer), "0_12",
+      ifelse(df$experience_employer<=12,"0_12",
+      ifelse(df$experience_employer<=120,"13_120","more_120")))
+  df$experience_employer <- as.factor(df$experience_employer)
   
-  df$status_finished_total_cut <- ifelse(is.na(df$status_finished_total),
-     "0_71_72_73",
-     ifelse(df$status_finished_total %in% c(0,71,72,73),"0_71_72_73",
-     ifelse(df$status_finished_total %in% c(74),"74","75")))
-  df$status_finished_total <- as.factor(df$status_finished_total_cut)
+  df$purpose <- ifelse(is.na(df$purpose), "other",
+      ifelse(df$purpose %in% c(2,5),"2_5","other"))
+  df$purpose <- as.factor(df$purpose)
   
-  df$status_active_total_cut <- ifelse(is.na(df$status_active_total),
-     "other",
-     ifelse(df$status_active_total %in% c(0,-1,71),"other", 
-     ifelse(df$status_active_total %in% c(72,73),"72_73", "74_75")))
-  df$status_active_total <- as.factor(df$status_active_total_cut)
+  df$cred_count_total <- ifelse(is.na(df$cred_count_total), "other",
+      ifelse(df$cred_count_total==0,"0_and_more_8",
+      ifelse(df$cred_count_total>=8,"0_and_more_8","other")))
+  df$cred_count_total <- as.factor(df$cred_count_total)
   
-  df$source_entity_count_total_cut <- ifelse(is.na(df$source_entity_count_total),
-    "other",
-    ifelse(df$source_entity_count_total==0, "0_more_6",
-    ifelse(df$source_entity_count_total %in% c(1,4,5),"other",
-    ifelse(df$source_entity_count_total %in% c(2,3) , "other","0_more_6"))))
-  df$source_entity_count_total <- as.factor(df$source_entity_count_total_cut)
+  df$status_finished_total <- ifelse(is.na(df$status_finished_total),
+      "other",ifelse(df$status_finished_total %in% c(73:75),"73_74_75",
+      "other"))
+  df$status_finished_total <- as.factor(df$status_finished_total)
   
-  df$outs_overdue_ratio_total_cut <- ifelse(
-    is.na(df$outs_overdue_ratio_total), "other",
-    ifelse(df$outs_overdue_ratio_total==-999,"other",
-    ifelse(df$outs_overdue_ratio_total==0,"other",
-    ifelse(df$outs_overdue_ratio_total>0 & df$outs_overdue_ratio_total<=0.02,
-      "other",
-    ifelse(df$outs_overdue_ratio_total>0.02 & df$outs_overdue_ratio_total<=0.06,
-      "0.02_0.06","more_0.06")))))
-  df$outs_overdue_ratio_total <- as.factor(df$outs_overdue_ratio_total_cut)
+  df$outs_overdue_ratio_total <- ifelse(
+    is.na(df$outs_overdue_ratio_total), "0_0.01",
+    ifelse(df$outs_overdue_ratio_total==-999,"0_0.01",
+    ifelse(df$outs_overdue_ratio_total<=0.01,"0_0.01",
+    ifelse(df$outs_overdue_ratio_total<=0.04,"0.01_0.04","more_0.04"))))
+  df$outs_overdue_ratio_total <- as.factor(df$outs_overdue_ratio_total)
   
-  df$viber_registered_cut <- ifelse(is.na(df$has_viber), "other",
-    ifelse(df$has_viber==0, "False",
-    ifelse(df$has_viber==1, "other", "other")))
-  df$viber_registered <- as.factor(df$viber_registered_cut)
+  df$viber_phone <- 
+    ifelse(is.na(df$has_viber), "other",
+    ifelse(df$has_viber=="False", "False","other"))
+  df$viber_phone <- as.factor(df$viber_phone)
   
-  df$whatsapp_registered_cut <- "other"
-  df$whatsapp_registered <- as.factor(df$whatsapp_registered_cut)
+  if(is.na(api_df$email)){
+    df$email_char_ratio <- NA
+  } else {
+    df$email_name <- strsplit(api_df$email,"@")[[1]][1]
+    df$email_char_ratio <- nchar(rawToChar(
+      unique(charToRaw(df$email_name)))) / nchar(df$email_name)
+  }
+  df$API_email_char_ratio <- ifelse(is.na(df$email_char_ratio), "other",
+    ifelse(df$email_char_ratio<=0.6,"0_0.6","other"))
+  df$API_email_ratio_char <- as.factor(df$API_email_char_ratio)
+  
+  df$API_payment_method <- ifelse(is.na(api_df$payment_method), "other",
+    ifelse(api_df$payment_method==2, "2",
+    ifelse(api_df$payment_method==3, "other", "other")))
+  df$API_payment_method <- as.factor(df$API_payment_method)
+  
+  df$API_amount <- 
+    ifelse(is.na(api_df$amount),"250_650",
+    ifelse(api_df$amount<=150,"less_150",
+    ifelse(api_df$amount<=200,"200",
+    ifelse(api_df$amount<=650,"250_650","more_700"))))    
+  df$API_amount <- as.factor(df$API_amount)
+  
+  df$API_referral_source <- ifelse(
+    is.na(api_df$referral_source) | is.null(api_df$referral_source), "other",
+     ifelse(api_df$referral_source=="facebook","facebook","other"))
+  df$API_referral_source <- as.factor(df$API_referral_source)
+  
+  device_type <- ifelse(grepl("Android",api_df$user_agent),"Android",
+     ifelse(grepl("iPhone",api_df$user_agent),"iPhone",
+     ifelse(grepl("Win64",api_df$user_agent),"Windows",
+      ifelse(grepl("Windows",api_df$user_agent),"Windows",
+      ifelse(grepl("Linux",api_df$user_agent),"Linux","other")))))
+  df$API_device <- ifelse(is.na(device_type), "other",
+     ifelse(device_type=="Windows", "Windows", "other"))
+  df$API_device <- as.factor(df$API_device)
+  
+  final2 <- read.xlsx(paste("C:\\Projects\\Apply_Scoring\\","api_payday.xlsx", 
+                            sep=""))
+  final2 <- rbind(df[,c("API_amount","API_payment_method",
+     "API_referral_source","API_device","API_email_ratio_char")], final2)
+  write.xlsx(final2, paste("C:\\Projects\\Apply_Scoring\\","api_payday.xlsx", sep=""))
   
   # Apply logisic regression
   for(i in 1:nrow(scoring_df)){

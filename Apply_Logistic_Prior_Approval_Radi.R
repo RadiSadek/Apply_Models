@@ -227,6 +227,11 @@ names(offers)[names(offers)=="max_installment_amount"] <- "installment_amount"
 offers[is.na(offers)] <- "NULL"
 
 
+# Adjust product ID
+offers$product_id <- ifelse(offers$product_id %in% c(43,44,49,50,57,58),55,
+                            offers$product_id)
+
+
 # Make result ready for SQL query
 string_sql <- gen_sql_string_po_terminated(offers,1)
 if(nrow(offers)>1){

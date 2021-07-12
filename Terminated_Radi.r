@@ -329,8 +329,9 @@ flag_new_credirect_old_city <- ifelse(flag_credirect==1 & flag_beh==1 &
 
 
 # Get flag if client is dead
-flag_is_dead <- ifelse(is.na(suppressWarnings(fetch(dbSendQuery(con,
- gen_flag_is_dead(db_name,all_df$client_id)), n=-1))$dead_at),0,1)
+# flag_is_dead <- ifelse(is.na(suppressWarnings(fetch(dbSendQuery(con,
+#  gen_flag_is_dead(db_name,all_df$client_id)), n=-1))$dead_at),0,1)
+flag_is_dead <- 0
 
 
 # Get flag if client is in a risky address
@@ -349,7 +350,7 @@ scoring_df <- gen_apply_score(
   flag_beh,all_df,scoring_df,df,products,df_Log_beh_CityCash,
   df_Log_CityCash_App,df_Log_beh_Credirect,df_Log_Credirect_App_installments,
   df_Log_Credirect_App_payday,period,all_id,prev_amount,amount_tab,
-  t_income,disposable_income_adj,flag_new_credirect_old_city,1)
+  t_income,disposable_income_adj,flag_new_credirect_old_city,api_df,1)
 
 
 ######################################

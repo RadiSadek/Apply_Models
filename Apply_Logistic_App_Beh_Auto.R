@@ -17,6 +17,8 @@ suppressMessages(suppressWarnings(library(RMySQL)))
 suppressMessages(suppressWarnings(library(here)))
 suppressMessages(suppressWarnings(library(dotenv)))
 suppressMessages(suppressWarnings(require("reshape")))
+suppressMessages(suppressWarnings(require(jsonlite)))
+
 
 
 # Defines the directory where custom .env file is located
@@ -235,6 +237,19 @@ all_df$self_approval <- suppressWarnings(fetch(dbSendQuery(con,
   gen_self_approval_office_query(db_name,all_df$office_id)), n=-1))$self_approve
 
 
+# Get dataframe of API data 
+tryCatch(
+  api_df <- gen_dataframe_json(suppressWarnings(fetch(dbSendQuery(
+    con,gen_api_data(db_name,application_id)), n=-1))), 
+  error=function(e) 
+  {api_df <- NA})
+if(!exists('api_df')){
+  api_df <- NA
+}
+api_df <- gen_treat_api_df(api_df)
+
+
+
 ############################################
 ### Compute and rework additional fields ###
 ############################################
@@ -296,6 +311,9 @@ if(flag_beh==1){
     ifelse(is.na(all_df$days_diff_last_credit),all_df$days_diff_last_credit,
     ifelse(flag_app_quickly==1 & flag_credirect==1,0,
     all_df$days_diff_last_credit))
+} else {
+  all_df$days_diff_last_credit <- NA
+  flag_app_quickly <- NA
 }
 
 
@@ -416,7 +434,7 @@ scoring_df <- gen_apply_score(
   flag_beh,all_df,scoring_df,df,products,df_Log_beh_CityCash,
   df_Log_CityCash_App,df_Log_beh_Credirect,df_Log_Credirect_App_installments,
   df_Log_Credirect_App_payday,period,all_id,prev_amount,amount_tab,
-  t_income,disposable_income_adj,flag_new_credirect_old_city,0)
+  t_income,disposable_income_adj,flag_new_credirect_old_city,api_df,0)
 
 
 # Build column PD

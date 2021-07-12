@@ -374,4 +374,12 @@ gen_self_approval_office_query <- function(db_name,input){
     input,")",sep=""))
 }
 
+# Get API data
+gen_api_data <- function(db_name,application_id){
+  return(paste(
+    "SELECT payload
+     FROM ",db_name,".api_credits_applications
+     WHERE application_id IN (", 
+    application_id,")",sep=""))
+}
 

@@ -5,66 +5,63 @@
 
 gen_app_credirect_installments <- function(df,scoring_df,products,
   df_Log_Credirect_App_installments,period,all_df,prev_amount,amount_tab,
-  t_income,disposable_income_adj,flag_credit_next_salary){
+  t_income,disposable_income_adj,flag_credit_next_salary,api_df){
   
-  # Cut and bin
-  df$age_cut <- ifelse(df$age<=24,"24_less",
-       ifelse(df$age<=39,"25_39",
-       ifelse(df$age<=49,"40_49","more_50")))
-  df$age <- as.factor(df$age_cut)
+  df$age <- ifelse(df$age<=20,"20_less","more_20")
+  df$age <- as.factor(df$age)
   
-  df$education_cut <- ifelse(is.na(df$education),"2",
-      ifelse(df$education==1,"1",
-      ifelse(df$education %in% c(3,4), "3_4", "2")))
-  df$education <- as.factor(df$education_cut)
+  df$education <- ifelse(is.na(df$education),"2",
+     ifelse(df$education==1,"1",
+     ifelse(df$education %in% c(3,4), "3_4", "2")))
+  df$education <- as.factor(df$education)
   
-  df$marital_status_cut <- ifelse(is.na(df$marital_status), "not_1",
-      ifelse(df$marital_status %in% c(2,3,4,5), "not_1", df$marital_status))
-  df$marital_status <- as.factor(df$marital_status_cut)
+  df$marital_status <- ifelse(is.na(df$marital_status), "2_4_5",
+     ifelse(df$marital_status %in% c(1,3), "1_3", "2_4_5"))
+  df$marital_status <- as.factor(df$marital_status)
   
-  df$status_work_cut <- ifelse(is.na(df$status_work), "other",
-      ifelse(df$status_work %in% c(4,5), "4_5","other"))
-  df$status_work <- as.factor(df$status_work_cut)
+  df$status_work <- ifelse(is.na(df$status_work), "other",
+     ifelse(df$status_work %in% c(4,5,9,10,12), "4_5_9_10_12","other"))
+  df$status_work <- as.factor(df$status_work)
   
-  df$status_finished_total_cut <- ifelse(is.na(df$status_finished_total),
-     "0_71_72_73",
-     ifelse(df$status_finished_total %in% c(0,71,72,73),"0_71_72_73", "74_75"))
-  df$status_finished_total <- as.factor(df$status_finished_total_cut)
+  df$status_finished_total <- ifelse(is.na(df$status_finished_total),
+    "0_71_72_73",ifelse(df$status_finished_total %in% c(0,71,72),"0_71_72_73",
+    "74_75"))
+  df$status_finished_total <- as.factor(df$status_finished_total)
   
-  df$source_entity_count_total_cut <- 
-    ifelse(is.na(df$source_entity_count_total),"more_2",
-    ifelse(df$source_entity_count_total==0, "0",
-    ifelse(df$source_entity_count_total==1, "1","more_2")))
-  df$source_entity_count_total <- as.factor(df$source_entity_count_total_cut)
+  df$experience_employer <- 
+    ifelse(is.na(df$experience_employer), "less_24",
+           ifelse(df$experience_employer<=24,"less_24","more_24"))
+  df$experience_employer <- as.factor(df$experience_employer)
   
-  df$outs_overdue_ratio_total_cut <- ifelse(
+  df$outs_overdue_ratio_total <- ifelse(
     is.na(df$outs_overdue_ratio_total), "0_0.01",
     ifelse(df$outs_overdue_ratio_total==-999,"0_0.01",
     ifelse(df$outs_overdue_ratio_total<=0.01,"0_0.01",
-    ifelse(df$outs_overdue_ratio_total<=0.08,"0.01_0.08",
-    ifelse(df$outs_overdue_ratio_total<=1,"0.08_1","more_0.08")))))
-  df$outs_overdue_ratio_total <- as.factor(df$outs_overdue_ratio_total_cut)
+    ifelse(df$outs_overdue_ratio_total<=0.21,"0.01_0.21","more_0.21"))))
+  df$outs_overdue_ratio_total <- as.factor(df$outs_overdue_ratio_total)
   
-  df$viber_registered_cut <- ifelse(is.na(df$has_viber), "other",
-     ifelse(df$has_viber==0, "False",
-     ifelse(df$has_viber==1, "other", "other")))
-  df$viber_registered <- as.factor(df$viber_registered_cut)
-
+  df$viber_phone <- 
+    ifelse(is.na(df$has_viber), "other",
+    ifelse(df$has_viber=="False", "False","other"))
+  df$viber_phone <- as.factor(df$viber_phone)
+  
+  df$API_payment_method <- ifelse(is.na(api_df$payment_method), "other",
+    ifelse(api_df$payment_method==2, "2",
+    ifelse(api_df$payment_method==3, "other", "other")))
+  df$API_payment_method <- as.factor(df$API_payment_method)
+  
+  df$API_period <- 
+    ifelse(is.na(api_df$period),"5_6",
+    ifelse(api_df$period<=4,"less_4",
+    ifelse(api_df$period<=6,"5_6","more_7")))
+  df$API_period <- as.factor(df$API_period)
+  
   # Apply logisic regression
   for(i in 1:nrow(scoring_df)){
     
     period_tab <- as.numeric(scoring_df$period[i])
     amount_tab <- as.numeric(scoring_df$amount[i])
-    
-    # Compute correct maturity for each amount and product_id
-    current_maturity <- ifelse(period==1, period_tab*7/30, 
-                               ifelse(period==2, period_tab*14/30, period_tab))
-    df$maturity_cut <- ifelse(current_maturity<=2,"2",
-             ifelse(current_maturity<=3,"3",
-             ifelse(current_maturity<=9,"4_9","more_10")))
-    df$maturity <- as.factor(df$maturity_cut)
-    
-    
+  
     apply_logit <- predict(df_Log_Credirect_App_installments, newdata=df, 
                            type="response")
     
