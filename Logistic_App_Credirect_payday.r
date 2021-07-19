@@ -95,12 +95,6 @@ gen_app_credirect_payday <- function(df,scoring_df,products,
      ifelse(device_type=="Windows", "Windows", "other"))
   df$API_device <- as.factor(df$API_device)
   
-  final2 <- read.xlsx(paste("C:\\Projects\\Apply_Scoring\\","api_payday.xlsx", 
-                            sep=""))
-  final2 <- rbind(df[,c("API_amount","API_payment_method",
-     "API_referral_source","API_device","API_email_ratio_char")], final2)
-  write.xlsx(final2, paste("C:\\Projects\\Apply_Scoring\\","api_payday.xlsx", sep=""))
-  
   # Apply logisic regression
   for(i in 1:nrow(scoring_df)){
     
