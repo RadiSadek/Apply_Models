@@ -127,6 +127,9 @@ gen_correction_po_ref <- function(con,db_name,all_df,all_id,
           scoring_df$amount<=po_ref$max_amount & 
           scoring_df$installment_amount<=po_ref$max_installment,3,
           scoring_df$color)
+        
+        scoring_df$color <- ifelse(scoring_df$amount>po_ref$max_amount,1,
+                                   scoring_df$color)
       }
       
       if(po_ref$final_time<=7 & is.na(po_ref$max_installment)){

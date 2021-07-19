@@ -329,9 +329,8 @@ flag_new_credirect_old_city <- ifelse(flag_credirect==1 & flag_beh==1 &
 
 
 # Get flag if client is dead
-# flag_is_dead <- ifelse(is.na(suppressWarnings(fetch(dbSendQuery(con,
-#  gen_flag_is_dead(db_name,all_df$client_id)), n=-1))$dead_at),0,1)
-flag_is_dead <- 0
+flag_is_dead <- ifelse(is.na(suppressWarnings(fetch(dbSendQuery(con,
+ gen_flag_is_dead(db_name,all_df$client_id)), n=-1))$dead_at),0,1)
 
 
 # Get flag if client is in a risky address
