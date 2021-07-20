@@ -251,7 +251,7 @@ gen_treat_api_df <- function(input){
       input$user_agent[[1]])
     api_email <- ifelse(is.null(input$client.email[[1]]),NA,
       input$client.email[[1]])
-    api_period <- ifelse(is.null(api_df$period[[1]]),NA,api_df$period[[1]])
+    api_period <- ifelse(is.null(input$period[[1]]),NA,input$period[[1]])
     
   } else {
     api_payment_method <- NA
