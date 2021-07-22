@@ -185,6 +185,19 @@ all_df$self_approval <- suppressWarnings(fetch(dbSendQuery(con,
   gen_self_approval_office_query(db_name,all_df$office_id)), n=-1))$self_approve
 
 
+# Get dataframe of API data 
+tryCatch(
+  api_df <- gen_dataframe_json(suppressWarnings(fetch(dbSendQuery(
+    con,gen_api_data(db_name,application_id)), n=-1))), 
+  error=function(e) 
+  {api_df <- NA})
+if(!exists('api_df')){
+  api_df <- NA
+}
+api_df <- gen_treat_api_df(api_df)
+
+
+
 ############################################
 ### Compute and rework additional fields ###
 ############################################
@@ -248,6 +261,11 @@ flag_rep <- ifelse(nrow(subset(all_id,all_id$status==5))>0,1,0)
 # Compute ratio of number of payments
 all_df$ratio_nb_payments_prev <- ifelse(flag_beh==1,prev_paid_days/	
        total_amount$installments,NA)
+
+
+# Compute ratio of refinanced
+all_df$refinance_ratio <- ifelse(flag_beh==1,
+       gen_ratio_refinance_previous(db_name,all_id),NA)
 
 
 #  Get SEON variables 
@@ -358,7 +376,7 @@ scoring_df <- gen_apply_score(
   flag_beh,all_df,scoring_df,df,products,df_Log_beh_CityCash,
   df_Log_CityCash_App,df_Log_beh_Credirect,df_Log_Credirect_App_installments,
   df_Log_Credirect_App_payday,period,all_id,prev_amount,amount_tab,
-  t_income,disposable_income_adj,flag_new_credirect_old_city,1)
+  t_income,disposable_income_adj,flag_new_credirect_old_city,api_df,1)
 
 
 

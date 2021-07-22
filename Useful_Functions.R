@@ -252,6 +252,8 @@ gen_treat_api_df <- function(input){
     api_email <- ifelse(is.null(input$client.email[[1]]),NA,
       input$client.email[[1]])
     api_period <- ifelse(is.null(input$period[[1]]),NA,input$period[[1]])
+    api_partial_app_at <- ifelse(is.null(input$partial_application_at[[1]]),NA,
+      input$partial_application_at[[1]])
     
   } else {
     api_payment_method <- NA
@@ -260,18 +262,20 @@ gen_treat_api_df <- function(input){
     api_user_agent <- NA
     api_email <- NA
     api_period <- NA
+    api_partial_app_at <- NA
   }
   
   # Finalize output dataframe
-  output <- as.data.frame(matrix(NA,ncol=6,nrow=1))
+  output <- as.data.frame(matrix(NA,ncol=7,nrow=1))
   names(output) <- c("payment_method","amount","referral_source","user_agent",
-                     "email","period")
+                     "email","period","partial_app_at")
   output$payment_method <- api_payment_method
   output$amount <- api_amount
   output$referral_source <- api_referral_source
   output$user_agent <- api_user_agent
   output$email <- api_email
   output$period <- api_period
+  output$partial_app_at <- api_partial_app_at
   
   return(output)
 }

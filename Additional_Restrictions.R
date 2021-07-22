@@ -100,7 +100,8 @@ gen_restrict_citycash_beh <- function(scoring_df,prev_amount,products,all_id,
       gen_big_sql_query(db_name,all_id$id[i])), n=-1))$amount
   }
   max_prev_amount <- max(all_id$amount[
-     all_id$company_id==all_id$company_id[all_id$id==application_id]])
+     all_id$company_id==all_id$company_id[all_id$id==application_id] & 
+     all_id$status %in% c(4,5)])
   scoring_df$color <- ifelse(scoring_df$score %in% c("Good 4") & 
      scoring_df$amount>(max_prev_amount+600),1,
      ifelse(scoring_df$score %in% c("Good 1","Good 2","Good 3",

@@ -362,7 +362,7 @@ gen_flag_if_curr_active <- function(all_id,application_id){
 }
 
 # Get time since last credit even for past applications
-gen_all_days_since_credit <- function(df_name,all_credits,all_df){
+gen_all_days_since_credit <- function(db_name,all_credits,all_df){
   
   all_credits_here <- all_credits[order(all_credits$date),]
   
@@ -410,6 +410,39 @@ gen_all_days_since_credit <- function(df_name,all_credits,all_df){
   }
   
   return(flag_app_quickly)
+}
+
+# Get ratio of number of refinanced credits of past credits
+gen_ratio_refinance_previous <- function(db_name,all_id){
+  
+  all_id_here_term <- subset(all_id,all_id$status %in% c(5))
+  all_id_here_active <- subset(all_id,all_id$status %in% c(4))
+
+  # Set correctly time of deactivation of previous credits 
+  if(nrow(all_id_here_active)>0){
+    all_id_here_active$deactivated_at <- as.Date(as.POSIXlt(Sys.time(),
+      format = '%d%b%Y:%H:%M:%S'),origin = "1970-01-01")
+  }
+  if(nrow(all_id_here_term)>0){
+    all_id_here_term$deactivated_at <- as.Date(all_id_here_term$deactivated_at,
+      origin = "1970-01-01")
+  }
+  all_id_here <- rbind(all_id_here_term,all_id_here_active)
+  all_id_here$created_at <- as.Date(all_id_here$created_at,
+                                    origin = "1970-01-01")
+
+  for(i in 1:nrow(all_id_here)){
+    select <- subset(all_id_here,
+        all_id_here$created_at<all_id_here$created_at[i])
+    all_id_here$diff_time[i] <- round(suppressWarnings(
+      max(difftime(select$deactivated_at,all_id_here$created_at[i],
+      units = c("days")))))
+  }
+  
+  all_id_here$days_diff_last_credit <- ifelse(all_id_here$diff_time>=-1,1,0)
+  
+  return(round(sum(all_id_here$days_diff_last_credit)/nrow(all_id_here),2))
+
 }
 
 

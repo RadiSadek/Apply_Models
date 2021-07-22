@@ -38,7 +38,7 @@ main_dir <- "C:\\Projects\\Apply_Scoring\\"
 # Read argument of ID
 args <- commandArgs(trailingOnly = TRUE)
 application_id <- args[1]
-#application_id <- 942711
+#application_id <- 968523
 product_id <- NA
 
 
@@ -260,7 +260,7 @@ flag_rep <- ifelse(nrow(subset(all_id,all_id$status==5))>0,1,0)
 
 # Correct days since last default if necessary
 if(flag_beh==1){
-  flag_app_quickly <- gen_all_days_since_credit(df_name,all_credits,all_df)
+  flag_app_quickly <- gen_all_days_since_credit(db_name,all_credits,all_df)
   all_df$days_diff_last_credit <- 
     ifelse(is.na(all_df$days_diff_last_credit),all_df$days_diff_last_credit,
     ifelse(flag_app_quickly==1 & flag_credirect==1,0,
@@ -274,6 +274,11 @@ if(flag_beh==1){
 # Compute ratio of number of payments
 all_df$ratio_nb_payments_prev <- ifelse(flag_beh==1,prev_paid_days/	
        total_amount$installments,NA)
+
+
+# Compute ratio of refinanced
+all_df$refinance_ratio <- ifelse(flag_beh==1,
+       gen_ratio_refinance_previous(db_name,all_id),NA)
 
 
 # Compute and rework CKR variables, suitable for model application
@@ -511,9 +516,7 @@ final$status_finished_total <- all_df$status_finished_total
 final$outs_overdue_ratio_total <- all_df$outs_overdue_ratio_total
 final$source_entity_count_total <- all_df$source_entity_count_total
 final$office <- all_df$office_id
-final$days_diff <- all_df$days_diff_last_credit
-final$days_diff2 <- all_df$days_diff_last_credit2
-final$flag_app_quickly <- flag_app_quickly
+
 
 # Read and write
 final_exists <- read.xlsx(paste(main_dir,"Scored_Credits.xlsx", 
