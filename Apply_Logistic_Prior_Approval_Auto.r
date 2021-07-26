@@ -439,7 +439,7 @@ if(substring(Sys.time(),9,10)=="01"){
 get_special_sql <- suppressWarnings(dbSendQuery(con, paste("
 SELECT id
 FROM ",db_name,".clients
-WHERE gdpr_marketing_messages=1 OR is_dead=1",sep="")))
+WHERE gdpr_marketing_messages=1 OR dead_at IS NOT NULL",sep="")))
 special <- fetch(get_special_sql,n=-1)
 
 # Remove special cases if has offer
