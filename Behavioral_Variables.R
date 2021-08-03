@@ -296,6 +296,12 @@ gen_prev_deactiv_date <- function(db_name,all_df,all_id,application_id){
     dbSendQuery(con,gen_products_query_desc(db_name,all_df))))$company_id)
   all_id_local <- subset(all_id_local,all_id_local$status %in% c(4,5))
   
+  # Remove if current application_id is too soon
+  all_id_local$difftime <- difftime(Sys.time(),all_id_local$signed_at,
+                                    units = c("days"))
+  all_id_local <- all_id_local[!(all_id_local$status=4 & 
+                                 all_id_local$difftime<=2),]
+
   if(nrow(all_id_local)>0){
     all_id_local <- all_id_local[order(all_id_local$deactivated_at),]
     all_id_local <- all_id_local[nrow(all_id_local),]

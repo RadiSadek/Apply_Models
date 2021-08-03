@@ -178,4 +178,47 @@ gen_correction_po_ref <- function(con,db_name,all_df,all_id,
   }
   return(scoring_df)
 }
+
+# Function to check if early paid previous credit 
+gen_corection_early_repaid <- function(con,db_name,scoring_df,all_df,all_id,
+                                       flag_credit_next_salary){
   
+  # Identify last credit of same company_id
+  all_df <- get_company_id_prev(db_name,all_df)
+  all_id_here <- all_id[all_id$company_id==all_df$company_id & 
+                          all_id$status %in% c(4,5),]
+  all_id_here <- all_id_here[rev(order(all_id_here$deactivated_at)),]
+  all_id_here <- all_id_here[1,]
+  
+  # Get time since deactivation of last
+  time_since <- difftime(Sys.time(),all_id_here$deactivated_at,
+                         units = c("days"))
+  time_since <- ifelse(is.na(time_since),999,time_since)
+  
+  # Get total installments, passed installments of last credit
+  tot_installments <- suppressWarnings(fetch(dbSendQuery(con,
+    gen_last_cred_amount_query(
+    all_id_here$id,db_name)), n=-1))$installments
+  passed_installments <- suppressWarnings(fetch(dbSendQuery(con,
+    gen_passed_install_before_query(
+    db_name,all_id_here$id,Sys.time())), n=-1))$passed_installments
+  
+  # Get period of last credit (monthly,weekly...)
+  period <- suppressWarnings(fetch(dbSendQuery(con,
+    gen_products_query_desc(db_name,all_id_here)), n=-1))$period
+  
+  # Apply conditions
+  if(time_since<=3){
+    if((flag_credit_next_salary==1 & passed_installments==0) |
+       (flag_credit_next_salary!=1 & period==3 & 
+        passed_installments<2 & tot_installments<4) |
+       (flag_credit_next_salary!=1 & passed_installments<4 & 
+        tot_installments>=4)){
+      scoring_df$color <- ifelse(!(scoring_df$score %in% c("NULL")),1,
+                                 scoring_df$color)
+    }
+  }
+
+  return(scoring_df)
+}
+

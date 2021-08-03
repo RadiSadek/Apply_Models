@@ -38,7 +38,7 @@ main_dir <- "C:\\Projects\\Apply_Scoring\\"
 # Read argument of ID
 args <- commandArgs(trailingOnly = TRUE)
 application_id <- args[1]
-#application_id <- 968523
+#application_id <- 979758
 product_id <- NA
 
 
@@ -411,7 +411,6 @@ scoring_df$created_at <- Sys.time()
 scoring_df <- scoring_df[,c("application_id","amount","period","score","color",
                             "pd","created_at")]
 
-
 # Readjust score when applicable
 scoring_df <- gen_apply_policy(scoring_df,flag_credirect,flag_cession,
    flag_bad_ckr_citycash,all_df,all_id,flag_beh,prev_amount,products,
@@ -449,6 +448,13 @@ scoring_df <- gen_correction_po(con,db_name,all_df,all_id,
 # Recorrect for prior approvals - refinances
 scoring_df <- gen_correction_po_ref(con,db_name,all_df,all_id,
                                     scoring_df,products,period)
+
+
+# Check if early paid previous credit : no offer for City Cash
+if(flag_beh_company==1){
+    scoring_df <- gen_corection_early_repaid(con,db_name,scoring_df,
+     all_df,all_id,flag_credit_next_salary)
+}
 
 
 # Reselect columns 

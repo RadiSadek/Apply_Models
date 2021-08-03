@@ -20,10 +20,8 @@ suppressMessages(suppressWarnings(require("reshape")))
 suppressMessages(suppressWarnings(require(jsonlite)))
 
 
-
 # Defines the directory where custom .env file is located
 load_dot_env(file = here('.env'))
-
 
 
 #########################
@@ -40,7 +38,7 @@ product_id <- args[2]
 #######################
 
 # Defines the directory where the RScript is located
-base_dir <- here('app/Factories/Scoring')
+base_dir <- Sys.getenv("SCORING_PATH", unset = "", names = FALSE)
 
 
 
@@ -495,6 +493,13 @@ scoring_df <- gen_correction_po(con,db_name,all_df,all_id,
 # Recorrect for prior approvals - refinances
 scoring_df <- gen_correction_po_ref(con,db_name,all_df,all_id,
                                     scoring_df,products,period)
+
+
+# Check if early paid previous credit : no offer for City Cash
+if(flag_beh_company==1& flag_credirect==0){
+   scoring_df <- gen_corection_early_repaid(con,db_name,scoring_df,
+    all_df,all_id,flag_credit_next_salary)
+}
 
 
 # Reselect columns 
