@@ -378,9 +378,10 @@ select[is.na(select)] <- "NULL"
 
 # Make result ready for SQL query
 string_sql <- gen_sql_string_po_refinance(select,1)
+if(nrow(select)>1){
 for(i in 2:nrow(select)){
   string_sql <- paste(string_sql,gen_sql_string_po_refinance(select,i),sep=",")
-}
+}}
 
 
 # Output real offers
