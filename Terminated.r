@@ -12,7 +12,7 @@ load_dot_env(file = here('.env'))
   
   
 # Defines the directory where the RScript is located
-base_dir <- here('app/Factories/Scoring')
+base_dir <- Sys.getenv("SCORING_PATH", unset = "", names = FALSE)
 
 
 #####################	
