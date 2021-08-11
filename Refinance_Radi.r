@@ -180,7 +180,7 @@ api_df <- gen_treat_api_df(api_df)
 
 # Compute flag if credit is up to next salary
 flag_credit_next_salary <- ifelse(all_df$product_id %in% 
-      c(25:28,36,37,41:44,49,50,55:58), 1, 0)
+      c(25:28,36,37,41:44,49,50,55:58,67:68), 1, 0)
 
 
 # Compute flag if product is credirect

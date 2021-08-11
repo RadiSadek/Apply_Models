@@ -254,7 +254,7 @@ api_df <- gen_treat_api_df(api_df)
 
 # Compute flag if credit is up to next salary
 flag_credit_next_salary <- ifelse(all_df$product_id %in% 
-      c(25:28,36,37,41:44,49,50,55:58), 1, 0)
+      c(25:28,36,37,41:44,49,50,55:58,67:68), 1, 0)
 
 
 # Compute flag if product is credirect
@@ -496,7 +496,7 @@ scoring_df <- gen_correction_po_ref(con,db_name,all_df,all_id,
 
 
 # Check if early paid previous credit : no offer for City Cash
-if(flag_beh_company==1& flag_credirect==0){
+if(flag_beh_company==1 & flag_credirect==0){
    scoring_df <- gen_corection_early_repaid(con,db_name,scoring_df,
     all_df,all_id,flag_credit_next_salary)
 }
