@@ -33,9 +33,11 @@ gen_correction_po <- function(con,db_name,all_df,all_id,
         last_po_date <- NA
       }
       all_id_local <- subset(all_id,all_id$status %in% c(4,5))
+      all_id_local$difftime <- round(as.numeric(difftime(
+         all_id_local$created_at,last_po_date,units = c("days"))),2)
       all_id_local <- subset(all_id_local,
          all_id_local$company_id==po$company_id & 
-         all_id_local$created_at>=(as.POSIXct(last_po_date) + 3600))
+         all_id_local$difftime>=0)
       po$final_time <- ifelse(!is.na(po$deleted_at) &
          substring(po$deleted_at,12,20)!="04:00:00",
          difftime(Sys.time(),po$deleted_at,units=c("days")),999)
