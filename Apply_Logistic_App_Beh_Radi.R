@@ -526,10 +526,11 @@ final$office <- all_df$office_id
 
 
 # Read and write
-final_exists <- read.xlsx(paste(main_dir,"Scored_Credits.xlsx", 
-                                sep=""))
+final_exists <- read.xlsx(paste(main_dir,
+  "\\Monitoring\\Files\\Scored_Credits.xlsx", sep=""))
 final <- rbind(final_exists, final)
-write.xlsx(final, paste(main_dir,"Scored_Credits.xlsx", sep=""))
+write.xlsx(final, paste(main_dir,"\\Monitoring\\Files\\Scored_Credits.xlsx", 
+  sep=""))
 
 
 

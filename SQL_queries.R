@@ -48,7 +48,7 @@ return(big_sql_query)
 
 # Define query for products periods and amounts
 gen_products_query <- function(db_name,all_df){
-  return(paste("SELECT * FROM ", db_name, ".products_periods_and_amounts 
+  return(paste("SELECT * FROM ", db_name, ".products_periods_and_amounts
                WHERE product_id IN (",
                all_df$product_id, ")", sep=""))
 }
