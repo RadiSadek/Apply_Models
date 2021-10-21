@@ -245,6 +245,9 @@ if(flag_beh==1){
     ifelse(flag_app_quickly==1 & flag_credirect==1,0,
     all_df$days_diff_last_credit))
 }
+if(flag_cashpoint==1){
+  all_df$days_diff_last_credit <- 30
+}
 
 
 # Compute ratio of number of payments

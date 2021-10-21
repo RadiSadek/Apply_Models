@@ -269,6 +269,9 @@ if(flag_beh==1){
   all_df$days_diff_last_credit <- NA
   flag_app_quickly <- NA
 }
+if(flag_cashpoint==1){
+  all_df$days_diff_last_credit <- 30
+}
 
 
 # Compute ratio of number of payments
@@ -523,6 +526,7 @@ final$status_finished_total <- all_df$status_finished_total
 final$outs_overdue_ratio_total <- all_df$outs_overdue_ratio_total
 final$source_entity_count_total <- all_df$source_entity_count_total
 final$office <- all_df$office_id
+final$risky_address <- flag_risky_address$flag_risky_address
 
 
 # Read and write
