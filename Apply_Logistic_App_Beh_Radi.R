@@ -38,7 +38,7 @@ main_dir <- "C:\\Projects\\Apply_Scoring\\"
 # Read argument of ID
 args <- commandArgs(trailingOnly = TRUE)
 application_id <- args[1]
-#application_id <- 979758
+#application_id <- 1061845
 product_id <- NA
 
 
@@ -427,7 +427,7 @@ if(flag_beh_company==1){
   if((max(flag_active)==1 & flag_credirect==0) | 
      (flag_active[1]==1 & flag_credirect==1)){
     scoring_df <- gen_restrict_beh_refinance(db_name,all_df,all_id,
-      scoring_df,flag_active,application_id,flag_credirect)
+      scoring_df,flag_active,application_id,flag_credirect,flag_cashpoint)
   }
 }
 

@@ -308,7 +308,7 @@ gen_adjust_score <- function(scoring_df,crit){
 
 # Function to apply restrictions to refinances
 gen_restrict_beh_refinance <- function(db_name,all_df,all_id,
-    scoring_df,flag_active,application_id,flag_credirect){
+    scoring_df,flag_active,application_id,flag_credirect,flag_cashpoint){
   
   # Apply restrictions
   if(flag_credirect==1 & all_df$max_delay>180){
@@ -318,7 +318,8 @@ gen_restrict_beh_refinance <- function(db_name,all_df,all_id,
     scoring_df$color <- scoring_df$color
   }
     
-  filter_company <- ifelse(flag_credirect==1,2,1)
+  filter_company <- ifelse(flag_credirect==1,2,
+                    ifelse(flag_cashpoint==1,5,1))
   all_id_local <- all_id[all_id$company_id==filter_company,]
   all_id_local_active <- subset(all_id_local,all_id_local$status==4)
   all_id_local <- all_id_local[all_id_local$id!=application_id,]
