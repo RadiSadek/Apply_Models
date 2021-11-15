@@ -36,8 +36,8 @@ main_dir <- "C:\\Projects\\Apply_Scoring\\"
 
 # Read argument of ID
 args <- commandArgs(trailingOnly = TRUE)
-application_id <- args[1]
-#application_id <- 426970
+#application_id <- args[1]
+application_id <- 1056672
 
 
 # Load other r files
@@ -134,12 +134,15 @@ FROM ",db_name,".products
 WHERE id= ",all_credit$product_id,sep="")))
 all_credit$period <- fetch(get_period_sql,n=-1)$period
 flag_credit_next_salary <- ifelse(all_credit$product_id %in% 
-    c(25:28,36,37,41:44,49,50,55:58), 1, 0)
+    c(25:28,36,37,41:44,49,50,55:58,67,68), 1, 0)
 if((flag_credit_next_salary==1 & all_credit$passed_installments==0) |
    (flag_credit_next_salary!=1 & all_credit$period==3 & 
-    all_credit$passed_installments<2 & all_credit$tot_installments<4) |
+    all_credit$passed_installments<2 & all_credit$tot_installments<4 & 
+    all_credit$company_id!=5) |
    (flag_credit_next_salary!=1 & all_credit$passed_installments<4 & 
-    all_credit$tot_installments>=4)){
+    all_credit$tot_installments>=4 & all_credit$company_id!=5) |
+   (flag_credit_next_salary!=1 & all_credit$passed_installments==0 & 
+    all_credit$company_id==5)) {
   quit()
 }
 
