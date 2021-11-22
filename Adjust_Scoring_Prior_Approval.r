@@ -5,7 +5,7 @@
 
 # Function to correct scoring table for clients with po terminated
 gen_correction_po <- function(con,db_name,all_df,all_id,
-                              scoring_df,products,period){
+                              scoring_df,products,period,application_id){
 
   # Read credits with already an offer for terminated prior approval
   po <- suppressWarnings(fetch(dbSendQuery(con,
@@ -37,7 +37,8 @@ gen_correction_po <- function(con,db_name,all_df,all_id,
          all_id_local$created_at,last_po_date,units = c("days"))),2)
       all_id_local <- subset(all_id_local,
          all_id_local$company_id==po$company_id & 
-         all_id_local$difftime>=0)
+         all_id_local$difftime>=0 & 
+         all_id_local$id!=application_id)
       po$final_time <- ifelse(!is.na(po$deleted_at) &
          substring(po$deleted_at,12,20)!="04:00:00",
          difftime(Sys.time(),po$deleted_at,units=c("days")),999)

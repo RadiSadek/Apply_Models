@@ -37,8 +37,8 @@ main_dir <- "C:\\Projects\\Apply_Scoring\\"
 
 # Read argument of ID
 args <- commandArgs(trailingOnly = TRUE)
-application_id <- args[1]
-#application_id <- 1061845
+#application_id <- args[1]
+application_id <- 895638
 product_id <- NA
 
 
@@ -357,8 +357,8 @@ df <- gen_norm_var2(df)
 
 
 # Compute flag exclusion for cession in CKR
-flag_cession <- ifelse(flag_credirect==1 & df$amount_cession_total>0, 1, 0)
-
+#flag_cession <- ifelse(flag_credirect==1 & df$amount_cession_total>0, 1, 0)
+flag_cession <- ifelse(df$amount_cession_total>0, 1, 0)
 
 # Compute flag if new credirect but old citycash
 flag_new_credirect_old_city <- ifelse(flag_credirect==1 & flag_beh==1 &
@@ -446,7 +446,7 @@ scoring_df <- scoring_df[,c("application_id","amount","period","score","color",
 
 # Recorrect for prior approvals - terminated
 scoring_df <- gen_correction_po(con,db_name,all_df,all_id,
-                                scoring_df,products,period)
+                                scoring_df,products,period,application_id)
 
 
 # Recorrect for prior approvals - refinances

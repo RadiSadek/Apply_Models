@@ -490,7 +490,7 @@ scoring_df <- scoring_df[,c("application_id","amount","period","score","color",
 
 # Recorrect for prior approvals - terminated
 scoring_df <- gen_correction_po(con,db_name,all_df,all_id,
-                                scoring_df,products,period)
+                                scoring_df,products,period,application_id)
 
 
 # Recorrect for prior approvals - refinances
