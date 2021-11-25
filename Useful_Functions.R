@@ -279,3 +279,39 @@ gen_treat_api_df <- function(input){
   return(output)
 }
 
+# Get accept or decline reasons 
+gen_decline_reason <- function(scoring_df,all_df,level,input){
+  
+  # Get score of exact amount and installments
+  score_here <- scoring_df$color[scoring_df$amount==all_df$amount &
+       scoring_df$period==all_df$installments]
+  if(length(score_here)==0){
+    score_here <- scoring_df$color[scoring_df$amount== unique(scoring_df$amount)
+      [which.min(abs(all_df$amount - unique(scoring_df$amount)))] & 
+       scoring_df$period==unique(scoring_df$period)
+      [which.min(abs(all_df$installments - unique(scoring_df$period)))]]
+  }
+  
+  # Apply accept/reject nomenclature
+  if(level==10){
+    if(score_here %in% c(2:6)){result <- 1} else {result <- 0}
+    result <- cbind(score_here,level)
+  } else {
+    if(input[1]!=score_here){
+      input[1] <- score_here
+      result <- cbind(input,level)
+    } else {
+      result <- input
+    }
+  }
+  
+  # Comglomerate for final level
+  if(level==83){
+    result <- as.data.frame(result)
+    result <- sum(result[,names(result)=="level"])
+  }
+  
+  return(result)
+}
+    
+

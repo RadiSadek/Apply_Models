@@ -209,6 +209,7 @@ gen_query_ckr <- function(all_df,all_credits,type_of){
                  "outstanding_overdue_principal","amount_cession")
   query_ckr <- paste("SELECT 
   ",db_name,".clients_ckr_files.client_id,
+  ",db_name,".clients_ckr_files.created_at,
   ",db_name,".clients_ckr_files.application_id,
   ",db_name,".clients_ckr_files_data.current_status_active, 
   ",db_name,".clients_ckr_files_data.status_active, 
@@ -225,16 +226,16 @@ gen_query_ckr <- function(all_df,all_credits,type_of){
   WHERE ",db_name,".clients_ckr_files_data.type=",type_of," AND ",db_name,
                      ".clients_ckr_files.client_id=",all_df$client_id, sep ="")
   result_df <- suppressWarnings(fetch(dbSendQuery(con, query_ckr), n=-1))
-  result_df <- merge(result_df, all_credits[,c("id","date")], 
-                     by.x = "application_id",
-                     by.y = "id", all.x = TRUE)
+  # result_df <- merge(result_df, all_credits[,c("id","date")], 
+  #                    by.x = "application_id",
+  #                    by.y = "id", all.x = TRUE)
   if(nrow(result_df)==0){
     empty_df <- as.data.frame(cbind(NA,NA,NA,NA,NA,NA,NA,NA,NA))
     names(empty_df) <- names_col
     return(empty_df)
   } else {
     result_df$date_curr <- all_df$date
-    result_df$date_diff <- difftime(result_df$date_curr, result_df$date, 
+    result_df$date_diff <- difftime(result_df$date_curr, result_df$created_at, 
                                     units=c("days"))
     result_df <- result_df[order(result_df$date_diff),]
     result_final <- as.data.frame(matrix(nrow = 1, 

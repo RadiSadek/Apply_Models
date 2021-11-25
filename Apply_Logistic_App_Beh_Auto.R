@@ -443,6 +443,10 @@ scoring_df <- gen_apply_score(
   t_income,disposable_income_adj,flag_new_credirect_old_city,api_df,0)
 
 
+# Set initial scoring reason
+scoring_decision <- gen_decline_reason(scoring_df,all_df,10,NA)
+
+
 # Build column PD
 if(!("pd" %in% names(scoring_df))){
   scoring_df$pd <- NA
@@ -464,6 +468,7 @@ scoring_df <- gen_apply_policy(scoring_df,flag_credirect,flag_cession,
    flag_bad_ckr_citycash,all_df,all_id,flag_beh,prev_amount,products,
    application_id,flag_new_credirect_old_city,flag_credit_next_salary,
    flag_beh_company,flag_cashpoint)
+scoring_decision <- gen_decline_reason(scoring_df,all_df,15,scoring_decision)
 
 
 # Apply repeat restrictions to refinances and with potential refinance
@@ -474,6 +479,7 @@ if(flag_beh_company==1){
       scoring_df,flag_active,application_id,flag_credirect,flag_cashpoint)
   }
 }
+scoring_decision <- gen_decline_reason(scoring_df,all_df,22,scoring_decision)
 
 
 # Get fraud flag
@@ -491,11 +497,13 @@ scoring_df <- scoring_df[,c("application_id","amount","period","score","color",
 # Recorrect for prior approvals - terminated
 scoring_df <- gen_correction_po(con,db_name,all_df,all_id,
                                 scoring_df,products,period,application_id)
+scoring_decision <- gen_decline_reason(scoring_df,all_df,49,scoring_decision)
 
 
 # Recorrect for prior approvals - refinances
 scoring_df <- gen_correction_po_ref(con,db_name,all_df,all_id,
                                     scoring_df,products,period)
+scoring_decision <- gen_decline_reason(scoring_df,all_df,72,scoring_decision)
 
 
 # Check if early paid previous credit : no offer for City Cash
@@ -503,6 +511,7 @@ if(flag_beh_company==1 & flag_credirect==0){
    scoring_df <- gen_corection_early_repaid(con,db_name,scoring_df,
     all_df,all_id,flag_credit_next_salary)
 }
+scoring_decision <- gen_decline_reason(scoring_df,all_df,83,scoring_decision)
 
 
 # Reselect columns 
@@ -520,6 +529,14 @@ update_table_extras_query <- paste("UPDATE ",db_name,
   " WHERE id=",application_id, sep="")
 suppressMessages(suppressWarnings(dbSendQuery(con, 
   update_table_extras_query)))
+
+
+# Update table credits applications decisions
+update_table_extras_query2 <- paste("UPDATE ",db_name,
+  ".credits_applications_decisions SET scoring_decision = ",scoring_decision,
+  " WHERE application_id=",application_id, sep="")
+suppressMessages(suppressWarnings(dbSendQuery(con, 
+   update_table_extras_query2)))
 
 
 # Update table credits applications scoring
