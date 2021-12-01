@@ -55,7 +55,7 @@ gen_products_query <- function(db_name,all_df){
 
 # Define query for products 
 gen_products_query_desc <- function(db_name,all_df){
-  return(paste("SELECT id, period, company_id FROM ", db_name, ".products 
+  return(paste("SELECT id, period, brand_id AS company_id FROM ", db_name, ".products 
                WHERE id=", all_df$product_id, sep=""))
 }
 
@@ -197,7 +197,7 @@ gen_address_client_coordinates_query <- function(db_name,all_df){
 
 # Define query to get company id (credirect or city cash) 
 gen_get_company_id_query <- function(db_name){
-  return(get_company_id_query <- paste("SELECT id, company_id FROM ", db_name, 
+  return(get_company_id_query <- paste("SELECT id, brand_id AS company_id FROM ", db_name, 
      ".products", sep=""))
 }
 
