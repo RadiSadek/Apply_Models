@@ -37,8 +37,8 @@ main_dir <- "C:\\Projects\\Apply_Scoring\\"
 
 # Read argument of ID
 args <- commandArgs(trailingOnly = TRUE)
-#application_id <- args[1]
-application_id <- 1034737
+application_id <- args[1]
+#application_id <- 1042545
 product_id <- NA
 
 
