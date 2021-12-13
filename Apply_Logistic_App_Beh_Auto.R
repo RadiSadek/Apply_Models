@@ -507,7 +507,7 @@ scoring_decision <- gen_decline_reason(scoring_df,all_df,72,scoring_decision)
 
 
 # Check if early paid previous credit : no offer for City Cash
-if(flag_beh_company==1 & flag_credirect==0){
+if(flag_beh_company==1 & flag_credirect==0 & flag_cashpoint==0){
    scoring_df <- gen_corection_early_repaid(con,db_name,scoring_df,
     all_df,all_id,flag_credit_next_salary)
 }
