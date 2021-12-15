@@ -258,9 +258,9 @@ gen_installment_ratio <- function(db_name,all_id,all_df){
   all_id_local <- subset(all_id_here,all_id_here$status %in% c(5))
   all_id_local2 <- subset(all_id_here,all_id_here$status %in% c(4))
   all_id_local_activ_not_ok <- subset(all_id_local2,
-                                      all_id_local2$max_delay>60)
+          all_id_local2$max_delay>60)
   
-  if(nrow(all_id_local)>0){
+  if(nrow(all_id_local)>0 | nrow(all_id_local2)>0){
 
     # Get DPD of terminated credits
     all_id_local_tot <- all_id_local
@@ -280,7 +280,7 @@ gen_installment_ratio <- function(db_name,all_id,all_df){
              1.1*gen_prev_max_installment(db_name,rbind(
                all_id_local_ok,all_id_local2),all_df),
       ifelse(nrow(all_id_local2)>0,
-             1*gen_prev_max_installment(db_name,all_id_local2,all_df),
+             1.1*gen_prev_max_installment(db_name,all_id_local2,all_df),
              1*gen_prev_max_installment(db_name,all_id_local_not_ok,all_df)))))                          
          
   } else {

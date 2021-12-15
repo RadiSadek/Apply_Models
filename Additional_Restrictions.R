@@ -177,26 +177,26 @@ gen_restrict_credirect_beh <- function(scoring_df,all_df,all_id,application_id,
   # Define maximum step with previous
   max_step_prev_low <- ifelse(passed_install_at_pay!=-999,
    (ifelse(prev_next_salary==0,
-   (ifelse(passed_install_at_pay==0,100,
-    ifelse(passed_install_at_pay==1,300,
-    ifelse(passed_install_at_pay==2,400,
-    ifelse(passed_install_at_pay==3,400,Inf))))),
-   (ifelse(passed_install_at_pay==0,200,Inf)))),200)
+   (ifelse(passed_install_at_pay==0,200,
+    ifelse(passed_install_at_pay==1,400,
+    ifelse(passed_install_at_pay==2,500,
+    ifelse(passed_install_at_pay==3,500,Inf))))),
+   (ifelse(passed_install_at_pay==0,300,Inf)))),300)
   
   max_step_prev_high <- ifelse(passed_install_at_pay!=-999,
    (ifelse(prev_next_salary==0,
-   (ifelse(passed_install_at_pay==0,200,
-    ifelse(passed_install_at_pay==1,400,
-    ifelse(passed_install_at_pay==2,600,
-    ifelse(passed_install_at_pay==3,800,Inf))))),
-   (ifelse(passed_install_at_pay==0,300,Inf)))),300)
+   (ifelse(passed_install_at_pay==0,400,
+    ifelse(passed_install_at_pay==1,600,
+    ifelse(passed_install_at_pay==2,800,
+    ifelse(passed_install_at_pay==3,1000,Inf))))),
+   (ifelse(passed_install_at_pay==0,500,Inf)))),500)
   
   # Apply policy rules for Credirect Installments
   if(flag_credit_next_salary==0){
     
     scoring_df$allowed_amount_app <- 
       ifelse(scoring_df$score %in% c("NULL","Bad","Indeterminate"),0,
-             ifelse(scoring_df$score %in% c("Good 4"),1000,600))
+             ifelse(scoring_df$score %in% c("Good 4"),1400,800))
     
     # If has at least 1 terminated 
     if(nrow(all_id_local)>0){
@@ -205,12 +205,12 @@ gen_restrict_credirect_beh <- function(scoring_df,all_df,all_id,application_id,
         ifelse(scoring_df$score %in% c("Bad","NULL"),
                max(all_id_local$amount) + min(0,max_step_prev_low),
         ifelse(scoring_df$score %in% c("Good 1","Indeterminate"),
-               max(all_id_local$amount) + min(200,max_step_prev_low),
+               max(all_id_local$amount) + min(400,max_step_prev_low),
         ifelse(scoring_df$score %in% c("Good 2"),
-               max(all_id_local$amount) + min(400,max_step_prev_high),
+               max(all_id_local$amount) + min(600,max_step_prev_high),
         ifelse(scoring_df$score %in% c("Good 3"),
-               max(all_id_local$amount) + min(600,max_step_prev_high), 
-               max(all_id_local$amount) + min(1000,max_step_prev_high)))))
+               max(all_id_local$amount) + min(800,max_step_prev_high), 
+               max(all_id_local$amount) + min(1200,max_step_prev_high)))))
       
       for (i in 1:nrow(scoring_df)){
         scoring_df$allowed_amount[i] <- max(scoring_df$allowed_amount_rep[i],
@@ -238,19 +238,19 @@ gen_restrict_credirect_beh <- function(scoring_df,all_df,all_id,application_id,
   } else {
       scoring_df$allowed_amount_app <- 
         ifelse(scoring_df$score %in% c("NULL","Bad","Indeterminate"),0,
-        ifelse(scoring_df$score %in% c("Good 4"),800,600))
+        ifelse(scoring_df$score %in% c("Good 4"),800,800))
       
       if(nrow(all_id_local)>0){
         scoring_df$allowed_amount_rep <- 
           ifelse(scoring_df$score %in% c("Bad","NULL"),
              max(all_id_local$amount) + min(0,max_step_prev_low),
           ifelse(scoring_df$score %in% c("Good 1","Indeterminate"),
-             max(all_id_local$amount) + min(200,max_step_prev_low),
+             max(all_id_local$amount) + min(400,max_step_prev_low),
           ifelse(scoring_df$score %in% c("Good 2"),
-             max(all_id_local$amount) + min(400,max_step_prev_high),
+             max(all_id_local$amount) + min(600,max_step_prev_high),
           ifelse(scoring_df$score %in% c("Good 3"),
-             max(all_id_local$amount) + min(600,max_step_prev_high), 
-             max(all_id_local$amount) + min(1000,max_step_prev_high)))))
+             max(all_id_local$amount) + min(800,max_step_prev_high), 
+             max(all_id_local$amount) + min(1200,max_step_prev_high)))))
         
         for (i in 1:nrow(scoring_df)){
           scoring_df$allowed_amount[i] <- max(scoring_df$allowed_amount_rep[i],
