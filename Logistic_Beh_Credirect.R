@@ -40,8 +40,11 @@ gen_beh_credirect <- function(df,scoring_df,products,df_Log_beh_Credirect,
   df$refinance_ratio <- ifelse(df$refinance_ratio<=0.49,"0_0.49","0.5_1")
   df$refinance_ratio <- as.factor(df$refinance_ratio)
   
-  df$credits_cum <- ifelse(df$credits_cum<=1,"1",
-    ifelse(df$credits_cum %in% c(2:6),"2_6","more_7"))
+  df$credits_cum <- 
+    ifelse(df$credits_cum<=1,"1",
+    ifelse(df$credits_cum==2,"2",
+    ifelse(df$credits_cum==3,"3",
+    ifelse(df$credits_cum<=6,"4_6","more_7"))))
   df$credits_cum <- as.factor(df$credits_cum)
   
   df$max_delay <- ifelse(is.na(df$max_delay),"31_55",
