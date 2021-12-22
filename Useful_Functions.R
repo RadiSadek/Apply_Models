@@ -293,24 +293,27 @@ gen_decline_reason <- function(scoring_df,all_df,level,input){
   }
   
   # Apply accept/reject nomenclature
-  if(level==10){
-    if(score_here %in% c(2:6)){result <- 1} else {result <- 0}
-    result <- cbind(score_here,level)
-  } else {
-    if(input[1]!=score_here){
-      input[1] <- score_here
-      result <- cbind(input,level)
+  if(!is.na(score_here) & !is.na(length(level))){
+    if(level==10){
+      if(score_here %in% c(2:6)){result <- 1} else {result <- 0}
+      result <- cbind(score_here,level)
     } else {
-      result <- input
+      if(input[1]!=score_here){
+        input[1] <- score_here
+        result <- cbind(input,level)
+      } else {
+        result <- input
+      }
     }
+    
+    # Comglomerate for final level
+    if(level==83){
+      result <- as.data.frame(result)
+      result <- sum(result[,names(result)=="level"])
+    }
+  } else {
+    result <- 99
   }
-  
-  # Comglomerate for final level
-  if(level==83){
-    result <- as.data.frame(result)
-    result <- sum(result[,names(result)=="level"])
-  }
-  
   return(result)
 }
     
