@@ -38,7 +38,7 @@ main_dir <- "C:\\Projects\\Apply_Scoring\\"
 # Read argument of ID
 args <- commandArgs(trailingOnly = TRUE)
 application_id <- args[1]
-#application_id <- 1104486
+#application_id <- 1042261
 product_id <- NA
 
 
@@ -537,6 +537,7 @@ final$source_entity_count_total <- all_df$source_entity_count_total
 final$office <- all_df$office_id
 final$risky_address <- flag_risky_address$flag_risky_address
 final$decision <- scoring_decision
+final$max_delay <- all_df$max_delay
 
 # Read and write
 final_exists <- read.xlsx(paste(main_dir,

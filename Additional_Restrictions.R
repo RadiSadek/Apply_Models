@@ -204,13 +204,19 @@ gen_restrict_credirect_beh <- function(scoring_df,all_df,all_id,application_id,
       scoring_df$allowed_amount_rep <- 
         ifelse(scoring_df$score %in% c("Bad","NULL"),
                max(all_id_local$amount) + min(0,max_step_prev_low),
-        ifelse(scoring_df$score %in% c("Good 1","Indeterminate"),
+        ifelse(scoring_df$score %in% c("Indeterminate") & scoring_df$pd>0.735,
+               max(all_id_local$amount) + min(-200,max_step_prev_low),
+        ifelse(scoring_df$score %in% c("Indeterminate") & scoring_df$pd>0.72,
+               max(all_id_local$amount) + min(0,max_step_prev_low),
+        ifelse(scoring_df$score %in% c("Indeterminate"),
+               max(all_id_local$amount) + min(400,max_step_prev_low), 
+        ifelse(scoring_df$score %in% c("Good 1"),
                max(all_id_local$amount) + min(400,max_step_prev_low),
         ifelse(scoring_df$score %in% c("Good 2"),
                max(all_id_local$amount) + min(600,max_step_prev_high),
         ifelse(scoring_df$score %in% c("Good 3"),
                max(all_id_local$amount) + min(800,max_step_prev_high), 
-               max(all_id_local$amount) + min(1200,max_step_prev_high)))))
+               max(all_id_local$amount) + min(1200,max_step_prev_high))))))))
       
       for (i in 1:nrow(scoring_df)){
         scoring_df$allowed_amount[i] <- max(scoring_df$allowed_amount_rep[i],
@@ -242,15 +248,19 @@ gen_restrict_credirect_beh <- function(scoring_df,all_df,all_id,application_id,
       
       if(nrow(all_id_local)>0){
         scoring_df$allowed_amount_rep <- 
-          ifelse(scoring_df$score %in% c("Bad","NULL"),
+          ifelse(scoring_df$score %in% c("Indeterminate") & scoring_df$pd>0.735,
+             max(all_id_local$amount) + min(-200,max_step_prev_low),
+          ifelse(scoring_df$score %in% c("Indeterminate") & scoring_df$pd>0.72,
              max(all_id_local$amount) + min(0,max_step_prev_low),
-          ifelse(scoring_df$score %in% c("Good 1","Indeterminate"),
+         ifelse(scoring_df$score %in% c("Indeterminate"),
+             max(all_id_local$amount) + min(400,max_step_prev_low), 
+          ifelse(scoring_df$score %in% c("Good 1"),
              max(all_id_local$amount) + min(400,max_step_prev_low),
           ifelse(scoring_df$score %in% c("Good 2"),
              max(all_id_local$amount) + min(600,max_step_prev_high),
           ifelse(scoring_df$score %in% c("Good 3"),
              max(all_id_local$amount) + min(800,max_step_prev_high), 
-             max(all_id_local$amount) + min(1200,max_step_prev_high)))))
+             max(all_id_local$amount) + min(1200,max_step_prev_high)))))))
         
         for (i in 1:nrow(scoring_df)){
           scoring_df$allowed_amount[i] <- max(scoring_df$allowed_amount_rep[i],
