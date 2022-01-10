@@ -50,7 +50,10 @@ gen_beh_credirect <- function(df,scoring_df,products,df_Log_beh_Credirect,
   df$max_delay <- ifelse(is.na(df$max_delay),"31_55",
     ifelse(df$max_delay %in% c(0,1),"less_1",
     ifelse(df$max_delay<=30,"2_30",
-    ifelse(df$max_delay<=55,"31_55","56_more"))))
+    ifelse(df$max_delay<=55,"31_55",
+    ifelse(df$max_delay<=90,"56_90",
+    ifelse(df$max_delay<=180,"90_180",
+    ifelse(df$max_delay<=360,"180_360","360_more")))))))
   df$max_delay <- as.factor(df$max_delay)
   
   df$status_finished_total <- 

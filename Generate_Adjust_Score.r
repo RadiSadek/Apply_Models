@@ -23,12 +23,6 @@ gen_apply_score <- function(empty_fields,threshold_empty,flag_exclusion,
     scoring_df$score <- "Bad"
     scoring_df$color <- 1
     
-  } else if (flag_credirect==1 & flag_beh==1 &
-             !is.na(all_df$max_delay) & all_df$max_delay>=180){
-    
-    scoring_df$score <- "Bad"
-    scoring_df$color <- 1
-    
   } else if (flag_beh==1 & flag_credirect==0){
     scoring_df <- gen_beh_citycash(df,scoring_df,products,df_Log_beh_CityCash,
       period,all_id,all_df,prev_amount,amount_tab,
