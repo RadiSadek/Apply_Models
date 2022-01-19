@@ -133,12 +133,6 @@ if(!(all_credit$sub_status %in% c(123,128))){
 }
 
 
-# Subset based on max DPD
-if(max_dpd>14 & !is.na(max_dpd)){
-  quit()
-}
-
-
 # Subset based on flagged GDPR
 if(flag_gdpr==1 & !is.na(flag_gdpr)){
   quit()
