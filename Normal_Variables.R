@@ -21,7 +21,8 @@ gen_norm_var <- function(period,all_df,products,criteria_age){
     all_df$age <- 18
   } else{
     all_df$dob <- as.Date(ifelse(as.character(substring(all_df$egn,1,2)) %in% 
-      c("00","01","02","03","04","05","06","07","08","09"),
+      c("00","01","02","03","04","05","06","07","08","09","10","11","12",
+        "13","14","15"),
       as.Date(paste("20",substring(all_df$egn,1,2),"-",
       (as.numeric(substring(all_df$egn,3,3))-4),
       substring(all_df$egn,4,4),"-",substring(all_df$egn,5,6),sep="")),

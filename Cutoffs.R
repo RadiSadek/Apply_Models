@@ -21,7 +21,7 @@ cu_beh_city <- c(0.4,0.3,0.225,0.15,0.075)
 ############# Credirect 
 
 # Application Credirect PayDay
-cu_app_cred_flex <- c(0.225,0.125,0.1,0.07,0.045)
+cu_app_cred_flex <- c(0.26,0.125,0.1,0.07,0.045)
 
 # Application Credirect Installments
 cu_app_cred_user <- c(0.7,0.58,0.5,0.425,0.35)

@@ -47,7 +47,7 @@ gen_empty_fields <- function(flag_beh,flag_credirect,df){
           "on_address","experience_employer","purpose",
           "status_work","total_income")])),
      ifelse(flag_beh==1 & flag_credirect==1, sum(is.na(df[,c(
-       "household_children","experience_employer","ownership","education",
+       "experience_employer","ownership","education","status_work",
        "status_active_total")])),
      ifelse(flag_credirect==0, sum(is.na(df[,c("ownership","education",
        "purpose","experience_employer","marital_status",
