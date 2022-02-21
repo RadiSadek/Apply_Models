@@ -206,9 +206,12 @@ gen_select_relevant_ids_max_delay <- function(db_name,all_actives_past,
 }
 
 # Get maximum previous installment amount
-gen_prev_max_installment <- function(db_name,input,all_df){
+gen_prev_max_installment <- function(db_name,input,all_df,application_id,crit){
   
   input <- input[order(input$signed_at),]
+  if(crit==0){
+    input <- input[input$id!=application_id,]
+  }
   all_df$period <- suppressWarnings(fetch(dbSendQuery
      (con,gen_products_query_desc(db_name,all_df[1,])), n=-1))$period
   
@@ -229,10 +232,13 @@ gen_prev_max_installment <- function(db_name,input,all_df){
 }
 
 # Function to compute installment ratio 
-gen_installment_ratio <- function(db_name,all_id,all_df){
+gen_installment_ratio <- function(db_name,all_id,all_df,application_id,crit){
   
   # Join DPD of past credits
   all_id_here <- all_id[all_id$status %in% c(4,5),]
+  if(crit==0){
+    all_id_here <- all_id_here[all_id_here$id!=application_id,]
+  }
   for (i in 1:nrow(all_id_here)){
     all_id_here$max_delay[i] <- fetch(dbSendQuery(
       con,gen_plan_main_select_query(db_name,all_id_here$id[i])), 
@@ -272,16 +278,19 @@ gen_installment_ratio <- function(db_name,all_id,all_df){
     # Compute optimized previous installment amount
     final_prev_installment_amount <-
       ifelse(nrow(all_id_local_activ_not_ok)>0,0.6*
-               gen_prev_max_installment(db_name,all_id_local2,all_df),
+               gen_prev_max_installment(db_name,all_id_local2,
+                                        all_df,application_id,crit),
       ifelse(nrow(all_id_local_ok)>0 & nrow(all_id_local_not_ok)==0,
              1.3*gen_prev_max_installment(db_name,rbind(
-               all_id_local_ok,all_id_local2),all_df),
+               all_id_local_ok,all_id_local2),all_df,application_id,crit),
       ifelse(nrow(all_id_local_ok)>0 & nrow(all_id_local_not_ok)>0,
              1.1*gen_prev_max_installment(db_name,rbind(
-               all_id_local_ok,all_id_local2),all_df),
+               all_id_local_ok,all_id_local2),all_df,application_id,crit),
       ifelse(nrow(all_id_local2)>0,
-             1.1*gen_prev_max_installment(db_name,all_id_local2,all_df),
-             1*gen_prev_max_installment(db_name,all_id_local_not_ok,all_df)))))                          
+             1.1*gen_prev_max_installment(db_name,all_id_local2,all_df,
+                                        application_id,crit),
+             1*gen_prev_max_installment(db_name,all_id_local_not_ok,all_df,
+                                        application_id,crit)))))                          
          
   } else {
     final_prev_installment_amount <- Inf

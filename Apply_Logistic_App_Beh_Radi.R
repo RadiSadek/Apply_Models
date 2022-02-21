@@ -38,7 +38,7 @@ main_dir <- "C:\\Projects\\Apply_Scoring\\"
 # Read argument of ID
 args <- commandArgs(trailingOnly = TRUE)
 application_id <- args[1]
-#application_id <- 1071432
+#application_id <- 1068075
 product_id <- NA
 
 
@@ -423,7 +423,7 @@ scoring_df <- scoring_df[,c("application_id","amount","period","score","color",
 scoring_df <- gen_apply_policy(scoring_df,flag_credirect,flag_cession,
    flag_bad_ckr_citycash,all_df,all_id,flag_beh,prev_amount,products,
    application_id,flag_new_credirect_old_city,flag_credit_next_salary,
-   flag_beh_company,flag_cashpoint)
+   flag_beh_company,flag_cashpoint,0)
 scoring_decision <- gen_decline_reason(scoring_df,all_df,15,scoring_decision)
 
 
