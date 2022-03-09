@@ -5,7 +5,7 @@
 
 # Define function to generate query
 gen_query <- function(con,input){
-  return(suppressWarnings(fetch(dbSendQuery(con,input), n=-1)))
+  return(suppressWarnings(dbFetch(dbSendQuery(con,input))))
 }
 
 # Define function to get apply cutoffs
@@ -321,7 +321,7 @@ gen_decline_reason <- function(scoring_df,all_df,level,input){
   }
   return(result)
 }
-    
+  
 # Correct time format 
 gen_time_format <- function(input){
   input$created_at2 <- as.POSIXct(Sys.Date())
