@@ -45,7 +45,7 @@ main_dir <- "C:\\Projects\\Apply_Scoring\\"
 # Read argument of ID
 args <- commandArgs(trailingOnly = TRUE)
 application_id <- args[1]
-#application_id <- 1073023
+application_id <- 1205140
 product_id <- NA
 
 
@@ -54,25 +54,25 @@ setwd(main_dir)
 
 
 # Load other r files
-source(paste(main_dir,"Apply_Models_Live\\Additional_Restrictions.r", sep=""))
-source(paste(main_dir,"Apply_Models_Live\\Addresses.r", sep=""))
-source(paste(main_dir,"Apply_Models_Live\\Adjust_Scoring_Prior_Approval.r", sep=""))
-source(paste(main_dir,"Apply_Models_Live\\Logistic_App_CityCash.r", sep=""))
-source(paste(main_dir,"Apply_Models_Live\\Logistic_App_Credirect_installments.r", 
+source(paste(main_dir,"Apply_Models\\Additional_Restrictions.r", sep=""))
+source(paste(main_dir,"Apply_Models\\Addresses.r", sep=""))
+source(paste(main_dir,"Apply_Models\\Adjust_Scoring_Prior_Approval.r", sep=""))
+source(paste(main_dir,"Apply_Models\\Logistic_App_CityCash.r", sep=""))
+source(paste(main_dir,"Apply_Models\\Logistic_App_Credirect_installments.r", 
        sep=""))
-source(paste(main_dir,"Apply_Models_Live\\Logistic_App_Credirect_payday.r", sep=""))
-source(paste(main_dir,"Apply_Models_Live\\Logistic_App_Credirect_Fraud.r", sep=""))
-source(paste(main_dir,"Apply_Models_Live\\Logistic_Beh_CityCash.r", sep=""))
-source(paste(main_dir,"Apply_Models_Live\\Logistic_Beh_Credirect.r", sep=""))
-source(paste(main_dir,"Apply_Models_Live\\Useful_Functions_Radi.r", sep=""))
-source(paste(main_dir,"Apply_Models_Live\\Empty_Fields.r", sep=""))
-source(paste(main_dir,"Apply_Models_Live\\Cutoffs.r", sep=""))
-source(paste(main_dir,"Apply_Models_Live\\SQL_queries.r", sep=""))
-source(paste(main_dir,"Apply_Models_Live\\Disposable_Income.r", sep=""))
-source(paste(main_dir,"Apply_Models_Live\\Behavioral_Variables.r", sep=""))
-source(paste(main_dir,"Apply_Models_Live\\Normal_Variables.r", sep=""))
-source(paste(main_dir,"Apply_Models_Live\\CKR_variables.r", sep=""))
-source(paste(main_dir,"Apply_Models_Live\\Generate_Adjust_Score.r", sep=""))
+source(paste(main_dir,"Apply_Models\\Logistic_App_Credirect_payday.r", sep=""))
+source(paste(main_dir,"Apply_Models\\Logistic_App_Credirect_Fraud.r", sep=""))
+source(paste(main_dir,"Apply_Models\\Logistic_Beh_CityCash.r", sep=""))
+source(paste(main_dir,"Apply_Models\\Logistic_Beh_Credirect.r", sep=""))
+source(paste(main_dir,"Apply_Models\\Useful_Functions_Radi.r", sep=""))
+source(paste(main_dir,"Apply_Models\\Empty_Fields.r", sep=""))
+source(paste(main_dir,"Apply_Models\\Cutoffs.r", sep=""))
+source(paste(main_dir,"Apply_Models\\SQL_queries.r", sep=""))
+source(paste(main_dir,"Apply_Models\\Disposable_Income.r", sep=""))
+source(paste(main_dir,"Apply_Models\\Behavioral_Variables.r", sep=""))
+source(paste(main_dir,"Apply_Models\\Normal_Variables.r", sep=""))
+source(paste(main_dir,"Apply_Models\\CKR_variables.r", sep=""))
+source(paste(main_dir,"Apply_Models\\Generate_Adjust_Score.r", sep=""))
 
 
 # Load predefined libraries
@@ -478,6 +478,10 @@ scoring_df <- scoring_df[,c("application_id","amount","period","score","color",
 scoring_df <- gen_final_table_display(scoring_df)
 
 
+# Save result of dataframe into jsonfile
+json_out <- toJSON(df)
+
+
 # Create output dataframe
 final <- as.data.frame(cbind(scoring_df$application_id[1],
  scoring_df$score[scoring_df$amount== unique(scoring_df$amount)
@@ -546,9 +550,9 @@ final$credits_counts <- all_df$cred_count_total
 
 # Read and write
 final_exists <- read.xlsx(paste(main_dir,
-  "\\Monitoring\\Files\\Scored_Credits_live.xlsx", sep=""))
+  "\\Monitoring\\Files\\Scored_Credits.xlsx", sep=""))
 final <- rbind(final_exists, final)
-write.xlsx(final, paste(main_dir,"\\Monitoring\\Files\\Scored_Credits_live.xlsx", 
+write.xlsx(final, paste(main_dir,"\\Monitoring\\Files\\Scored_Credits.xlsx", 
   sep=""))
 
 
