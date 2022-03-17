@@ -18,7 +18,7 @@ source(paste(main_dir,"Apply_Models\\Logistic_App_Credirect_payday.r", sep=""))
 source(paste(main_dir,"Apply_Models\\Logistic_App_Credirect_Fraud.r", sep=""))
 source(paste(main_dir,"Apply_Models\\Logistic_Beh_CityCash.r", sep=""))
 source(paste(main_dir,"Apply_Models\\Logistic_Beh_Credirect.r", sep=""))
-source(paste(main_dir,"Apply_Models\\Useful_Functions.r", sep=""))
+source(paste(main_dir,"Apply_Models\\Useful_Functions_Radi.r", sep=""))
 source(paste(main_dir,"Apply_Models\\Empty_Fields.r", sep=""))
 source(paste(main_dir,"Apply_Models\\Cutoffs.r", sep=""))
 source(paste(main_dir,"Apply_Models\\SQL_queries.r", sep=""))
@@ -48,8 +48,7 @@ risky_address <- read.csv("risky_coordinates\\risky_coordinates.csv",sep=";")
 
 # Read credits applications
 all_df <- gen_query(con,gen_big_sql_query(db_name,application_id))
-all_df$date <- ifelse(all_df$status %in% c(4,5), all_df$signed_at, 
-                      all_df$created_at)
+all_df <- gen_time_format(all_df)
 
 
 # Apply some checks to main credit dataframe
@@ -71,8 +70,7 @@ all_df$amount <- max(products$amount)
 
 # Read all previous credits or applications of client
 all_credits <- gen_query(con,gen_all_credits_query(db_name,all_df))
-all_credits$date <- ifelse(all_credits$status %in% c(4,5), 
-      all_credits$signed_at, all_credits$created_at)
+all_credits <- gen_time_format(all_credits)
 
 
 # Check if client has a risk profile

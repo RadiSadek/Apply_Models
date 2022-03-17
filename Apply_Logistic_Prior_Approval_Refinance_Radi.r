@@ -13,7 +13,9 @@
 ########################
 
 # Libraries
-suppressMessages(suppressWarnings(library(RMySQL)))
+suppressMessages(suppressWarnings(library(RMariaDB)))
+suppressMessages(suppressWarnings(library(DBI)))
+suppressMessages(suppressWarnings(library(Rcpp)))
 suppressMessages(suppressWarnings(library(here)))
 suppressMessages(suppressWarnings(library(dotenv)))
 suppressMessages(suppressWarnings(require("reshape")))
@@ -21,13 +23,16 @@ suppressMessages(suppressWarnings(library(openxlsx)))
 
 
 # Database
-db_user <- "root"
-db_password <- "123456"
-db_name <- "citycash_db"
-db_host <- "127.0.0.1"
-df_port <- 3306
-con <- dbConnect(MySQL(), user=db_user, password=db_password, 
-                 dbname=db_name, host=db_host, port = df_port)
+db_name <- "citycash"
+con <- dbConnect(RMariaDB::MariaDB(),dbname = "citycash",host ="192.168.2.110",
+  port = 3306,user = "userro1",password = "DHng_2pg5zdL0yI9x@")
+# db_user <- "root"
+# db_password <- "123456"
+# db_name <- "citycash_db"
+# db_host <- "127.0.0.1"
+# df_port <- 3306
+# con <- dbConnect(MySQL(), user=db_user, password=db_password, 
+#                  dbname=db_name, host=db_host, port = df_port)
 
 
 # Define work directory
@@ -35,9 +40,9 @@ main_dir <- "C:\\Projects\\Apply_Scoring\\"
 
 
 # Load other r files
-source(paste(main_dir,"Apply_Models_Live\\Refinance_Radi.r",sep=""))
-source(paste(main_dir,"Apply_Models_Live\\SQL_queries.r", sep=""))
-source(paste(main_dir,"Apply_Models_Live\\Useful_Functions.r", sep=""))
+source(paste(main_dir,"Apply_Models\\Refinance_Radi.r",sep=""))
+source(paste(main_dir,"Apply_Models\\SQL_queries.r", sep=""))
+source(paste(main_dir,"Apply_Models\\Useful_Functions_Radi.r", sep=""))
 
 
 # Define product id
@@ -111,6 +116,7 @@ WHERE payed_at IS NOT NULL AND pay_day<= '",substring(Sys.time(),1,10),
 paid_install <- gen_query(con,paid_install_sql)
 daily <- merge(daily,paid_install,by.x = "application_id",
    by.y = "application_id",all.x = TRUE)
+daily$installments_paid <- as.numeric(daily$installments_paid)
 daily$installments_paid <- ifelse(is.na(daily$installments_paid),0,
    daily$installments_paid)
 daily$installment_ratio <- round(

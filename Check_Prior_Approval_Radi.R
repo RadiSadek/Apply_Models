@@ -13,7 +13,10 @@
 ########################
 
 # Libraries
-suppressMessages(suppressWarnings(library(RMySQL)))
+suppressMessages(suppressWarnings(library(RMariaDB)))
+suppressMessages(suppressWarnings(library(DBI)))
+suppressMessages(suppressWarnings(library(Rcpp)))
+suppressMessages(suppressWarnings(library(here)))
 suppressMessages(suppressWarnings(library(here)))
 suppressMessages(suppressWarnings(library(dotenv)))
 suppressMessages(suppressWarnings(require("reshape")))
@@ -21,13 +24,16 @@ suppressMessages(suppressWarnings(library(openxlsx)))
 
 
 # Database
-db_user <- "root"
-db_password <- "123456"
-db_name <- "citycash_db"
-db_host <- "127.0.0.1"
-df_port <- 3306
-con <- dbConnect(MySQL(), user=db_user, password=db_password, 
-                 dbname=db_name, host=db_host, port = df_port)
+db_name <- "citycash"
+con <- dbConnect(RMariaDB::MariaDB(),dbname = "citycash",host ="192.168.2.110",
+   port = 3306,user = "userro1",password = "DHng_2pg5zdL0yI9x@")
+# db_user <- "root"
+# db_password <- "123456"
+# db_name <- "citycash_db"
+# db_host <- "127.0.0.1"
+# df_port <- 3306
+# con <- dbConnect(MySQL(), user=db_user, password=db_password, 
+#                  dbname=db_name, host=db_host, port = df_port)
 
 
 # Define work directory
@@ -43,7 +49,7 @@ application_id <- 1056672
 # Load other r files
 source(paste(main_dir,"Apply_Models\\Terminated_Radi.r",sep=""))
 source(paste(main_dir,"Apply_Models\\SQL_queries.r", sep=""))
-source(paste(main_dir,"Apply_Models\\Useful_Functions.r", sep=""))
+source(paste(main_dir,"Apply_Models\\Useful_Functions_Radi.r", sep=""))
 
 
 # Define product id
