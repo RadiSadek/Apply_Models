@@ -61,7 +61,7 @@ gen_restrict_cashpoint_app <- function(scoring_df,all_df,flag_beh){
 
   # Take only one third of Good 1 for certain offices
   if(all_df$office_id %in% c("150") & !is.na(scoring_df$pd[1])){
-    scoring_df$color <- ifelse(scoring_df$pd>0.275,1,scoring_df$color)
+    scoring_df$color <- ifelse(scoring_df$pd>0.3,1,scoring_df$color)
   }
   if(flag_beh==1 & !is.na(scoring_df$pd[1])){
       scoring_df$color <- ifelse(scoring_df$pd>0.275,1,scoring_df$color)  
@@ -71,7 +71,7 @@ gen_restrict_cashpoint_app <- function(scoring_df,all_df,flag_beh){
 
 # Function to apply restrictions for City Cash repeats
 gen_restrict_citycash_beh <- function(scoring_df,prev_amount,products,all_id,
-                                      all_df,db_name,application_id,crit){
+         all_df,db_name,application_id,crit,flag_cashpoint){
   
   # Check if has Good 1 at least somewhere in table
   criteria <- length(names(table(scoring_df$score))
@@ -88,7 +88,7 @@ gen_restrict_citycash_beh <- function(scoring_df,prev_amount,products,all_id,
        by.x = c("amount","period"),by.y = c("amount","period"),all.x = TRUE)
   }
   allowed_installment <- gen_installment_ratio(db_name,all_id,all_df,
-      application_id,crit)
+      application_id,crit,flag_cashpoint)
   for(i in 1:nrow(scoring_df)){
     if(scoring_df$installment_amount[i]>allowed_installment){
       scoring_df$color[i] <- 1
@@ -108,6 +108,10 @@ gen_restrict_citycash_beh <- function(scoring_df,prev_amount,products,all_id,
      ifelse(scoring_df$score %in% c("Good 1","Good 2","Good 3",
      "Indeterminate") & scoring_df$amount>(max_prev_amount+400),1,
      scoring_df$color))
+  
+  if(flag_cashpoint==1){
+    scoring_df$color <- ifelse(scoring_df$pd>0.3,1,scoring_df$color)  
+  }
 
   return(scoring_df)
 }

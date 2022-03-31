@@ -209,7 +209,8 @@ gen_select_relevant_ids_max_delay <- function(db_name,all_actives_past,
 }
 
 # Get maximum previous installment amount
-gen_prev_max_installment <- function(db_name,input,all_df,application_id,crit){
+gen_prev_max_installment <- function(db_name,input,all_df,application_id,crit,
+                                     flag_cashpoint){
   
   input <- input[order(input$signed_at),]
   if(crit==0){
@@ -230,12 +231,32 @@ gen_prev_max_installment <- function(db_name,input,all_df,application_id,crit){
         input$period[i],all_df$period,input$installment_amount[i])
     }
   }
-  prev_installment_amount <- max(input$installment_amount)
+  
+  # Apply additional criteria to repeat Cashpoint
+  if(flag_cashpoint==1){
+    if(all_df$period==3){
+      array <- gen_query(con, 
+          gen_set_installment_query(db_name,66,600))$installment_amount
+      max_install <- array[which.min(abs(array - quantile(array,0.5)))]
+    } else if(all_df$period==2){
+      array <- gen_query(con, 
+          gen_set_installment_query(db_name,72,600))$installment_amount
+      max_install <- array[which.min(abs(array - quantile(array,0.5)))]
+    } else {
+      array <- gen_query(con, 
+          gen_set_installment_query(db_name,71,600))$installment_amount
+      max_install <- array[which.min(abs(array - quantile(array,0.5)))]
+    }
+    prev_installment_amount <- max(input$installment_amount,max_install)
+  } else {
+    prev_installment_amount <- max(input$installment_amount)
+  }
   return(prev_installment_amount)
 }
 
 # Function to compute installment ratio 
-gen_installment_ratio <- function(db_name,all_id,all_df,application_id,crit){
+gen_installment_ratio <- function(db_name,all_id,all_df,application_id,crit,
+     flag_cashpoint){
   
   # Join DPD of past credits
   all_id_here <- all_id[all_id$status %in% c(4,5),]
@@ -281,18 +302,20 @@ gen_installment_ratio <- function(db_name,all_id,all_df,application_id,crit){
     final_prev_installment_amount <-
       ifelse(nrow(all_id_local_activ_not_ok)>0,0.6*
                gen_prev_max_installment(db_name,all_id_local2,
-                                        all_df,application_id,crit),
+                 all_df,application_id,crit,flag_cashpoint),
       ifelse(nrow(all_id_local_ok)>0 & nrow(all_id_local_not_ok)==0,
              1.3*gen_prev_max_installment(db_name,rbind(
-               all_id_local_ok,all_id_local2),all_df,application_id,crit),
+               all_id_local_ok,all_id_local2),all_df,application_id,crit,
+               flag_cashpoint),
       ifelse(nrow(all_id_local_ok)>0 & nrow(all_id_local_not_ok)>0,
              1.1*gen_prev_max_installment(db_name,rbind(
-               all_id_local_ok,all_id_local2),all_df,application_id,crit),
+               all_id_local_ok,all_id_local2),all_df,application_id,crit,
+               flag_cashpoint),
       ifelse(nrow(all_id_local2)>0,
              1.1*gen_prev_max_installment(db_name,all_id_local2,all_df,
-                                        application_id,crit),
+                application_id,crit,flag_cashpoint),
              1*gen_prev_max_installment(db_name,all_id_local_not_ok,all_df,
-                                        application_id,crit)))))                          
+                application_id,crit,flag_cashpoint)))))                          
          
   } else {
     final_prev_installment_amount <- Inf

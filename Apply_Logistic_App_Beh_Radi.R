@@ -384,6 +384,14 @@ flag_risky_address <- gen_flag_risky_address(db_name,application_id,
 df$risky_address <- flag_risky_address$flag_risky_address
 
 
+# Compute days of play on Credirect's site
+if(flag_credirect==1){
+  days_play <- gen_play_days(db_name,all_df)
+} else {
+  days_play <- 0
+}
+
+
 
 ############################################################
 ### Apply model coefficients according to type of credit ###
@@ -479,7 +487,12 @@ scoring_df <- gen_final_table_display(scoring_df)
 
 
 # Save result of dataframe into jsonfile
-json_out <- toJSON(df)
+all_flags <- cbind(flag_credirect,flag_beh,flag_rep,flag_beh_company, 
+    flag_credit_next_salary,flag_cashpoint,flag_is_dead,flag_app_quickly,  
+    flag_new_credirect_old_city,flag_varnat,fraud_flag,flag_exclusion,
+    flag_cession,flag_risky_address[1])
+json_out <- gen_setjson(df,all_flags)
+scoring_log <- gen_log(application_id,scoring_decision,json_out)
 
 
 # Create output dataframe
@@ -515,7 +528,8 @@ final$PD <- scoring_df$pd[scoring_df$amount== unique(scoring_df$amount)
       & 
   scoring_df$period==unique(scoring_df$period)
   [which.min(abs(all_df$installments - unique(scoring_df$period)))]]
-final$highest_amount <- max(scoring_df$amount)
+final$highest_amount <- suppressWarnings(max(scoring_df$amount[
+  scoring_df$color!=1 & scoring_df$score !="NULL"]))
 final$flag_beh <- flag_beh
 final$flag_beh_company <- flag_beh_company
 final$flag_credirect <- flag_credirect
@@ -546,6 +560,9 @@ final$outs_principal <- all_df$outs_principal_bank + all_df$outs_principal_fin
 final$outs_overdue <- all_df$outs_overdue_bank + all_df$outs_overdue_fin
 final$amount_drawn <- all_df$amount_bank + all_df$amount_fin
 final$credits_counts <- all_df$cred_count_total
+final$api_amount <- api_df$amount
+final$api_payment <- api_df$payment_method
+final$days_play <- days_play
 
 
 # Read and write

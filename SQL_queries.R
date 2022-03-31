@@ -382,3 +382,19 @@ gen_api_data <- function(db_name,application_id){
     application_id,")",sep=""))
 }
 
+# Get play dates on Credirect's site
+gen_play_query <- function(db_name,input){
+  return(paste(
+    "SELECT a.created_at, a.description
+    FROM ",db_name,".loyal_program_wallet_logs a
+    INNER JOIN citycash.loyal_program_wallets b
+    ON a.wallet_id=b.id
+    WHERE b.client_id =",input,sep=""))
+}
+
+# Define constant installment ratio at fixed amount
+gen_set_installment_query <- function(db_name,product,crit){
+  return(paste("SELECT * FROM ", db_name, ".products_periods_and_amounts
+               WHERE product_id IN (",
+               product, ") AND amount=",crit, sep=""))
+}

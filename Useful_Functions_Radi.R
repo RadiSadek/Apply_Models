@@ -321,7 +321,7 @@ gen_decline_reason <- function(scoring_df,all_df,level,input){
   }
   return(result)
 }
-  
+
 # Correct time format 
 gen_time_format <- function(input){
   input$created_at2 <- as.POSIXct(Sys.Date())
@@ -345,5 +345,40 @@ gen_time_format <- function(input){
   input <- input[ , -which(names(input) %in% c("signed_at2","created_at2",
                                                "deactivated_at2"))]
   return(input)
+}
+
+# Set json file 
+gen_setjson <- function(df,all_flags){
+  here <- cbind(df,all_flags)
+  return(toJSON(here))
+}
+
+# Set log file
+gen_log <- function(application_id,scoring_decision,json_out){
+  
+  here <- as.data.frame(cbind(application_id,scoring_decision,json_out))
+  here <- cbind(here,Sys.time())
+  names(here)[ncol(here)] <- "created_at"
+  
+  return(here)
+}
+
+# Get how many days of play on Credirect's site
+gen_play_days <- function(db_name,input){
+  
+  here <- gen_query(con,gen_play_query(db_name,all_df$client_id))
+  here <- subset(here,here$created_at<=all_df$created_at)
+  here$number_words <- sapply(strsplit(here$description, " "), length)
+  here$nchar <- nchar(here$description)
+  here <- subset(here,here$number_words==5 & here$nchar==29)
+  if(nrow(here)>0){
+    here$days <- substring(here$created_at,1,10)
+    here <- here[!duplicated(here$days),]
+    days_play <- nrow(here)
+  } else {
+    days_play <- 0
+  }
+  
+  return(days_play)
 }
 
