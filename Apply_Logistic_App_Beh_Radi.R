@@ -45,7 +45,7 @@ main_dir <- "C:\\Projects\\Apply_Scoring\\"
 # Read argument of ID
 args <- commandArgs(trailingOnly = TRUE)
 application_id <- args[1]
-application_id <- 1205140
+#application_id <- 1222529
 product_id <- NA
 
 
@@ -222,7 +222,7 @@ flag_cashpoint <- ifelse(products_desc$company_id==5, 1, 0)
 
 # Compute flag if client has previous otpisan or tsediran
 flag_exclusion <- ifelse(length(which(names(
-  table(all_id$sub_status)) %in% c(124,133)))>0, 1,
+  table(all_credits$sub_status)) %in% c(124,133)))>0, 1,
   ifelse(nrow(risk)>0, 1, 0))
 
 
@@ -483,7 +483,7 @@ scoring_df <- scoring_df[,c("application_id","amount","period","score","color",
 
 
 # Create column for table display
-scoring_df <- gen_final_table_display(scoring_df)
+scoring_df <- gen_final_table_display(scoring_df,flag_credirect)
 
 
 # Save result of dataframe into jsonfile
@@ -491,7 +491,7 @@ all_flags <- cbind(flag_credirect,flag_beh,flag_rep,flag_beh_company,
     flag_credit_next_salary,flag_cashpoint,flag_is_dead,flag_app_quickly,  
     flag_new_credirect_old_city,flag_varnat,fraud_flag,flag_exclusion,
     flag_cession,flag_risky_address[1])
-json_out <- gen_setjson(df,all_flags)
+json_out <- gen_setjson(df,all_flags,api_df)
 scoring_log <- gen_log(application_id,scoring_decision,json_out)
 
 

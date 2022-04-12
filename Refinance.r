@@ -386,18 +386,37 @@ scoring_df <- gen_apply_policy(scoring_df,flag_credirect,flag_cession,
   flag_beh_company,flag_cashpoint,1)
 
 
-# Subset scoring dataframe according to criteria
-correct_scoring_df <- subset(scoring_df,scoring_df$color!=1 &
-      scoring_df$score %in% c("Good 1","Good 2","Good 3","Good 4"))
+# Get if self approval
+self_approval <- suppressWarnings(dbFetch(dbSendQuery(con,
+  gen_self_approval_office_query(db_name, all_df$office_id))))$self_approve
+
+
+# Get maximum DPD on current credit
+days_delay <- gen_query(con,
+  gen_plan_main_select_query(db_name,application_id))
 
 
 # Get highest amount of previous credits
 for(i in 1:nrow(all_id)){
   all_id$amount[i] <- gen_query(con,
-  gen_big_sql_query(db_name,all_id$id[i]))$amount
+    gen_big_sql_query(db_name,all_id$id[i]))$amount
 }
 max_prev_amount <- max(all_id$amount[
   all_id$company_id==all_id$company_id[all_id$id==application_id]])
+
+
+# Subset scoring dataframe according to criteria
+if(self_approval==1 & days_delay<90){
+  correct_scoring_df <- subset(scoring_df,
+     scoring_df$amount<=(max_prev_amount+500) &
+     scoring_df$score %in% c("Indeterminate","Good 1",
+                             "Good 2","Good 3","Good 4"))
+} else{
+  correct_scoring_df <- subset(scoring_df,
+     scoring_df$color!=1 &
+     scoring_df$score %in% c("Indeterminate","Good 1",
+                             "Good 2","Good 3","Good 4"))
+}
 
 
 # Get highest amount
@@ -406,8 +425,12 @@ get_max_amount <- suppressWarnings(max(correct_scoring_df$amount))
 
 # Get score of highest amount
 if(get_max_amount>-Inf){
-  sub <- subset(scoring_df,scoring_df$color!=1 &
+  if(self_approval==1 & days_delay<90){
+    sub <- subset(scoring_df,scoring_df$color!=1)
+  } else {
+    sub <- subset(scoring_df,scoring_df$color!=1 &
                   scoring_df$amount==get_max_amount)
+  }
   get_score <- 
     ifelse(nrow(subset(sub,sub$score=="Good 4"))>0,
       "Good 4",
@@ -416,7 +439,9 @@ if(get_max_amount>-Inf){
     ifelse(nrow(subset(sub,sub$score=="Good 2"))>0,
       "Good 2",
     ifelse(nrow(subset(sub,sub$score=="Good 1"))>0,
-     "Good 1",NA))))
+     "Good 1",
+    ifelse(nrow(subset(sub,sub$score=="Indeterminate"))>0,
+     "Indeterminate",NA)))))
 } else {
   get_score <- NA
 }
@@ -426,14 +451,14 @@ if(get_max_amount>-Inf){
 if(is.infinite(get_max_amount)){	
   get_max_installment <- NA
 } else {	
-  get_max_installment <- max(scoring_df$installment_amount[	
-    scoring_df$color>2 & scoring_df$amount==get_max_amount])	
+  if(self_approval==1 & days_delay<90){
+    get_max_installment <- max(scoring_df$installment_amount[
+      scoring_df$amount==get_max_amount]) 
+  } else {
+    get_max_installment <- max(scoring_df$installment_amount[
+      scoring_df$color>=2 & scoring_df$amount==get_max_amount]) 
+  }
 }
-
-
-# Get maximum DPD on current credit
-days_delay <- gen_query(con,
-    gen_plan_main_select_query(db_name,application_id))
 
 
 # Get if third side

@@ -165,12 +165,19 @@ gen_correct_max_installment_po <- function(period_po,period,installment_amount){
 }
 
 # Function to create column for scoring table for display
-gen_final_table_display <- function(scoring_df){
+gen_final_table_display <- function(scoring_df,flag_credirect){
   scoring_df$display_score <- 
    ifelse(scoring_df$color %in% c(1) & !(scoring_df$score %in% c("NULL")),"No",
    ifelse(scoring_df$score %in% c("NULL"),"NULL","Yes"))
   scoring_df$color <- ifelse(scoring_df$display_score=="No",1,
    ifelse(scoring_df$display_score=="NULL",2, 6))
+  
+  if(!is.na(flag_credirect) & flag_credirect!=1){
+    scoring_df$color <- ifelse(scoring_df$score %in%
+       c("Indeterminate","Good 1","Good 2","Good 3","Good 4") &
+       scoring_df$display_score=="No",2,scoring_df$color)
+  }
+
   return(scoring_df)
 }
 
@@ -348,8 +355,9 @@ gen_time_format <- function(input){
 }
 
 # Set json file 
-gen_setjson <- function(df,all_flags){
-  here <- cbind(df,all_flags)
+gen_setjson <- function(df,all_flags,api_df){
+  here <- cbind(df,all_flags,api_df[,c("period","payment_method",
+     "amount","email","referral_source")])
   return(toJSON(here))
 }
 
@@ -359,6 +367,7 @@ gen_log <- function(application_id,scoring_decision,json_out){
   here <- as.data.frame(cbind(application_id,scoring_decision,json_out))
   here <- cbind(here,Sys.time())
   names(here)[ncol(here)] <- "created_at"
+  names(here) <- c("application_id","decision","input_params","created_at")
   
   return(here)
 }
