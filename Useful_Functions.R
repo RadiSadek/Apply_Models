@@ -171,12 +171,6 @@ gen_final_table_display <- function(scoring_df,flag_credirect){
    ifelse(scoring_df$score %in% c("NULL"),"NULL","Yes"))
   scoring_df$color <- ifelse(scoring_df$display_score=="No",1,
    ifelse(scoring_df$display_score=="NULL",2, 6))
-  
-  if(!is.na(flag_credirect) & flag_credirect!=1){
-    scoring_df$color <- ifelse(scoring_df$score %in%
-       c("Indeterminate","Good 1","Good 2","Good 3","Good 4") &
-       scoring_df$display_score=="No",2,scoring_df$color)
-  }
 
   return(scoring_df)
 }
