@@ -69,7 +69,7 @@ gen_flag_risky_address <- function(db_name,application_id,risky_address,all_df){
     
     # Compute flag of risky address
     flag_risky_address <- ifelse(min(risky_address$distance)<=500 & 
-                                 address$location_precision==1,1,0)
+                                 address$location_precision==3,1,0)
     }
     else flag_risky_address <- NA
     } else {
