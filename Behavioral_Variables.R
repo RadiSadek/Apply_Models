@@ -256,7 +256,7 @@ gen_prev_max_installment <- function(db_name,input,all_df,application_id,crit,
 
 # Function to compute installment ratio 
 gen_installment_ratio <- function(db_name,all_id,all_df,application_id,crit,
-     flag_cashpoint){
+     flag_cashpoint,max_prev_amount){
   
   # Join DPD of past credits
   all_id_here <- all_id[all_id$status %in% c(4,5),]
@@ -299,23 +299,30 @@ gen_installment_ratio <- function(db_name,all_id,all_df,application_id,crit,
                               all_id_local_tot$max_delay>60)
     
     # Compute optimized previous installment amount
+    if(max_prev_amount<=500){
+      allowed_ratio <- c(0.6,2,2,2,2)
+    } else {
+      allowed_ratio <- c(0.6,1.3,1.1,1.1,1)
+    }
+    
     final_prev_installment_amount <-
-      ifelse(nrow(all_id_local_activ_not_ok)>0,0.6*
+      ifelse(nrow(all_id_local_activ_not_ok)>0,allowed_ratio[1]*
                gen_prev_max_installment(db_name,all_id_local2,
                  all_df,application_id,crit,flag_cashpoint),
       ifelse(nrow(all_id_local_ok)>0 & nrow(all_id_local_not_ok)==0,
-             1.3*gen_prev_max_installment(db_name,rbind(
+             allowed_ratio[2]*gen_prev_max_installment(db_name,rbind(
                all_id_local_ok,all_id_local2),all_df,application_id,crit,
                flag_cashpoint),
       ifelse(nrow(all_id_local_ok)>0 & nrow(all_id_local_not_ok)>0,
-             1.1*gen_prev_max_installment(db_name,rbind(
+             allowed_ratio[3]*gen_prev_max_installment(db_name,rbind(
                all_id_local_ok,all_id_local2),all_df,application_id,crit,
                flag_cashpoint),
       ifelse(nrow(all_id_local2)>0,
-             1.1*gen_prev_max_installment(db_name,all_id_local2,all_df,
-                application_id,crit,flag_cashpoint),
-             1*gen_prev_max_installment(db_name,all_id_local_not_ok,all_df,
-                application_id,crit,flag_cashpoint)))))                          
+             allowed_ratio[4]*gen_prev_max_installment(db_name,all_id_local2,
+                all_df,application_id,crit,flag_cashpoint),
+             allowed_ratio[5]*gen_prev_max_installment(db_name,
+                all_id_local_not_ok,all_df,application_id,crit,
+                flag_cashpoint)))))                          
          
   } else {
     final_prev_installment_amount <- Inf

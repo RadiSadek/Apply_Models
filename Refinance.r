@@ -360,6 +360,13 @@ flag_risky_address <- gen_flag_risky_address(db_name,application_id,
 df$risky_address <- flag_risky_address$flag_risky_address
 
 
+# Compute flag if judicial 
+flag_judicial <- ifelse(
+    nrow(subset(all_credits,!is.na(all_credits$judicial_date)))>0,1,
+  ifelse(!is.na(gen_query(con,gen_flag_judges_us(
+    db_name,all_df$client_id))$judge_us_at),1,0))
+
+
 ############################################################
 ### Apply model coefficients according to type of credit ###
 ############################################################
@@ -370,8 +377,8 @@ scoring_df <- gen_apply_score(
   flag_beh,all_df,scoring_df,df,products,df_Log_beh_CityCash,
   df_Log_CityCash_App,df_Log_beh_Credirect,df_Log_Credirect_App_installments,
   df_Log_Credirect_App_payday,period,all_id,prev_amount,amount_tab,
-  t_income,disposable_income_adj,flag_new_credirect_old_city,api_df,1)
-
+  t_income,disposable_income_adj,flag_new_credirect_old_city,api_df,
+  flag_judicial,1)
 
 
 ######################################

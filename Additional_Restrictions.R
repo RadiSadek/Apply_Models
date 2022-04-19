@@ -81,6 +81,15 @@ gen_restrict_citycash_beh <- function(scoring_df,prev_amount,products,all_id,
     ifelse(criteria==0 & scoring_df$amount>prev_amount$amount,1,
            scoring_df$color))
   
+  # Limit based on maximum amount differential
+  for(i in 1:nrow(all_id)){
+    all_id$amount[i] <- gen_query(con,
+        gen_big_sql_query(db_name,all_id$id[i]))$amount
+  }
+  max_prev_amount <- max(all_id$amount[ 
+        all_id$company_id==all_id$company_id[all_id$id==application_id] & 
+        all_id$status %in% c(4,5)])
+  
   # Check if installment ratio is OK
   if(!("installment_amount" %in% names(scoring_df))){
     scoring_df <- merge(scoring_df,products[,c("amount","period",
@@ -88,21 +97,13 @@ gen_restrict_citycash_beh <- function(scoring_df,prev_amount,products,all_id,
        by.x = c("amount","period"),by.y = c("amount","period"),all.x = TRUE)
   }
   allowed_installment <- gen_installment_ratio(db_name,all_id,all_df,
-      application_id,crit,flag_cashpoint)
+      application_id,crit,flag_cashpoint,max_prev_amount)
   for(i in 1:nrow(scoring_df)){
     if(scoring_df$installment_amount[i]>allowed_installment){
       scoring_df$color[i] <- 1
     }
   }
   
-  # Limit based on maximum amount differential
-  for(i in 1:nrow(all_id)){
-     all_id$amount[i] <- gen_query(con,
-      gen_big_sql_query(db_name,all_id$id[i]))$amount
-  }
-  max_prev_amount <- max(all_id$amount[
-     all_id$company_id==all_id$company_id[all_id$id==application_id] & 
-     all_id$status %in% c(4,5)])
   scoring_df$color <- ifelse(scoring_df$score %in% c("Good 4") & 
      scoring_df$amount>(max_prev_amount+600),1,
      ifelse(scoring_df$score %in% c("Good 1","Good 2","Good 3",

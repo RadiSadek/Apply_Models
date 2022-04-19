@@ -83,7 +83,7 @@ gen_loans_sql_query <- function(db_name,all_df){
 # Define query for getting all credits for client 
 gen_all_credits_query <- function(db_name,all_df){
   return(paste("SELECT id, client_id, signed_at, created_at, 
-  deactivated_at, status, sub_status, product_id
+  deactivated_at, status, sub_status, product_id, judicial_date
   FROM ",db_name,".credits_applications 
   WHERE client_id=",all_df$client_id, sep =""))
 }
@@ -304,7 +304,7 @@ gen_po_refinance_query <- function(db_name,input){
 # Read PO refinance data per client_id
 gen_flag_is_dead <- function(db_name,input){
   return(paste(
-    "SELECT dead_at
+    "SELECT dead_at 
      FROM ",db_name,".clients
      WHERE id=",input,sep=""))
 }
@@ -398,3 +398,12 @@ gen_set_installment_query <- function(db_name,product,crit){
                WHERE product_id IN (",
                product, ") AND amount=",crit, sep=""))
 }
+
+# Read if client is judicial 
+gen_flag_judges_us <- function(db_name,input){
+  return(paste(
+    "SELECT judge_us_at 
+     FROM ",db_name,".clients
+     WHERE id=",input,sep=""))
+}
+
