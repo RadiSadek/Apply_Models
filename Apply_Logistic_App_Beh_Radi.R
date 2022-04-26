@@ -571,6 +571,7 @@ final$credits_counts <- all_df$cred_count_total
 final$api_amount <- api_df$amount
 final$api_payment <- api_df$payment_method
 final$days_play <- days_play
+final$amount_cession <- df$amount_cession_total
 
 
 # Read and write

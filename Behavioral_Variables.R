@@ -341,7 +341,7 @@ gen_prev_deactiv_date <- function(db_name,all_df,all_id,application_id){
   all_id_local$difftime <- difftime(Sys.time(),all_id_local$signed_at,
                                     units = c("days"))
   all_id_local <- all_id_local[!(all_id_local$status=4 & 
-                                 all_id_local$difftime<=2),]
+                                 all_id_local$difftime<=1),]
 
   if(nrow(all_id_local)>0){
     all_id_local <- all_id_local[order(all_id_local$deactivated_at),]
