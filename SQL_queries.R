@@ -198,7 +198,8 @@ gen_address_client_coordinates_query <- function(db_name,all_df){
 # Define query to get company id (credirect or city cash) 
 gen_get_company_id_query <- function(db_name){
   return(get_company_id_query <- paste("SELECT id, brand_id AS 
-     company_id FROM ", db_name,".products", sep=""))
+     company_id, company_id AS big_company_id 
+     FROM ", db_name,".products", sep=""))
 }
 
 # Define query to get the CKR status 

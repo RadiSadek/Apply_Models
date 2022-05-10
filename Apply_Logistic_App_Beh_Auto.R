@@ -341,7 +341,8 @@ all_df <- gen_prev_online(db_name,all_id,all_df,application_id)
 # Get flag if credit is behavioral but with same company
 flag_beh_company <- ifelse(
   nrow(all_id[all_id$company_id==
-       all_id$company_id[all_id$id==application_id],])>1,1,0)
+       all_id$company_id[all_id$id==application_id] & 
+       !(all_id$big_company_id %in% c(4)),])>1,1,0)
 
 
 # Compute flag if last paid credit is maybe hidden refinance

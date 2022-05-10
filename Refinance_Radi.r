@@ -262,7 +262,8 @@ all_df <- gen_prev_online(db_name,all_id,all_df,max(all_id$id)+1)
 # Get flag if credit is behavioral but with same company
 flag_beh_company <- ifelse(flag_credirect==0,1,
   ifelse(nrow(all_id[all_id$company_id==
-       all_id$company_id[all_id$id==application_id],])>1,1,0))
+              all_id$company_id[all_id$id==application_id] & 
+              !(all_id$big_company_id %in% c(4)),])>1,1,0))
 
 
 # Compute flag if last paid credit is maybe hidden refinance
@@ -407,7 +408,7 @@ get_max_amount <- suppressWarnings(max(correct_scoring_df$amount))
 # Get score of highest amount
 if(get_max_amount>-Inf){
   if(self_approval==1 & days_delay<90){
-    sub <- subset(scoring_df,scoring_df$amount==get_max_amount)
+    sub <- subset(scoring_df,scoring_df$color!=1)
   } else {
     sub <- subset(scoring_df,scoring_df$color!=1 &
                   scoring_df$amount==get_max_amount)
@@ -434,9 +435,7 @@ if(is.infinite(get_max_amount)){
 } else {	
   if(self_approval==1 & days_delay<90){
     get_max_installment <- max(scoring_df$installment_amount[
-      scoring_df$amount==get_max_amount & 
-      scoring_df$score %in% c("Indeterminate","Good 1",
-                              "Good 2","Good 3","Good 4")]) 
+      scoring_df$amount==get_max_amount]) 
   } else {
     get_max_installment <- max(scoring_df$installment_amount[
       scoring_df$color>=2 & scoring_df$amount==get_max_amount]) 

@@ -259,7 +259,8 @@ gen_installment_ratio <- function(db_name,all_id,all_df,application_id,crit,
      flag_cashpoint,max_prev_amount){
   
   # Join DPD of past credits
-  all_id_here <- all_id[all_id$status %in% c(4,5),]
+  all_id_here <- all_id[all_id$status %in% c(4,5) & 
+                        !(all_id$big_company_id %in% c(4)),]
   if(crit==0){
     all_id_here <- all_id_here[all_id_here$id!=application_id,]
   }
