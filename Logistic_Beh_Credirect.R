@@ -70,6 +70,7 @@ gen_beh_credirect <- function(df,scoring_df,products,df_Log_beh_Credirect,
      ifelse(df$has_viber==1,"other","no"))
   df$has_viber <- as.factor(df$has_viber)
   
+  api_df$payment_method <- as.numeric(api_df$payment_method)
   df$API_payment_method <- ifelse(is.na(api_df$payment_method), "other",
      ifelse(api_df$payment_method==2, "2",
      ifelse(api_df$payment_method==3, "other", "other")))

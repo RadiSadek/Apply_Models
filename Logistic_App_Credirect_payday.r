@@ -69,11 +69,13 @@ gen_app_credirect_payday <- function(df,scoring_df,products,
     ifelse(df$email_char_ratio<=0.6,"0_0.6","other"))
   df$API_email_ratio_char <- as.factor(df$API_email_char_ratio)
   
+  api_df$payment_method <- as.numeric(api_df$payment_method)
   df$API_payment_method <- ifelse(is.na(api_df$payment_method), "other",
     ifelse(api_df$payment_method==2, "2",
     ifelse(api_df$payment_method==3, "other", "other")))
   df$API_payment_method <- as.factor(df$API_payment_method)
   
+  api_df$amount <- as.numeric(api_df$amount)
   df$API_amount <- 
     ifelse(is.na(api_df$amount),"250_650",
     ifelse(api_df$amount<=150,"less_150",

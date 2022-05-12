@@ -45,11 +45,13 @@ gen_app_credirect_installments <- function(df,scoring_df,products,
     ifelse(df$has_viber=="False", "False","other"))
   df$viber_phone <- as.factor(df$viber_phone)
   
+  api_df$payment_method <- as.numeric(api_df$payment_method)
   df$API_payment_method <- ifelse(is.na(api_df$payment_method), "other",
     ifelse(api_df$payment_method==2, "2",
     ifelse(api_df$payment_method==3, "other", "other")))
   df$API_payment_method <- as.factor(df$API_payment_method)
   
+  api_df$period <- as.numeric(api_df$period)
   df$API_period <- 
     ifelse(is.na(api_df$period),"5_6",
     ifelse(api_df$period<=4,"less_4",
