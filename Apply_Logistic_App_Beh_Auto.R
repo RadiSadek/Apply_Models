@@ -496,16 +496,11 @@ scoring_df <- scoring_df[,c("application_id","amount","period","score","color",
                             "pd","created_at")]
 
 
-# Recorrect for prior approvals - terminated
-scoring_df <- gen_correction_po(con,db_name,all_df,all_id,
-                                scoring_df,products,period,application_id)
-scoring_decision <- gen_decline_reason(scoring_df,all_df,49,scoring_decision)
-
-
-# Recorrect for prior approvals - refinances
-scoring_df <- gen_correction_po_ref(con,db_name,all_df,all_id,
-                                    scoring_df,products,period)
-scoring_decision <- gen_decline_reason(scoring_df,all_df,72,scoring_decision)
+# Correct for prior approval offers
+scoring_df <- gen_correction_po_fct(con,db_name,all_df,all_id,
+     scoring_df,products,period,application_id,scoring_decision)[[1]]
+scoring_decision <- gen_decline_reason(scoring_df,all_df,49,
+                                       scoring_decision)
 
 
 # Check if early paid previous credit : no offer for City Cash
@@ -532,7 +527,6 @@ all_flags <- cbind(flag_credirect,flag_beh,flag_rep,flag_beh_company,
     flag_cession,flag_risky_address[1])
 json_out <- gen_setjson(df,all_flags,api_df)
 scoring_log <- gen_log(application_id,scoring_decision,json_out)
-#scoring_log <- NA
 
 
 # Update table credits applications

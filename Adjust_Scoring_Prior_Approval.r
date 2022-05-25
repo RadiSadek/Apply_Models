@@ -3,6 +3,42 @@
 ## Apply correction to prior approval credits (terminated - refinanced) ##
 ##########################################################################
 
+# Function to apply correction depending if terminated or refinance
+gen_correction_po_fct <- function(con,db_name,all_df,all_id,
+      scoring_df,products,period,application_id,scoring_decision){
+  
+  # Read offers of terminated or refinance
+  po <- gen_query(con,
+                  gen_po_terminated_query(db_name,all_df$client_id))
+  string_sql_update <- gen_prev_ids_ref_cor(con,db_name,all_df,all_id)[[2]]
+  if(length(string_sql_update[!is.na(string_sql_update)])>0){
+    po_ref <- gen_query(con,
+                        gen_po_refinance_query(db_name,string_sql_update))
+  } else {
+    po_ref <- subset(as.data.frame(NA),!is.na(NA))
+  }
+
+  # Apply correction depending on whether there is a term or ref offer (or both)
+  if(nrow(po_ref)>0 & nrow(po)>0){
+    if(po$credit_amount>po_ref$max_amount){
+      scoring_df <- gen_correction_po(con,db_name,all_df,all_id,
+          scoring_df,products,period,application_id)
+    } else {
+      scoring_df <- gen_correction_po_ref(con,db_name,all_df,all_id,
+                                          scoring_df,products,period)
+    }
+  } else if(nrow(po)>0){
+    scoring_df <- gen_correction_po(con,db_name,all_df,all_id,
+                                    scoring_df,products,period,application_id)
+  } else if(nrow(po_ref)>0){
+    scoring_df <- gen_correction_po_ref(con,db_name,all_df,all_id,
+                                        scoring_df,products,period)
+  } else {
+    scoring_df <- scoring_df
+  }
+  return(list(scoring_df,scoring_decision))
+}
+
 # Function to correct scoring table for clients with po terminated
 gen_correction_po <- function(con,db_name,all_df,all_id,
                               scoring_df,products,period,application_id){
@@ -76,41 +112,14 @@ gen_correction_po <- function(con,db_name,all_df,all_id,
 gen_correction_po_ref <- function(con,db_name,all_df,all_id,
                               scoring_df,products,period){
   
-  # Get company ID and all current actives
-  all_df_local <- get_company_id_prev(db_name,all_df)
-  input <- all_id[all_id$status %in% c(4) & 
-                  all_id$company_id==all_df_local$company_id,]
-  
-  # Get those who were deactivated from not so long 
-  input2 <- all_id[all_id$status %in% c(5) & 
-                   all_id$company_id==all_df_local$company_id,]
-  if(nrow(input2)>0){
-    input2$time_since_deactiv <- difftime(Sys.time(),input2$deactivated_at,
-                                          units=c("days"))
-    input2 <- subset(input2,input2$time_since_deactiv<=3)
-    if(nrow(input2)>0){
-      input2 <- input2[order(input2$time_since_deactiv),]
-      input2 <- input2[1,]
-      input2 <- input2[ , -which(names(input2) %in% c("time_since_deactiv"))]
-      if(nrow(input)>0){
-        input <- rbind(input,input2)
-      } else {
-        input <- input2}
-    }
-  }
+  string_sql_update <- gen_prev_ids_ref_cor(con,db_name,all_df,all_id)[[2]]
+  input <- gen_prev_ids_ref_cor(con,db_name,all_df,all_id)[[1]]
   
   # Append installment amount and period
   scoring_df <- merge(scoring_df,
      products[,c("amount","period","installment_amount")],
     by.x = c("amount","period"),by.y = c("amount","period"),
      all.x = TRUE)
-  
-  string_sql_update <- input$id[1]
-  if(nrow(input)>1){
-    for(i in 2:nrow(input)){
-      string_sql_update <- paste(string_sql_update,input$id[i],sep=",")
-      }
-  }
   
   if(nrow(input)>0){
     

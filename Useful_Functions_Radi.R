@@ -171,7 +171,7 @@ gen_final_table_display <- function(scoring_df,flag_credirect){
    ifelse(scoring_df$score %in% c("NULL"),"NULL","Yes"))
   scoring_df$color <- ifelse(scoring_df$display_score=="No",1,
    ifelse(scoring_df$display_score=="NULL",2, 6))
-  
+
   return(scoring_df)
 }
 
@@ -383,5 +383,41 @@ gen_play_days <- function(db_name,input){
   }
   
   return(days_play)
+}
+
+# Function to get all previous credit ids but for refinance offer check
+gen_prev_ids_ref_cor <- function(con,db_name,all_df,all_id){
+  
+  # Get company ID and all current actives
+  all_df_local <- get_company_id_prev(db_name,all_df)
+  input <- all_id[all_id$status %in% c(4) & 
+                    all_id$company_id==all_df_local$company_id,]
+  
+  # Get those who were deactivated from not so long 
+  input2 <- all_id[all_id$status %in% c(5) & 
+                     all_id$company_id==all_df_local$company_id,]
+  if(nrow(input2)>0){
+    input2$time_since_deactiv <- difftime(Sys.time(),input2$deactivated_at,
+                                          units=c("days"))
+    input2 <- subset(input2,input2$time_since_deactiv<=3)
+    if(nrow(input2)>0){
+      input2 <- input2[order(input2$time_since_deactiv),]
+      input2 <- input2[1,]
+      input2 <- input2[ , -which(names(input2) %in% c("time_since_deactiv"))]
+      if(nrow(input)>0){
+        input <- rbind(input,input2)
+      } else {
+        input <- input2}
+    }
+  }
+
+  string_sql_update <- input$id[1]
+  if(nrow(input)>1){
+    for(i in 2:nrow(input)){
+      string_sql_update <- paste(string_sql_update,input$id[i],sep=",")
+    }
+  }
+  
+  return(list(input,string_sql_update))
 }
 
