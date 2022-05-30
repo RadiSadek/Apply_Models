@@ -148,6 +148,30 @@ daily <- daily[daily$application_id %in% select$id,]
 daily_raw <- daily
 
 
+# Read balance 
+balance <- suppressWarnings(dbFetch(dbSendQuery(con,
+paste("SELECT id, application_id, pay_day
+FROM ",db_name,".credits_plan_daily 
+WHERE application_id=",application_id,sep=""))))
+balance$today <- substring(Sys.time(),1,10)
+balance <- subset(balance,balance$pay_day<=balance$today)
+max_id <- max(balance$id)
+
+
+# Read daily claim 
+claims <- suppressWarnings(dbFetch(dbSendQuery(con,
+paste("SELECT SUM(taxes+penalty+interest+principal) as total_claim
+FROM ",db_name,".credits_plan_balance_claims  
+WHERE daily_id=",max_id,sep=""))))$total_claim
+balance_after <- suppressWarnings(dbFetch(dbSendQuery(con,
+paste("SELECT balance_after
+FROM ",db_name,".credits_plan_balance_changes   
+WHERE daily_id=",max_id-1,sep=""))))$balance_after
+if(length(balance_after)==0){
+  balance_after <- 0
+}
+
+
 # Get installment number
 nb_installments <- aggregate(daily$installment_num,
   by=list(daily$application_id),FUN=max)
@@ -236,8 +260,12 @@ sum_discount_agg  <- discount_agg
 select$paid_hitherto <- sum_paid_agg
 select$tax_amount <- sum_taxes_agg
 select$discount_amount <- sum_discount_agg
-select$left_to_pay <- select$final_credit_amount + 
-  select$tax_amount - select$paid_hitherto - select$discount_amount
+if(select$company_id==2){
+  select$left_to_pay <- claims - balance_after
+} else {
+  select$left_to_pay <- select$final_credit_amount + 
+    select$tax_amount - select$paid_hitherto - select$discount_amount
+}
 if(!is.na(select$left_to_pay) & select$left_to_pay==0){
   quit()
 }
@@ -353,10 +381,17 @@ if(nrow(all_credits_id)>0){
 } else {
   select$nb_criteria <- 0
 }
-select$filter_criteria <- ifelse(select$nb_criteria==0,0.5,
-   ifelse(select$score_max_amount %in% c("Good 4"), 0.3,
-   ifelse(select$score_max_amount %in% c("Good 3"), 0.4,
-   ifelse(select$score_max_amount %in% c("Good 2"), 0.45,0.5))))
+if(select$company_id==2){
+  select$filter_criteria <- ifelse(select$nb_criteria==0,0.4,
+    ifelse(select$score_max_amount %in% c("Good 4"), 0.2,
+    ifelse(select$score_max_amount %in% c("Good 3"), 0.3,
+    ifelse(select$score_max_amount %in% c("Good 2"), 0.35,0.4))))
+} else {
+  select$filter_criteria <- ifelse(select$nb_criteria==0,0.5,
+    ifelse(select$score_max_amount %in% c("Good 4"), 0.3,
+    ifelse(select$score_max_amount %in% c("Good 3"), 0.4,
+    ifelse(select$score_max_amount %in% c("Good 2"), 0.45,0.5))))
+}
 select <- subset(select,select$installment_ratio>=select$filter_criteria)
 
 

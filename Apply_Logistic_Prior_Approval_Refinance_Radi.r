@@ -116,9 +116,9 @@ WHERE payed_at IS NOT NULL AND pay_day<= '",substring(Sys.time(),1,10),
 paid_install <- gen_query(con,paid_install_sql)
 daily <- merge(daily,paid_install,by.x = "application_id",
    by.y = "application_id",all.x = TRUE)
-daily$installments_paid <- as.numeric(daily$installments_paid)
 daily$installments_paid <- ifelse(is.na(daily$installments_paid),0,
    daily$installments_paid)
+daily$installments_paid <- as.numeric(daily$installments_paid)
 daily$installment_ratio <- round(
   daily$installments_paid / daily$nb_installments,2)
 select <- merge(select,
@@ -158,6 +158,52 @@ discount_agg <- aggregate(daily_raw$discount_amount,
 names(discount_agg) <- c("application_id","discount_amount")
 
 
+# Read balance 
+all_apps <- select$id[1]
+if(nrow(select)>1){
+  for(i in 2:nrow(select)){
+    all_apps <- paste(all_apps,select$id[i],sep=",")}
+}
+balance <- suppressWarnings(dbFetch(dbSendQuery(con,
+paste("SELECT id, application_id, pay_day
+FROM ",db_name,".credits_plan_daily 
+WHERE application_id IN(",all_apps,")",sep=""))))
+balance$today <- substring(Sys.time(),1,10)
+balance <- subset(balance,balance$pay_day<=balance$today)
+max_id <- as.data.frame(aggregate(balance$id,by=list(balance$application_id),
+  FUN=max))
+names(max_id) <- c("id","max_id")
+
+
+# Read daily claim
+all_max_id <- max_id$max_id[1]
+if(nrow(max_id)>1){
+  for(i in 2:nrow(max_id)){
+    all_max_id <- paste(all_max_id,max_id$max_id[i],sep=",")}
+}
+claims <- suppressWarnings(dbFetch(dbSendQuery(con,
+paste("SELECT daily_id, taxes, penalty, interest, principal
+FROM ",db_name,".credits_plan_balance_claims  
+WHERE daily_id IN(",all_max_id,")",sep=""))))
+claims$claims <- claims$taxes + claims$penalty + claims$principal + 
+  claims$interest
+max_id <- merge(max_id,claims[,c("daily_id","claims")],
+   by.x = "max_id",by.y = "daily_id",all.x = TRUE)
+
+
+# Remove balance after
+balance_after <- suppressWarnings(dbFetch(dbSendQuery(con,
+paste("SELECT daily_id,balance_after
+FROM ",db_name,".credits_plan_balance_changes   
+WHERE daily_id IN(",all_max_id ,")",sep=""))))
+max_id <- merge(max_id,balance_after,
+  by.x = "max_id",by.y = "daily_id",all.x = TRUE)
+max_id$balance_after <- ifelse(is.na(max_id$balance_after),0,
+  max_id$balance_after)
+select <- merge(select,max_id[,c("id","claims","balance_after")],
+  by.x = "id",by.y = "id",all.x = TRUE)
+
+
 # Get all payments for each credit
 paid <- gen_query(con, paste("
 SELECT object_id, amount, pay_date 
@@ -189,8 +235,9 @@ select$tax_amount <- ifelse(is.na(select$tax_amount),0,
  select$tax_amount)
 select$discount_amount <- ifelse(is.na(select$discount_amount),0,
  select$discount_amount)
-select$left_to_pay <- select$final_credit_amount + 
-  select$tax_amount - select$paid_hitherto - select$discount_amount
+select$left_to_pay <- ifelse(select$company_id==2,
+  select$claims - select$balance_after, select$final_credit_amount + 
+  select$tax_amount - select$paid_hitherto - select$discount_amount)
 
 
 # Check if client has still VIP status 
@@ -296,10 +343,15 @@ select$nb_term_credirect <- ifelse(is.na(select$nb_term_credirect),0,
 # Refilter according to aformentioned 2 criteria
 select$nb_criteria <- ifelse(select$company_id==1,select$nb_term_citycash,
    select$nb_term_credirect)
-select$filter_criteria <- ifelse(select$nb_criteria==0,0.5,
+select$filter_criteria <- ifelse(select$company_id==2,
+  (ifelse(select$nb_criteria==0,0.4,
+   ifelse(select$score_max_amount %in% c("Good 4"), 0.2,
+   ifelse(select$score_max_amount %in% c("Good 3"), 0.3,
+   ifelse(select$score_max_amount %in% c("Good 2"), 0.35,0.4))))),                               
+  (ifelse(select$nb_criteria==0,0.5,
    ifelse(select$score_max_amount %in% c("Good 4"), 0.3,
    ifelse(select$score_max_amount %in% c("Good 3"), 0.4,
-   ifelse(select$score_max_amount %in% c("Good 2"), 0.45,0.5))))
+   ifelse(select$score_max_amount %in% c("Good 2"), 0.45,0.5))))))
 select <- subset(select,select$installment_ratio>=select$filter_criteria)
 
 
