@@ -382,7 +382,7 @@ if(nrow(all_credits_id)>0){
   select$nb_criteria <- 0
 }
 if(select$company_id==2){
-  select$filter_criteria <- ifelse(select$nb_criteria==0,0.4,
+  select$filter_criteria <- ifelse(select$nb_criteria==0,0.5,
     ifelse(select$score_max_amount %in% c("Good 4"), 0.2,
     ifelse(select$score_max_amount %in% c("Good 3"), 0.3,
     ifelse(select$score_max_amount %in% c("Good 2"), 0.35,0.4))))

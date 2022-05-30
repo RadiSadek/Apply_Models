@@ -344,7 +344,7 @@ select$nb_term_credirect <- ifelse(is.na(select$nb_term_credirect),0,
 select$nb_criteria <- ifelse(select$company_id==1,select$nb_term_citycash,
    select$nb_term_credirect)
 select$filter_criteria <- ifelse(select$company_id==2,
-  (ifelse(select$nb_criteria==0,0.4,
+  (ifelse(select$nb_criteria==0,0.5,
    ifelse(select$score_max_amount %in% c("Good 4"), 0.2,
    ifelse(select$score_max_amount %in% c("Good 3"), 0.3,
    ifelse(select$score_max_amount %in% c("Good 2"), 0.35,0.4))))),                               
