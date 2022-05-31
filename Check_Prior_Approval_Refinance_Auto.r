@@ -149,24 +149,24 @@ daily_raw <- daily
 
 
 # Read balance 
-balance <- suppressWarnings(dbFetch(dbSendQuery(con,
-paste("SELECT id, application_id, pay_day
+balance_sql <- paste("SELECT id, application_id, pay_day
 FROM ",db_name,".credits_plan_daily 
-WHERE application_id=",application_id,sep=""))))
+WHERE application_id=",application_id,sep="")
+balance <- gen_query(con,balance_sql)
 balance$today <- substring(Sys.time(),1,10)
 balance <- subset(balance,balance$pay_day<=balance$today)
 max_id <- max(balance$id)
 
 
 # Read daily claim 
-claims <- suppressWarnings(dbFetch(dbSendQuery(con,
-paste("SELECT SUM(taxes+penalty+interest+principal) as total_claim
+claims_sql <- paste("SELECT SUM(taxes+penalty+interest+principal) as total_claim
 FROM ",db_name,".credits_plan_balance_claims  
-WHERE daily_id=",max_id,sep=""))))$total_claim
-balance_after <- suppressWarnings(dbFetch(dbSendQuery(con,
-paste("SELECT balance_after
-FROM ",db_name,".credits_plan_balance_changes   
-WHERE daily_id=",max_id-1,sep=""))))$balance_after
+WHERE daily_id=",max_id,sep="")
+claims <- gen_query(con,claims_sql)$total_claim
+balance_after_sql <- paste("SELECT balance_after
+FROM ",db_name,".credits_plan_balance_changes
+WHERE daily_id=",max_id,sep="")
+balance_after <- gen_query(con,balance_after_sql)$balance_after
 if(length(balance_after)==0){
   balance_after <- 0
 }
@@ -192,6 +192,7 @@ WHERE application_id = ",application_id,
 paid_install <- gen_query(con,paid_install_sql)
 daily <- merge(daily,paid_install,by.x = "application_id",
    by.y = "application_id",all.x = TRUE)
+daily$installments_paid <- as.numeric(daily$installments_paid)
 daily$installments_paid <- ifelse(is.na(daily$installments_paid),0,
    daily$installments_paid)
 daily$installment_ratio <- round(

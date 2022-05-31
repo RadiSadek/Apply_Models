@@ -116,9 +116,9 @@ WHERE payed_at IS NOT NULL AND pay_day<= '",substring(Sys.time(),1,10),
 paid_install <- gen_query(con,paid_install_sql)
 daily <- merge(daily,paid_install,by.x = "application_id",
    by.y = "application_id",all.x = TRUE)
+daily$installments_paid <- as.numeric(daily$installments_paid)
 daily$installments_paid <- ifelse(is.na(daily$installments_paid),0,
    daily$installments_paid)
-daily$installments_paid <- as.numeric(daily$installments_paid)
 daily$installment_ratio <- round(
   daily$installments_paid / daily$nb_installments,2)
 select <- merge(select,
@@ -164,10 +164,10 @@ if(nrow(select)>1){
   for(i in 2:nrow(select)){
     all_apps <- paste(all_apps,select$id[i],sep=",")}
 }
-balance <- suppressWarnings(dbFetch(dbSendQuery(con,
-paste("SELECT id, application_id, pay_day
+balance_sql <- paste("SELECT id, application_id, pay_day
 FROM ",db_name,".credits_plan_daily 
-WHERE application_id IN(",all_apps,")",sep=""))))
+WHERE application_id IN(",all_apps,")",sep="")
+balance <- gen_query(con,balance_sql)
 balance$today <- substring(Sys.time(),1,10)
 balance <- subset(balance,balance$pay_day<=balance$today)
 max_id <- as.data.frame(aggregate(balance$id,by=list(balance$application_id),
@@ -181,10 +181,10 @@ if(nrow(max_id)>1){
   for(i in 2:nrow(max_id)){
     all_max_id <- paste(all_max_id,max_id$max_id[i],sep=",")}
 }
-claims <- suppressWarnings(dbFetch(dbSendQuery(con,
-paste("SELECT daily_id, taxes, penalty, interest, principal
+claims_sql <- paste("SELECT daily_id, taxes, penalty, interest, principal
 FROM ",db_name,".credits_plan_balance_claims  
-WHERE daily_id IN(",all_max_id,")",sep=""))))
+WHERE daily_id IN(",all_max_id,")",sep="")
+claims <- gen_query(con,claims_sql)
 claims$claims <- claims$taxes + claims$penalty + claims$principal + 
   claims$interest
 max_id <- merge(max_id,claims[,c("daily_id","claims")],
@@ -192,10 +192,10 @@ max_id <- merge(max_id,claims[,c("daily_id","claims")],
 
 
 # Remove balance after
-balance_after <- suppressWarnings(dbFetch(dbSendQuery(con,
-paste("SELECT daily_id,balance_after
+balance_after_sql <- paste("SELECT daily_id,balance_after
 FROM ",db_name,".credits_plan_balance_changes   
-WHERE daily_id IN(",all_max_id ,")",sep=""))))
+WHERE daily_id IN(",all_max_id ,")",sep="")
+balance_after <- gen_query(con,balance_after_sql)
 max_id <- merge(max_id,balance_after,
   by.x = "max_id",by.y = "daily_id",all.x = TRUE)
 max_id$balance_after <- ifelse(is.na(max_id$balance_after),0,
