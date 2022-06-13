@@ -20,6 +20,10 @@ gen_correction_po_fct <- function(con,db_name,all_df,all_id,
 
   # Apply correction depending on whether there is a term or ref offer (or both)
   if(nrow(po_ref)>0 & nrow(po)>0){
+    po_ref <- po_ref[rev(order(po_ref$deleted_at)),]
+    po_ref <- po_ref[1,]
+    po <- po[rev(order(po$deleted_at)),]
+    po <- po[1,]
     if(po$credit_amount>po_ref$max_amount){
       scoring_df <- gen_correction_po(con,db_name,all_df,all_id,
           scoring_df,products,period,application_id)

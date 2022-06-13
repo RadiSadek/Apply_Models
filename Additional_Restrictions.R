@@ -59,12 +59,16 @@ gen_restrict_cashpoint_app <- function(scoring_df,all_df,flag_beh){
   scoring_df$color <- ifelse(scoring_df$score %in% c("Bad","Indeterminate"),
     1, scoring_df$color)  
 
-  # Take only one third of Good 1 for certain offices
-  if(all_df$office_id %in% c("150") & !is.na(scoring_df$pd[1])){
-    scoring_df$color <- ifelse(scoring_df$pd>0.3,1,scoring_df$color)
+  # Apply according to office
+  if(all_df$office_id %in% c(155,156,150,154)){
+    scoring_df$color <- ifelse(scoring_df$score %in% c("Good 1"),
+     1, scoring_df$color)  
   }
-  if(flag_beh==1 & !is.na(scoring_df$pd[1])){
-      scoring_df$color <- ifelse(scoring_df$pd>0.275,1,scoring_df$color)  
+  
+  # Remove new cashpoint but old city cash 
+  if(flag_beh==1){
+    scoring_df$color <- ifelse(scoring_df$score %in% c("Good 1"),
+                               1, scoring_df$color)  
   }
   return(scoring_df)
 }
@@ -111,7 +115,16 @@ gen_restrict_citycash_beh <- function(scoring_df,prev_amount,products,all_id,
      scoring_df$color))
   
   if(flag_cashpoint==1){
-    scoring_df$color <- ifelse(scoring_df$pd>0.3,1,scoring_df$color)  
+    
+    # No Indeterminates
+    scoring_df$color <- ifelse(scoring_df$score %in% c("Bad","Indeterminate"),
+                               1, scoring_df$color)  
+    
+    # Apply according to office
+    if(all_df$office_id %in% c(155,156,150,154)){
+      scoring_df$color <- ifelse(scoring_df$score %in% c("Good 1"),
+                                 1, scoring_df$color)  
+    }
   }
 
   return(scoring_df)
