@@ -16,7 +16,8 @@ gen_norm_var <- function(period,all_df,products,criteria_age){
      [which.min(abs(all_df$amount - unique(products$amount)))] & 		
      products$product_id == all_df$product_id, ]$installment_amount
   if(!(substring(all_df$egn,3,3) %in% c("5","4")) & 
-     (substring(all_df$egn,1,2) %in% c("00","01","02","03","04","05","06"))){
+     (substring(all_df$egn,1,2) %in% c("00","01","02","03","04","05","06","07",
+      "08","09","10","11","12","13","14","15"))){
     all_df$dob <- NA
     all_df$age <- 18
   } else{
