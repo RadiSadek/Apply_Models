@@ -209,7 +209,11 @@ gen_corection_early_repaid <- function(con,db_name,scoring_df,all_df,all_id,
   # Get time since deactivation of last
   time_since <- difftime(Sys.time(),all_id_here$deactivated_at,
                          units = c("days"))
-  time_since <- ifelse(is.na(time_since),999,time_since)
+  time_since <- ifelse(is.na(all_id_here$deactivated_at),0,
+    ifelse(as.Date(Sys.time())-2==substring(all_id_here$deactivated_at,1,10),1,
+    ifelse(as.Date(Sys.time())-1==substring(all_id_here$deactivated_at,1,10),1,
+    ifelse(as.Date(Sys.time())-0==substring(all_id_here$deactivated_at,1,10),1,
+           0))))
   
   # Get total installments, passed installments of last credit
   tot_installments <- gen_query(con,
@@ -224,7 +228,7 @@ gen_corection_early_repaid <- function(con,db_name,scoring_df,all_df,all_id,
     gen_products_query_desc(db_name,all_id_here))$period
   
   # Apply conditions
-  if(time_since<=3){
+  if(!is.na(time_since) & time_since==1){
     if((flag_credit_next_salary==1 & passed_installments==0) |
        (flag_credit_next_salary!=1 & period==3 & 
         passed_installments<2 & tot_installments<4) |
