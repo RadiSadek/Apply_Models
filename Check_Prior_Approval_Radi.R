@@ -148,7 +148,7 @@ if((flag_credit_next_salary==1 & all_credit$passed_installments==0) |
 
 
 # Flag is terminated before maturing
-flag_limit_offer <- ifelse(all_credit$sub_status==123,1,0)
+flag_limit_offer <- 0
 
 
 # Remove if more than 1 "varnat"
