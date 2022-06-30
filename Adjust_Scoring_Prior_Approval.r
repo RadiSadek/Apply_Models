@@ -17,6 +17,20 @@ gen_correction_po_fct <- function(con,db_name,all_df,all_id,
   } else {
     po_ref <- subset(as.data.frame(NA),!is.na(NA))
   }
+  
+  # Subset only recent
+  po$final_time <- ifelse(!is.na(po$deleted_at) &
+   substring(po$deleted_at,12,20)!="04:00:00",
+   difftime(Sys.time(),po$deleted_at,units=c("days")),999)
+  po_ref$final_time <- ifelse(is.na(po_ref$deleted_at),0,
+      ifelse(substring(po_ref$deleted_at,12,20)!="04:00:00",
+      difftime(Sys.time(),po_ref$deleted_at,units=c("days")),999))
+  po_ref <- po_ref[order(po_ref$final_time),]
+  po_ref <- po_ref[1,]
+  
+  po <- subset(po,po$final_time<=7)
+  po_ref <- subset(po_ref,po_ref$final_time<=14)
+  
 
   # Apply correction depending on whether there is a term or ref offer (or both)
   if(nrow(po_ref)>0 & nrow(po)>0){
