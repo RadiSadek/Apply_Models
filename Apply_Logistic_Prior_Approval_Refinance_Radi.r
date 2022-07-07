@@ -568,13 +568,66 @@ special <- gen_query(con,get_special_sql)
 
 # Remove special cases if has offer
 po_special_sql_query <- paste(
-  "SELECT application_id, created_at
+  "SELECT application_id, created_at, product_id, max_amount
   FROM ",db_name,".prior_approval_refinances
   WHERE deleted_at IS NULL",sep="")
-po_special <- gen_query(con, po_special_sql_query)
+po_special <- gen_query(con,po_special_sql_query)
 po_special <- merge(po_special,all_credits[,c("id","client_id")],
                     by.x = "application_id",by.y = "id",all.x = TRUE)
+po_special_raw <- po_special
 po_special <- po_special[po_special$client_id %in% special$id,]
+
+# Remove Credirect if amount is less than due 
+po_special_credirect <- subset(po_special_raw,
+  po_special_raw$product_id %in% c(48))
+
+all_apps <- po_special_credirect$application_id[1]
+if(nrow(po_special_credirect)>1){
+  for(i in 2:nrow(po_special_credirect)){
+    all_apps <- paste(all_apps,po_special_credirect$application_id[i],sep=",")}
+}
+balance_sql <- paste("SELECT id, application_id, pay_day
+FROM ",db_name,".credits_plan_daily 
+WHERE application_id IN(",all_apps,")",sep="")
+balance <- gen_query(con,balance_sql)
+balance$today <- substring(Sys.time(),1,10)
+balance <- subset(balance,balance$pay_day<=balance$today)
+max_id <- as.data.frame(aggregate(balance$id,by=list(balance$application_id),
+                                  FUN=max))
+names(max_id) <- c("id","max_id")
+
+# Read daily claim
+all_max_id <- max_id$max_id[1]
+if(nrow(max_id)>1){
+  for(i in 2:nrow(max_id)){
+    all_max_id <- paste(all_max_id,max_id$max_id[i],sep=",")}
+}
+claims_sql <- paste("SELECT daily_id, taxes, penalty, interest, principal
+FROM ",db_name,".credits_plan_balance_claims  
+WHERE daily_id IN(",all_max_id,")",sep="")
+claims <- gen_query(con,claims_sql)
+claims$claims <- claims$taxes + claims$penalty + claims$principal + 
+  claims$interest
+max_id <- merge(max_id,claims[,c("daily_id","claims")],
+                by.x = "max_id",by.y = "daily_id",all.x = TRUE)
+
+# Remove balance after
+balance_after_sql <- paste("SELECT daily_id,balance_after
+FROM ",db_name,".credits_plan_balance_changes   
+WHERE daily_id IN(",all_max_id ,")",sep="")
+balance_after <- gen_query(con,balance_after_sql)
+max_id <- merge(max_id,balance_after,
+  by.x = "max_id",by.y = "daily_id",all.x = TRUE)
+max_id$balance_after <- ifelse(is.na(max_id$balance_after),0,
+  max_id$balance_after)
+po_special_credirect <- merge(po_special_credirect,
+  max_id[,c("id","claims","balance_after")],by.x = "application_id",
+  by.y = "id",all.x = TRUE)
+po_special_credirect$left_to_pay <- po_special_credirect$claims - 
+  po_special_credirect$balance_after
+po_special_credirect <- subset(po_special_credirect,
+  po_special_credirect$max_amount<po_special_credirect$left_to_pay)
+po_special <- rbind(po_special,po_special_credirect)
 
 if(nrow(po_special)>0){
   po_special_query <- paste("UPDATE ",db_name,
