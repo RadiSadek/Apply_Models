@@ -627,7 +627,9 @@ po_special_credirect$left_to_pay <- po_special_credirect$claims -
   po_special_credirect$balance_after
 po_special_credirect <- subset(po_special_credirect,
   po_special_credirect$max_amount<po_special_credirect$left_to_pay)
-po_special <- rbind(po_special,po_special_credirect)
+po_special <- rbind(po_special,
+     po_special_credirect[,c("application_id","created_at",
+                            "product_id","max_amount","client_id")])
 
 if(nrow(po_special)>0){
   po_special_query <- paste("UPDATE ",db_name,
