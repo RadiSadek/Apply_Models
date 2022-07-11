@@ -43,7 +43,7 @@ main_dir <- "C:\\Projects\\Apply_Scoring\\"
 # Read argument of ID
 args <- commandArgs(trailingOnly = TRUE)
 #application_id <- args[1]
-application_id <- 1056672
+application_id <- 1220604
 
 
 # Load other r files
@@ -181,6 +181,8 @@ if(nrow(po)>0){
 # Remove those who have active credit of corresponding company
 all_credit_status <- merge(all_credit_status,company_id,
    by.x = "product_id",by.y = "id",all.x = TRUE)
+all_credit_status <- subset(all_credit_status,
+  !(all_credit_status$product_id %in% c(69,70)))
 all_credit_active <- subset(all_credit_status,
    all_credit_status$status==4 & 
    all_credit_status$company_id==all_credit$company_id)
