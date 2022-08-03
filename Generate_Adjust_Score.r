@@ -59,7 +59,7 @@ gen_apply_policy <- function(scoring_df,flag_credirect,flag_cession,
      flag_beh_company,flag_cashpoint,crit){
   
   if(flag_cession==1 & flag_credirect==1){
-    scoring_df <- gen_adjust_score(scoring_df, c("Bad"))
+    scoring_df <- gen_adjust_score(scoring_df, c("Bad","Indeterminate"))
   }
   
   # Apply if City Cash application
