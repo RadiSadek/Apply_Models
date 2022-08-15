@@ -45,7 +45,7 @@ main_dir <- "C:\\Projects\\Apply_Scoring\\"
 # Read argument of ID
 args <- commandArgs(trailingOnly = TRUE)
 application_id <- args[1]
-#application_id <- 1042382
+#application_id <- 1286837
 product_id <- NA
 
 
@@ -434,11 +434,18 @@ scoring_df <- scoring_df[,c("application_id","amount","period","score","color",
                             "pd","created_at")]
 
 
+# Get fraud flag
+fraud_flag <- ifelse(flag_credirect==1 & flag_beh==0 & 
+    empty_fields<threshold_empty, gen_app_credirect_fraud(
+    df,scoring_df,products,df_Log_Credirect_Fraud,period,all_df,
+    prev_amount,amount_tab,t_income,disposable_income_adj,db_name), "NULL")
+
+
 # Readjust score when applicable
 scoring_df <- gen_apply_policy(scoring_df,flag_credirect,flag_cession,
    flag_bad_ckr_citycash,all_df,all_id,flag_beh,prev_amount,products,
    application_id,flag_new_credirect_old_city,flag_credit_next_salary,
-   flag_beh_company,flag_cashpoint,0)
+   flag_beh_company,flag_cashpoint,0,fraud_flag)
 scoring_decision <- gen_decline_reason(scoring_df,all_df,15,scoring_decision)
 
 
@@ -451,13 +458,6 @@ if(flag_beh_company==1){
   }
 }
 scoring_decision <- gen_decline_reason(scoring_df,all_df,22,scoring_decision)
-
-
-# Get fraud flag
-fraud_flag <- ifelse(flag_credirect==1 & flag_beh==0 & 
-   empty_fields<threshold_empty, gen_app_credirect_fraud(
-   df,scoring_df,products,df_Log_Credirect_Fraud,period,all_df,
-   prev_amount,amount_tab,t_income,disposable_income_adj,db_name), "NULL")
 
 
 # Reselect columns 
