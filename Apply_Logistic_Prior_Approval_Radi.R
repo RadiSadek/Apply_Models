@@ -56,18 +56,19 @@ product_id <- NA
 
 # Read credit applications 
 get_actives_sql <- paste("
-SELECT id, status, date, signed_at, product_id, client_id, 
+SELECT id, status, date, created_at, signed_at, product_id, client_id, 
 deactivated_at, sub_status, office_id, consultant_id
 FROM ",db_name,".credits_applications 
-WHERE status IN (4,5)",sep="")
-all_credits <- gen_query(con,get_actives_sql)
+WHERE status IN (1,3,4,5)",sep="")
+all_credits_all <- gen_query(con,get_actives_sql)
 
 
 # Get company ID
 company_id <- gen_query(con,
     gen_get_company_id_query(db_name))
-all_credits <- merge(all_credits,company_id,by.x = "product_id",
+all_credits_all <- merge(all_credits_all,company_id,by.x = "product_id",
     by.y = "id",all.x = TRUE)
+all_credits <- subset(all_credits_all,all_credits_all$status %in% c(4,5))
 
 
 # Subset terminated credits
@@ -406,9 +407,48 @@ if(substring(Sys.time(),9,10)=="01"){
 }
 
 
-#######################################################
-### Check for special cases and deleted immediately ###
-#######################################################
+
+#################################################
+### Check those who didn't amount to a credit ###
+#################################################
+
+# Reload offers which were deleted for nothing (and are relevant)
+po_sql_query <- paste(
+  "SELECT id, client_id, product_id, created_at,deleted_at
+  FROM ",db_name,".clients_prior_approval_applications
+  WHERE LEFT(deleted_at,10) = '",(as.Date(Sys.time())-3),"'",sep="")
+po_reload <- gen_query(con,po_sql_query)
+po_reload <- subset(po_reload,
+  !(substring(po_reload$deleted_at,12,19)=="01:00:00"))
+po_reload <- merge(po_reload,company_id[,c("id","company_id")],
+  by.x = "product_id",by.y = "id",all.x = TRUE)
+po_reload$difftime <- round(difftime(po_reload$deleted_at,po_reload$created_at,
+  units=c("days")),2)
+po_reload <- subset(po_reload,po_reload$difftime<180)
+
+# Subset if offer but didn't amount to nothing
+po_reload <- merge(po_reload,
+  all_credits_all[,c("client_id","created_at","company_id")],
+  by.x = "client_id",by.y = "client_id",all.x = TRUE)
+po_reload$difftime2 <- round(difftime(po_reload$created_at.y,
+  po_reload$deleted_at,units=c("days")),2)
+has_credit_after <- subset(po_reload,
+  po_reload$difftime2>=-0.3 & po_reload$company_id.x==po_reload$company_id.y)
+po_reload <- po_reload[!(po_reload$client_id %in% has_credit_after$client_id),]
+po_reload <- po_reload[!duplicated(po_reload$client_id),]
+
+if(nrow(po_reload)>0){
+  po_reload_query <- paste("UPDATE ",db_name,
+   ".clients_prior_approval_applications SET updated_at = '",
+   substring(Sys.time(),1,19),"', deleted_at = NULL",sep="")
+  suppressMessages(suppressWarnings(dbSendQuery(con,po_reload_query)))
+}
+
+
+
+######################################################
+### Check for special cases and delete immediately ###
+######################################################
 
 # Read special cases (deceased and gdrk marketing clients) 
 get_special_sql <- paste("
