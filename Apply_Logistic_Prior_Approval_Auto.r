@@ -453,9 +453,9 @@ po_reload <- subset(po_reload,po_reload$difftime<180)
 
 # Subset if offer but didn't amount to nothing
 po_reload <- merge(po_reload,
-  all_credits_all[,c("client_id","created_at","company_id")],
+  all_credits_all[,c("client_id","signed_at","company_id")],
   by.x = "client_id",by.y = "client_id",all.x = TRUE)
-po_reload$difftime2 <- round(difftime(po_reload$created_at.y,
+po_reload$difftime2 <- round(difftime(po_reload$signed_at,
   po_reload$deleted_at,units=c("days")),2)
 has_credit_after <- subset(po_reload,
   po_reload$difftime2>=-0.3 & po_reload$company_id.x==po_reload$company_id.y)
@@ -465,7 +465,8 @@ po_reload <- po_reload[!duplicated(po_reload$client_id),]
 if(nrow(po_reload)>0){
   po_reload_query <- paste("UPDATE ",db_name,
    ".clients_prior_approval_applications SET updated_at = '",
-   substring(Sys.time(),1,19),"', deleted_at = NULL",sep="")
+   substring(Sys.time(),1,19),"', deleted_at = NULL
+   WHERE id IN",gen_string_po_terminated(po_reload),sep="")
   suppressMessages(suppressWarnings(dbSendQuery(con,po_reload_query)))
 }
 
