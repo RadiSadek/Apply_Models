@@ -210,10 +210,10 @@ gen_restrict_credirect_beh <- function(scoring_df,all_df,all_id,application_id,
   
   max_step_prev_high <- ifelse(passed_install_at_pay!=-999,
    (ifelse(prev_next_salary==0,
-   (ifelse(passed_install_at_pay==0,400,
-    ifelse(passed_install_at_pay==1,600,
-    ifelse(passed_install_at_pay==2,800,
-    ifelse(passed_install_at_pay==3,1000,Inf))))),
+   (ifelse(passed_install_at_pay==0,500,
+    ifelse(passed_install_at_pay==1,700,
+    ifelse(passed_install_at_pay==2,900,
+    ifelse(passed_install_at_pay==3,1400,Inf))))),
    (ifelse(passed_install_at_pay==0,500,Inf)))),500)
   
   # Apply policy rules for Credirect Installments
@@ -238,10 +238,10 @@ gen_restrict_credirect_beh <- function(scoring_df,all_df,all_id,application_id,
         ifelse(scoring_df$score %in% c("Good 1"),
                max(all_id_local$amount) + min(400,max_step_prev_low),
         ifelse(scoring_df$score %in% c("Good 2"),
-               max(all_id_local$amount) + min(600,max_step_prev_high),
+               max(all_id_local$amount) + min(700,max_step_prev_high),
         ifelse(scoring_df$score %in% c("Good 3"),
-               max(all_id_local$amount) + min(800,max_step_prev_high), 
-               max(all_id_local$amount) + min(1200,max_step_prev_high))))))))
+               max(all_id_local$amount) + min(900,max_step_prev_high), 
+               max(all_id_local$amount) + min(1400,max_step_prev_high))))))))
       
       for (i in 1:nrow(scoring_df)){
         scoring_df$allowed_amount[i] <- max(scoring_df$allowed_amount_rep[i],
@@ -313,7 +313,6 @@ gen_restrict_big_fin_app <- function(scoring_df){
   return(scoring_df)
 }
 
-
 # Function to apply restrictions for Big Fin repeats
 gen_restrict_big_fin_rep <- function(scoring_df,prev_amount){
   scoring_df$color <- 
@@ -330,7 +329,6 @@ gen_restrict_big_fin_rep <- function(scoring_df,prev_amount){
   
   return(scoring_df)
 }
-
 
 # Readjust score if necessary for certain cases
 gen_adjust_score <- function(scoring_df,crit){
