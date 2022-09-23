@@ -225,7 +225,6 @@ for(i in 1:nrow(select_credits)){
 # Select based on score and DPD
 select_credits <- subset(select_credits,select_credits$max_amount>-Inf & 
                            select_credits$max_amount<Inf)
-select_credits <- subset(select_credits,select_credits$max_delay<=200)
 
 
 

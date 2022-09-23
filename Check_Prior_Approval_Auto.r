@@ -267,7 +267,9 @@ for(i in 1:nrow(all_credit)){
 # Select based on score and DPD
 all_credit <- subset(all_credit,all_credit$max_amount>-Inf & 
                                  all_credit$max_amount<Inf)
-all_credit <- subset(all_credit,all_credit$max_delay<=200)
+if(!is.na(all_credit$company_id) & all_credit$company_id!=5){
+  all_credit <- subset(all_credit,all_credit$max_delay<=300)
+}
 
 
 
