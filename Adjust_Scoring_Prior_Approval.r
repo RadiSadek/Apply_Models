@@ -10,6 +10,15 @@ gen_correction_po_fct <- function(con,db_name,all_df,all_id,
   # Read offers of terminated or refinance
   po <- gen_query(con,
                   gen_po_terminated_query(db_name,all_df$client_id))
+  company_id <- gen_query(con,
+      gen_get_company_id_query(db_name))
+  po <- merge(po,company_id,by.x = "product_id",by.y = "id",all.x = TRUE)
+  all_df <- merge(all_df,company_id,by.x = "product_id",by.y = "id",
+      all.x = TRUE)
+  po <- subset(po,po$company_id==all_df$company_id)
+  all_df <- all_df[,-which(names(all_df) %in% c("company_id"))]
+  po <- po[,-which(names(po) %in% c("company_id"))]
+  
   string_sql_update <- gen_prev_ids_ref_cor(con,db_name,all_df,all_id)[[2]]
   if(length(string_sql_update[!is.na(string_sql_update)])>0){
     po_ref <- gen_query(con,
