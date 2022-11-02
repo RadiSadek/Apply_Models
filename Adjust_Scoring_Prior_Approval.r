@@ -122,9 +122,12 @@ gen_correction_po <- function(con,db_name,all_df,all_id,
             products[,c("amount","period","installment_amount")],
             by.x = c("amount","period"),by.y = c("amount","period"),
             all.x = TRUE)
-        scoring_df$color2 <- ifelse(
-            scoring_df$amount<=po$credit_amount & 
-            scoring_df$installment_amount<=po$installment_amount,3,1)
+        scoring_df$color <- ifelse(
+          scoring_df$amount<=po$credit_amount & 
+            scoring_df$installment_amount<=po$installment_amount,3,
+            scoring_df$color)
+        scoring_df$color <- ifelse(scoring_df$amount>po$credit_amount & 
+            scoring_df$score!="NULL",1,scoring_df$color)
         scoring_df <-  scoring_df[,-which(names(scoring_df) %in% 
                                             c("installment_amount"))]}
     }
