@@ -7,6 +7,7 @@ gen_beh_credirect <- function(df,scoring_df,products,df_Log_beh_Credirect,
                              period,all_df,prev_amount,amount_tab,
                              t_income,disposable_income_adj,crit_po,
                              flag_new_credirect_old_city,api_df){
+  
   #  Cut and bin
   df$ownership <- ifelse(is.na(df$ownership),"1_2_3",
     ifelse(df$ownership==4, "4", "1_2_3"))
@@ -44,7 +45,10 @@ gen_beh_credirect <- function(df,scoring_df,products,df_Log_beh_Credirect,
     ifelse(df$credits_cum<=1,"1",
     ifelse(df$credits_cum==2,"2",
     ifelse(df$credits_cum==3,"3",
-    ifelse(df$credits_cum<=6,"4_6","more_7"))))
+    ifelse(df$credits_cum<=6,"4_6",
+    ifelse(df$credits_cum<=9,"7_9",
+    ifelse(df$credits_cum<=12,"10_12",
+    ifelse(df$credits_cum<=15,"13_15","16_more")))))))
   df$credits_cum <- as.factor(df$credits_cum)
   
   df$max_delay <- ifelse(is.na(df$max_delay),"31_55",

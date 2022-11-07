@@ -10,7 +10,7 @@ gen_apply_score <- function(empty_fields,threshold_empty,flag_exclusion,
   df_Log_CityCash_App,df_Log_beh_Credirect,df_Log_Credirect_App_installments,
   df_Log_Credirect_App_payday,period,all_id,prev_amount,amount_tab,
   t_income,disposable_income_adj,flag_new_credirect_old_city,api_df,
-  flag_judicial,criteria_po){
+  flag_judicial,criteria_po,flag_third_side,flag_cashpoint){
   
   # Apply model coefficients according to type of credit 
   if (empty_fields>=threshold_empty){
@@ -20,6 +20,11 @@ gen_apply_score <- function(empty_fields,threshold_empty,flag_exclusion,
     
   } else if (flag_exclusion==1 | flag_varnat==1 | flag_is_dead==1 | 
              flag_judicial==1){
+    
+    scoring_df$score <- "Bad"
+    scoring_df$color <- 1
+    
+  } else if (flag_third_side==1 & flag_cashpoint==1){
     
     scoring_df$score <- "Bad"
     scoring_df$color <- 1

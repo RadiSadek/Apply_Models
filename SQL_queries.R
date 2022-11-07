@@ -408,3 +408,11 @@ gen_flag_judges_us <- function(db_name,input){
      WHERE id=",input,sep=""))
 }
 
+# Read if client is judicial 
+gen_thid_side <- function(db_name,input){
+  return(paste(
+    "SELECT third_side_date 
+     FROM ",db_name,".credits_applications
+     WHERE id IN (",input,")",sep=""))
+}
+

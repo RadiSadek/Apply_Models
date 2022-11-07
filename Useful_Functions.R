@@ -421,3 +421,25 @@ gen_prev_ids_ref_cor <- function(con,db_name,all_df,all_id){
   return(list(input,string_sql_update))
 }
 
+# Compute if previous is third_side
+gen_third_side_prev <- function(db_name,all_id,application_id){
+  
+  # Get from same company_id
+  company <- all_id$company_id[all_id$id==application_id]
+  all_id <- subset(all_id,all_id$company_id==company)
+  
+  if(nrow(all_id)>0){
+    string_sql_update <- all_id$id[1]
+    if(nrow(all_id)>1){
+      for(i in 2:nrow(all_id)){
+        string_sql_update <- paste(string_sql_update,all_id$id[i],sep=",")
+      }
+    }
+  }
+  
+  # Get third side
+  third_sides <- gen_query(con,gen_thid_side(db_name,string_sql_update))
+  return(ifelse(nrow(subset(third_sides,
+      !is.na(third_sides$third_side_date)))>0,1,0))
+}
+

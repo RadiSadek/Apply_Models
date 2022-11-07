@@ -45,7 +45,7 @@ main_dir <- "C:\\Projects\\Apply_Scoring\\"
 # Read argument of ID
 args <- commandArgs(trailingOnly = TRUE)
 application_id <- args[1]
-#application_id <- 1286837
+#application_id <- 1145620
 product_id <- NA
 
 
@@ -400,6 +400,11 @@ flag_judicial <- ifelse(
     db_name,all_df$client_id))$judge_us_at),1,0))
 
 
+# Compute flag if third side
+flag_third_side <- gen_third_side_prev(db_name,all_id,application_id)
+
+
+
 ############################################################
 ### Apply model coefficients according to type of credit ###
 ############################################################
@@ -411,7 +416,7 @@ scoring_df <- gen_apply_score(
   df_Log_CityCash_App,df_Log_beh_Credirect,df_Log_Credirect_App_installments,
   df_Log_Credirect_App_payday,period,all_id,prev_amount,amount_tab,
   t_income,disposable_income_adj,flag_new_credirect_old_city,api_df,
-  flag_judicial,0)
+  flag_judicial,0,flag_third_side,flag_cashpoint)
 
 
 # Set initial scoring reason
@@ -547,6 +552,7 @@ final$flag_active <- flag_active[1,1]
 final$flag_active_hidden <- flag_active[1,2]
 final$flag_risky_address <- flag_risky_address$flag_risky_address
 final$flag_judicial <- flag_judicial
+final$flag_third_side <- flag_third_side
 final$lat <- flag_risky_address$lat
 final$lon <- flag_risky_address$lon
 final$type <- flag_risky_address$hierarchy
