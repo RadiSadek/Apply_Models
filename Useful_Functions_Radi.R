@@ -443,4 +443,32 @@ gen_third_side_prev <- function(db_name,all_id,application_id){
       !is.na(third_sides$third_side_date)))>0,1,0))
 }
 
+# Define function to get apply cutoffs for PTC 
+gen_group_scores_ptc <- function(all_df,flag_credirect,
+                                 flag_credit_next_salary){
+  
+  all_df$ptc_score <-
+    ifelse(is.na(all_df$ptc),"NULL",
+    ifelse(all_df$ptc>cu_ptc_citycash[1],"high",
+    ifelse(all_df$ptc>cu_ptc_citycash[2],"medium",
+    ifelse(all_df$ptc>cu_ptc_citycash[3],"low","very_low"))))
+  return(all_df)
+  
+}
 
+# Compute flag exclusion
+gen_flag_exclusion <- function(all_credits,flag_cashpoint,risk){
+  
+  all_credits <- merge(all_credits,
+     gen_query(con,gen_get_company_id_query(db_name)),by.x = "product_id",
+     by.y = "id",all.x = TRUE)
+  
+  if(flag_cashpoint==1){
+    all_credits <- subset(all_credits,all_credits$company_id!=2)
+  } 
+  flag_exclusion <- ifelse(length(which(names(
+    table(all_credits$sub_status)) %in% c(124,133)))>0, 1,
+    ifelse(nrow(risk)>0, 1, 0))
+  return(flag_exclusion)
+  
+}

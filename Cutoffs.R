@@ -32,3 +32,10 @@ cu_beh_cred <- c(0.7,0.4,0.275,0.175,0.1)
 # Application Credirect Frauds
 cu_app_cred_frauds <- 0.2
 
+
+
+########### Cutoffs for probability to churn 
+
+cu_ptc_citycash <- c(0.4,0.25,0.13)
+
+

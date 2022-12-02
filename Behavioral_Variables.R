@@ -485,4 +485,34 @@ gen_ratio_refinance_previous <- function(db_name,all_id){
 
 }
 
+# Compute average profit
+gen_avg_profit <- function(db_name,all_id){
+  
+  all_id$amount_paid <- NA
+  all_id$amount <- NA
+  for(i in 1:nrow(all_id)){
+    all_id$amount[i] <- gen_query(con,
+     gen_last_cred_amount_query (all_id$id[i],db_name))$amount
+    all_id$amount_paid[i] <- gen_query(con,
+     gen_all_payments_with_ref_query(all_id$id[i],db_name))$amount_paid
+  }
+  all_id$profit <- ifelse(is.na(all_id$amount_paid),0,all_id$amount_paid)
+  return(round(mean(all_id$profit),3))
+}
+
+# Compute ratio rejected applications
+gen_ratio_rej <- function(db_name,all_credits){
+  
+  # Joint company ID to all_df
+  all_credits <- merge(all_credits,
+    gen_query(con,gen_get_company_id_query(db_name)),by.x = "product_id",
+    by.y = "id",all.x = TRUE)
+  
+  # Return result
+  return(round(nrow(subset(all_credits,all_credits$status==2))/
+    nrow(all_credits),3))
+  
+}
+
+
 

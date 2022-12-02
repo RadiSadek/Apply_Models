@@ -1,23 +1,62 @@
 
-gen_terminated_fct <- function(con,client_id,product_id,last_id,
-                               flag_limit_offer){
+################################################################################
+#               Joint script for Application and Behavioral scoring            #
+#      Apply Logistic Regression on all products (CityCash and Credirect)      #
+#                          Version 7.0 (2020/04/08)                            #
+################################################################################
 
-  
+
+
+########################
+### Initial settings ###
+########################
+
+# Library
+suppressMessages(suppressWarnings(library(RMariaDB)))
+suppressMessages(suppressWarnings(library(DBI)))
+suppressMessages(suppressWarnings(library(Rcpp)))
+#suppressMessages(suppressWarnings(library(RMySQL)))
+suppressMessages(suppressWarnings(library(here)))
+suppressMessages(suppressWarnings(library(dotenv)))
+suppressMessages(suppressWarnings(require("reshape")))
+suppressMessages(suppressWarnings(library(openxlsx)))
+suppressMessages(suppressWarnings(require(jsonlite)))
+
+
+# Database
+db_name <- "citycash"
+con <- dbConnect(RMariaDB::MariaDB(),dbname = "citycash",host ="192.168.2.110",
+                 port = 3306,user = "userro1",password = "DHng_2pg5zdL0yI9x@")
+# db_user <- "root"
+# db_password <- "123456"
+# db_name <- "citycash_db"
+# db_host <- "127.0.0.1"
+# df_port <- 3306
+# con <- dbConnect(MySQL(), user=db_user, password=db_password, 
+#                  dbname=db_name, host=db_host, port = df_port)
+
+
+
+# Define work directory
+main_dir <- "C:\\Projects\\Apply_Scoring\\"
+
+
+# Read argument of ID
+args <- commandArgs(trailingOnly = TRUE)
+application_id <- args[1]
+application_id <- 1252973
+product_id <- NA
+
+
 # Set working directory for input (R data for logistic regression) and output #
-main_dir <-  "C:\\Projects\\Apply_Scoring\\"
 setwd(main_dir)
-  
+
 
 # Load other r files
 source(paste(main_dir,"Apply_Models\\Additional_Restrictions.r", sep=""))
 source(paste(main_dir,"Apply_Models\\Addresses.r", sep=""))
-source(paste(main_dir,"Apply_Models\\Logistic_App_CityCash.r", sep=""))
-source(paste(main_dir,"Apply_Models\\Logistic_App_Credirect_installments.r", 
-             sep=""))
-source(paste(main_dir,"Apply_Models\\Logistic_App_Credirect_payday.r", sep=""))
-source(paste(main_dir,"Apply_Models\\Logistic_App_Credirect_Fraud.r", sep=""))
-source(paste(main_dir,"Apply_Models\\Logistic_Beh_CityCash.r", sep=""))
-source(paste(main_dir,"Apply_Models\\Logistic_Beh_Credirect.r", sep=""))
+source(paste(main_dir,"Apply_Models\\Adjust_Scoring_Prior_Approval.r", sep=""))
+source(paste(main_dir,"Apply_Models\\Logistic_PTC_CityCash.r", sep=""))
 source(paste(main_dir,"Apply_Models\\Useful_Functions_Radi.r", sep=""))
 source(paste(main_dir,"Apply_Models\\Empty_Fields.r", sep=""))
 source(paste(main_dir,"Apply_Models\\Cutoffs.r", sep=""))
@@ -30,12 +69,7 @@ source(paste(main_dir,"Apply_Models\\Generate_Adjust_Score.r", sep=""))
 
 
 # Load predefined libraries
-load("rdata\\citycash_repeat.rdata")
-load("rdata\\citycash_app.rdata")
-load("rdata\\credirect_installments.rdata")
-load("rdata\\credirect_payday.rdata")
-load("rdata\\credirect_repeat.rdata")
-load("rdata\\credirect_app_fraud.rdata")
+load("rdata\\citycash_ptc.rdata")
 
 
 # Load Risky Coordinates
@@ -46,16 +80,17 @@ risky_address <- read.csv("risky_coordinates\\risky_coordinates.csv",sep=";")
 ### Read database and build data ###
 ####################################
 
-clients <- client_id 
-
-# Get last application_id of terminated or active credit	
-application_id <- last_id
-
 
 # Read credits applications
 all_df <- gen_query(con,gen_big_sql_query(db_name,application_id))
 all_df <- gen_time_format(all_df)
 curr_amount <- all_df$amount
+
+
+# Subset based on sub_status
+if(!(all_df$sub_status %in% c(123,128))){
+  quit()
+}
 
 
 # Apply some checks to main credit dataframe
@@ -72,10 +107,6 @@ products  <- gen_query(con,
       gen_products_query(db_name,all_df))
 products_desc <- gen_query(con,
       gen_products_query_desc(db_name,all_df))
-
-
-# Recorrect amount to get highest possible amount
-all_df$amount <- max(products$amount)
 
 
 # Read all previous credits or applications of client
@@ -124,7 +155,12 @@ if(nrow(all_actives_past)>0){
 }
 
 
-# # Generate sum paid and amounts of previous credit 
+# Get days delay on current 
+all_df$days_delay <- 
+  gen_query(con,gen_plan_main_select_query(db_name,application_id))$max_delay
+
+
+# Generate sum paid and amounts of previous credit 
 nrow_all_id <- nrow(all_id)
 if (nrow_all_id>=1){
    all_id_loc <- all_id[all_id$id<=application_id,]
@@ -245,16 +281,18 @@ if(flag_cashpoint==1){
 }
 
 
-# Compute ratio of number of payments
+# Compute other repeat fields
 all_df$ratio_nb_payments_prev <- ifelse(flag_beh==1,prev_paid_days/
     total_amount$installments,NA)
+all_df$profit_avg <- gen_avg_profit(db_name,all_id)
+all_df$ratio_rej <- gen_ratio_rej(db_name,all_credits)
 
 
 # Compute ratio of refinanced
 all_df$refinance_ratio <- ifelse(flag_beh==1,
        gen_ratio_refinance_previous(db_name,all_id),NA)
 
-
+  
 #  Get SEON variables 
 all_df$viber_registered <- ifelse(nrow(gen_seon_phones(
   db_name,7,application_id))>=1,gen_seon_phones(db_name,7,application_id),NA)
@@ -304,10 +342,6 @@ all_df$total_income <- gen_income(db_name,application_id)
 
 # Read relevant product amounts (not superior to amount of application)
 products <- subset(products, products$amount<=all_df$amount)
-
-
-# Prepare final dataframe
-scoring_df <- gen_final_df(products,application_id)
 
 
 # Make back-up dataframe
@@ -367,103 +401,19 @@ flag_third_side <- gen_third_side_prev(db_name,all_id,application_id)
 
 
 
-############################################################
-### Apply model coefficients according to type of credit ###
-############################################################
+####################################
+### Generate Probabity to Churn  ###
+####################################
 
-scoring_df <- gen_apply_score(
-  empty_fields,threshold_empty,flag_exclusion,
-  flag_varnat,flag_is_dead,flag_credit_next_salary,flag_credirect,
-  flag_beh,all_df,scoring_df,df,products,df_Log_beh_CityCash,
-  df_Log_CityCash_App,df_Log_beh_Credirect,df_Log_Credirect_App_installments,
-  df_Log_Credirect_App_payday,period,all_id,prev_amount,amount_tab,
-  t_income,disposable_income_adj,flag_new_credirect_old_city,api_df,
-  flag_judicial,1,flag_third_side,flag_cashpoint)
+# Generate PTC by calling model accordingly
+all_df <- gen_ptc(all_df,flag_credirect,flag_credit_next_salary)
 
-
-######################################
-### Generate final output settings ###
-######################################
+# Make final dataframe for output
+final <- all_df[,c("application_id","ptc","ptc_score")]
+final_exists <- read.xlsx(paste(main_dir,
+    "\\Monitoring\\Files\\Scored_Credits_PTC.xlsx", sep=""))
+final <- rbind(final_exists, final)
+write.xlsx(final, paste(main_dir,"\\Monitoring\\Files\\Scored_Credits_PTC.xlsx", 
+    sep=""))
 
 
-# Readjust score when applicable
-scoring_df <- gen_apply_policy(scoring_df,flag_credirect,flag_cession,
-  flag_bad_ckr_citycash,all_df,all_id,flag_beh,prev_amount,products,
-  application_id,flag_new_credirect_old_city,flag_credit_next_salary,
-  flag_beh_company,flag_cashpoint,1,NA)
-
-
-# Apply criteria according to when the last credit was terminated
-if(flag_limit_offer==1){
-  scoring_df$score <- ifelse(scoring_df$amount>curr_amount,"Bad",
-                             scoring_df$score)
-  scoring_df$color <- ifelse(scoring_df$amount>curr_amount,1,
-                             scoring_df$score)
-}
-
-
-# Subset scoring dataframe according to criteria
-correct_scoring_df <- subset(scoring_df,scoring_df$color!=1 &
-      scoring_df$score %in% c("Indeterminate","Good 1",
-                              "Good 2","Good 3","Good 4"))
-
-
-# Get highest amount of previous credits
-for(i in 1:nrow(all_id)){
-  all_id$amount[i] <- gen_query(con,
-    gen_big_sql_query(db_name,all_id$id[i]))$amount
-}
-max_prev_amount <- max(all_id$amount[
-  all_id$company_id==all_id$company_id[all_id$id==application_id]])
-
-
-# Get highest amount
-get_max_amount <- suppressWarnings(max(correct_scoring_df$amount))
-
-
-# Get maximum installment
-if(is.infinite(get_max_amount)){
-  get_max_installment <- -Inf	
-} else {	
-  get_max_installment <- max(scoring_df$installment_amount[
-    scoring_df$color!=1 & scoring_df$amount==get_max_amount])	
-}
-
-
-# Get score of highest amount
-if(get_max_amount>-Inf){
-  sub <- subset(scoring_df,scoring_df$color!=1 &
-                  scoring_df$installment_amount==get_max_installment & 
-                  scoring_df$amount==get_max_amount)
-  get_score <- 
-    ifelse(nrow(subset(sub,sub$score=="Good 4"))>0,
-      "Good 4",
-    ifelse(nrow(subset(sub,sub$score=="Good 3"))>0,
-      "Good 3",
-    ifelse(nrow(subset(sub,sub$score=="Good 2"))>0,
-      "Good 2",
-    ifelse(nrow(subset(sub,sub$score=="Good 1"))>0,
-     "Good 1",
-    ifelse(nrow(subset(sub,sub$score=="Indeterminate"))>0,
-    "Indeterminate",
-     NA)))))
-} else {
-  get_score <- NA
-}
-
-
-# Get maximum installment
-if(is.infinite(get_max_amount)){	
-  get_max_installment <- -Inf	
-} else {	
-  get_max_installment <- max(scoring_df$installment_amount[	
-  scoring_df$color!=1 & scoring_df$amount==get_max_amount])	
-}
-
-
-# Make final list and return result
-final_list <- list(get_max_amount,get_max_installment,get_score,
-                   all_df$max_delay)
-return(final_list)
-
-}

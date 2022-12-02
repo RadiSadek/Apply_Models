@@ -55,7 +55,7 @@ gen_products_query <- function(db_name,all_df){
 
 # Define query for products 
 gen_products_query_desc <- function(db_name,all_df){
-  return(paste("SELECT id, period, brand_id AS company_id FROM ", db_name, 
+  return(paste("SELECT id, period, type, brand_id AS company_id FROM ", db_name, 
   ".products WHERE id=", all_df$product_id, sep=""))
 }
 
@@ -164,6 +164,14 @@ gen_last_cred_amount_query <- function(var,db){
   return(paste("SELECT final_credit_amount, installments, amount
   FROM ",db,".credits_plan_contract 
   WHERE application_id=", var, sep =""))
+}
+
+# Define query to get all payments of previous credit 
+gen_all_payments_with_ref_query <- function(var,db){		
+  return(paste("SELECT SUM(amount) AS amount_paid
+  FROM ",db,".cash_flow		
+  WHERE nomenclature_id IN (90,100,101,102) AND deleted_at 
+  IS NULL AND object_type = 4	AND object_id=",var,sep =""))		
 }
 
 # Define query to get expenses according to city

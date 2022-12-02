@@ -45,7 +45,7 @@ main_dir <- "C:\\Projects\\Apply_Scoring\\"
 # Read argument of ID
 args <- commandArgs(trailingOnly = TRUE)
 application_id <- args[1]
-#application_id <- 1145620
+application_id <- 527588
 product_id <- NA
 
 
@@ -208,8 +208,8 @@ api_df <- gen_treat_api_df(api_df)
 ############################################
 
 # Compute flag if credit is up to next salary
-flag_credit_next_salary <- ifelse(all_df$product_id %in% 
-      c(25:28,36,37,41:44,49,50,55:58,67:68), 1, 0)
+flag_credit_next_salary <- ifelse(products_desc$type==4,1,
+  ifelse(all_df$product_id %in% c(25:28,36,37,41:44,49,50,55:58,67:68), 1, 0))
 
 
 # Compute flag if product is credirect
@@ -221,9 +221,7 @@ flag_cashpoint <- ifelse(products_desc$company_id==5, 1, 0)
 
 
 # Compute flag if client has previous otpisan or tsediran
-flag_exclusion <- ifelse(length(which(names(
-  table(all_credits$sub_status)) %in% c(124,133)))>0, 1,
-  ifelse(nrow(risk)>0, 1, 0))
+flag_exclusion <- gen_flag_exclusion(all_credits,flag_cashpoint,risk)
 
 
 # Get and rename columns for CKR variables
