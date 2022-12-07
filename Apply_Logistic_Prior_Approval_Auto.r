@@ -174,12 +174,17 @@ select_credits <- rbind(select_credits_citycash,select_credits_credirect)
 
 
 # Join if VIP
+names_b4 <- names(select_credits)
 is_vip_query <- paste(
-  "SELECT id, is_vip
-  FROM ",db_name,".clients",sep="")
+  "SELECT client_id, brand_id, is_vip
+   FROM ",db_name,".client_brand",sep="")
 is_vip <- gen_query(con,is_vip_query)
-select_credits <- merge(select_credits,is_vip,by.x = "client_id",
-  by.y = "id", all.x = TRUE)
+select_credits <- merge(select_credits,is_vip,
+   by.x = c("client_id","company_id"),
+   by.y = c("client_id","brand_id"),all.x = TRUE)
+select_credits$is_vip <- ifelse(is.na(select_credits$is_vip),0,
+   select_credits$is_vip)
+select_credits <- select_credits[,c(names_b4,"is_vip")]
 
 
 # Remove Big Fin and other Ipoteki
@@ -314,10 +319,13 @@ po_old$criteria <- ifelse(po_old$company_id==1,
 po_old <- subset(po_old,po_old$criteria==1)
 
 
-# Join if VIP
+# Recheck if client still has vip status
+names_b4 <- names(po_old)
 is_vip <- gen_query(con,is_vip_query)
-po_old <- merge(po_old,is_vip,by.x = "client_id",
-  by.y = "id", all.x = TRUE)
+po_old <- merge(po_old,is_vip,
+  by.x = c("client_id","company_id"),
+  by.y = c("client_id","brand_id"),all.x = TRUE)
+po_old <- po_old[,c(names_b4,"is_vip")]
 
 
 # Update scoring to selected credits

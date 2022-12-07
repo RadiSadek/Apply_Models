@@ -218,13 +218,16 @@ if(nrow(all_credit_active)>0){
 
 
 # Join if VIP
+names_b4 <- names(all_credit)
 is_vip_query <- paste(
-  "SELECT id, is_vip
-  FROM ",db_name,".clients 
-  WHERE id=",all_credit$client_id,sep="")
-is_vip <- gen_query(con, is_vip_query)
-all_credit <- merge(all_credit,is_vip,by.x = "client_id",
-  by.y = "id", all.x = TRUE)
+  "SELECT client_id, brand_id, is_vip
+   FROM ",db_name,".client_brand",sep="")
+is_vip <- gen_query(con,is_vip_query)
+all_credit <- merge(all_credit,is_vip,
+  by.x = c("client_id","company_id"),
+  by.y = c("client_id","brand_id"), all.x = TRUE)
+all_credit$is_vip <- ifelse(is.na(all_credit$is_vip),0,all_credit$is_vip)
+all_credit <- all_credit[,c(names_b4,"is_vip")]
 
 
 

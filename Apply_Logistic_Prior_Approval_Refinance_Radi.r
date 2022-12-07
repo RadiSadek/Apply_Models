@@ -241,11 +241,16 @@ select$left_to_pay <- ifelse(select$company_id==2,
 
 
 # Check if client has still VIP status 
+names_b4 <- names(select)
 is_vip_query <- paste(
-  "SELECT id, is_vip
-  FROM ",db_name,".clients",sep="")
-is_vip <- gen_query(con, is_vip_query)
-select <- merge(select,is_vip,by.x = "client_id",by.y = "id", all.x = TRUE)
+  "SELECT client_id, brand_id, is_vip
+   FROM ",db_name,".client_brand",sep="")
+is_vip <- gen_query(con,is_vip_query)
+select <- merge(select,is_vip,
+   by.x = c("client_id","company_id"),
+   by.y = c("client_id","brand_id"),all.x = TRUE)
+select$is_vip <- ifelse(is.na(select$is_vip),0,select$is_vip)
+select <- select[,c(names_b4,"is_vip")]
 
 
 # Remove Flex credits and other Ipoteki
@@ -261,7 +266,7 @@ select <- subset(select,!(select$product_id %in%
 
 # Append score
 if(nrow(select)>0){
-result_df <- select[,2, drop=FALSE]
+result_df <- select[,c("id","client_id"), drop=FALSE]
 result_df$max_amount <- NA
 result_df$score_max_amount <- NA
 result_df$product_id <- NA
@@ -291,7 +296,7 @@ for(i in 1:nrow(result_df)){
 
 
 # Make final data frame
-select <- select[,-which(names(select) %in% c("product_id"))]
+select <- select[,-which(names(select) %in% c("product_id","client_id"))]
 select <- merge(select,result_df,by.x = "id",by.y = "id",all.x = TRUE)
 
 
