@@ -136,17 +136,17 @@ gen_restrict_credirect_app <- function(scoring_df,all_df,
 
   if(flag_credit_next_salary==1){
     scoring_df$color <- 
-      ifelse(scoring_df$score %in% c("Good 4") & scoring_df$amount>800,1,
+      ifelse(scoring_df$score %in% c("Good 4") & scoring_df$amount>1000,1,
       ifelse(scoring_df$score %in% c("Good 3","Good 2","Good 1",
                                      "Indeterminate") &
-             scoring_df$amount>800,1,
+             scoring_df$amount>1000,1,
              scoring_df$color))
   } else {
     scoring_df$color <- 
       ifelse(scoring_df$score %in% c("Good 4") & scoring_df$amount>1400,1,
       ifelse(scoring_df$score %in% c("Good 3","Good 2","Good 1",
                                      "Indeterminate") &
-             scoring_df$amount>800,1,
+             scoring_df$amount>1000,1,
              scoring_df$color))
   }
   if(all_df$age<21){
@@ -269,7 +269,7 @@ gen_restrict_credirect_beh <- function(scoring_df,all_df,all_id,application_id,
   } else {
       scoring_df$allowed_amount_app <- 
         ifelse(scoring_df$score %in% c("NULL","Bad","Indeterminate"),0,
-        ifelse(scoring_df$score %in% c("Good 4"),800,800))
+        ifelse(scoring_df$score %in% c("Good 4"),1000,1000))
       
       if(nrow(all_id_local)>0){
         scoring_df$allowed_amount_rep <- 
@@ -295,7 +295,7 @@ gen_restrict_credirect_beh <- function(scoring_df,all_df,all_id,application_id,
         scoring_df$allowed_amount <- scoring_df$allowed_amount_app
         
       }
-      scoring_df$allowed_amount <- ifelse(scoring_df$allowed_amount>800,800,
+      scoring_df$allowed_amount <- ifelse(scoring_df$allowed_amount>1000,1000,
                                           scoring_df$allowed_amount)
       scoring_df$color <- ifelse(scoring_df$amount>scoring_df$allowed_amount,
                                  1,scoring_df$color)
