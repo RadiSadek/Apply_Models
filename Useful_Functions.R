@@ -444,14 +444,14 @@ gen_third_side_prev <- function(db_name,all_id,application_id){
 }
 
 # Define function to get apply cutoffs for PTC 
-gen_group_scores_ptc <- function(all_df,flag_credirect,
-                                 flag_credit_next_salary){
+gen_group_scores_ptc <- function(all_df,cutoffs){
   
   all_df$ptc_score <-
     ifelse(is.na(all_df$ptc),"NULL",
-    ifelse(all_df$ptc>cu_ptc_citycash[1],"high",
-    ifelse(all_df$ptc>cu_ptc_citycash[2],"medium",
-    ifelse(all_df$ptc>cu_ptc_citycash[3],"low","very_low"))))
+    ifelse(all_df$ptc>cutoffs[1],"very_high",
+    ifelse(all_df$ptc>cutoffs[2],"high",
+    ifelse(all_df$ptc>cutoffs[3],"medium",
+    ifelse(all_df$ptc>cutoffs[4],"low","very_low")))))
   return(all_df)
   
 }
@@ -472,3 +472,66 @@ gen_flag_exclusion <- function(all_credits,flag_cashpoint,risk){
   return(flag_exclusion)
   
 }
+
+# Compute days between last app and current terminated (for PTC)
+gen_days_since_app_ptc <- function(all_id,application_id){
+  
+  return(difftime(
+    all_id$signed_at[all_id$id==application_id],
+    all_id$deactivated_at[all_id$id==
+      max(subset(all_id,all_id$id!=application_id & all_id$company_id==2)$id)],
+    units = c("days")))
+}
+
+# Get if client has prior app to current credit (for PTC)
+gen_prev_apps_ptc <- function(all_credits,application_id,db_name){
+  
+  all_credits <- merge(all_credits,
+     gen_query(con,gen_get_company_id_query(db_name)),by.x = "product_id",
+     by.y = "id",all.x = TRUE)
+  all_credits <- subset(all_credits,all_credits$company_id==2 & 
+     all_credits$created_at<all_credits$created_at[
+     all_credits$id==application_id])
+  
+  return(ifelse(nrow(all_credits)>0,1,0))
+  
+}
+
+# Function to check if client has current active of other company
+gen_active_other_brand <- function(all_id,application_id,brand){
+  return(ifelse(
+    nrow(subset(all_id,all_id$company_id==brand & all_id$status==4))>0,1,0))
+  
+}
+
+# Apply PTC model to all
+gen_ptc <- function(all_df,all_credits,all_id,application_id,
+       flag_credirect,flag_credit_next_salary,flag_beh_company,db_name){
+  
+  if(flag_credirect==0){
+    all_df$ptc <- round(gen_ptc_citycash(all_df),3)
+    cutoffs <- cu_ptc_citycash
+    
+  } else {
+    if(flag_beh_company==0 & flag_credit_next_salary==1){
+      all_df$ptc <- round(gen_ptc_credirect_gratis(all_df,all_id,
+         application_id,all_credits,db_name),3)
+      cutoffs <- cu_ptc_gratis
+    } else if(flag_beh_company==1 & flag_credit_next_salary==1){
+      all_df$ptc <- round(gen_ptc_credirect_flex(all_df,all_id,application_id,
+         all_credits,db_name) ,3)
+      cutoffs <- cu_ptc_flex
+    } else if(flag_beh_company==0 & flag_credit_next_salary==0){
+      all_df$ptc <- round(gen_ptc_credirect_first_installments(all_df,all_id,
+         application_id,all_credits,db_name),3)
+      cutoffs <- cu_ptc_consumer_new
+    } else {
+      all_df$ptc <- round(gen_ptc_credirect_repeat_installments(all_df,all_id,
+         application_id,all_credits,db_name),3)
+      cutoffs <- cu_ptc_consumer_rep
+    }
+  }
+  all_df <- gen_group_scores_ptc(all_df,cutoffs)
+  return(all_df)
+}
+

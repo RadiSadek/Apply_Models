@@ -44,7 +44,7 @@ main_dir <- "C:\\Projects\\Apply_Scoring\\"
 # Read argument of ID
 args <- commandArgs(trailingOnly = TRUE)
 application_id <- args[1]
-application_id <- 1252973
+application_id <- 1370762
 product_id <- NA
 
 
@@ -57,6 +57,7 @@ source(paste(main_dir,"Apply_Models\\Additional_Restrictions.r", sep=""))
 source(paste(main_dir,"Apply_Models\\Addresses.r", sep=""))
 source(paste(main_dir,"Apply_Models\\Adjust_Scoring_Prior_Approval.r", sep=""))
 source(paste(main_dir,"Apply_Models\\Logistic_PTC_CityCash.r", sep=""))
+source(paste(main_dir,"Apply_Models\\Logistic_PTC_Credirect.r", sep=""))
 source(paste(main_dir,"Apply_Models\\Useful_Functions_Radi.r", sep=""))
 source(paste(main_dir,"Apply_Models\\Empty_Fields.r", sep=""))
 source(paste(main_dir,"Apply_Models\\Cutoffs.r", sep=""))
@@ -69,7 +70,11 @@ source(paste(main_dir,"Apply_Models\\Generate_Adjust_Score.r", sep=""))
 
 
 # Load predefined libraries
-load("rdata\\citycash_ptc.rdata")
+load("rdata\\ptc_citycash.rdata")
+load("rdata\\ptc_credirect_gratis.rdata")
+load("rdata\\ptc_credirect_flex.rdata")
+load("rdata\\ptc_credirect_consumer_repeat_model.rdata")
+load("rdata\\ptc_credirect_consumer_new.rdata")
 
 
 # Load Risky Coordinates
@@ -129,8 +134,8 @@ total_amount_curr <- gen_query(con,
 
 
 # Read CKR 
-data_ckr_bank <- gen_query_ckr(all_df,all_credits,1)
-data_ckr_financial <- gen_query_ckr(all_df,all_credits,2)
+data_ckr_bank <- gen_query_ckr(all_df,all_credits,1,0)
+data_ckr_financial <- gen_query_ckr(all_df,all_credits,2,0)
 
 
 # Read all previous active or terminated credits of client
@@ -406,7 +411,8 @@ flag_third_side <- gen_third_side_prev(db_name,all_id,application_id)
 ####################################
 
 # Generate PTC by calling model accordingly
-all_df <- gen_ptc(all_df,flag_credirect,flag_credit_next_salary)
+all_df <- gen_ptc(all_df,all_credits,all_id,application_id,
+    flag_credirect,flag_credit_next_salary,flag_beh_company,db_name)
 
 # Make final dataframe for output
 final <- all_df[,c("application_id","ptc","ptc_score")]

@@ -211,7 +211,7 @@ gen_get_company_id_query <- function(db_name){
 }
 
 # Define query to get the CKR status 
-gen_query_ckr <- function(all_df,all_credits,type_of){
+gen_query_ckr <- function(all_df,all_credits,type_of,crit){
   names_col <- c("current_status_active","status_active","status_finished",
                  "source_entity_count","amount_drawn","cred_count", 
                  "outstanding_performing_principal",
@@ -245,6 +245,9 @@ gen_query_ckr <- function(all_df,all_credits,type_of){
     result_df$date_diff <- difftime(result_df$date_curr, result_df$created_at, 
                                     units=c("days"))
     result_df <- result_df[order(result_df$date_diff),]
+    if(crit!=0 & nrow(result_df)>1){
+      result_df <- result_df[2:nrow(result_df),]
+    }
     result_final <- as.data.frame(matrix(nrow = 1, 
                                          ncol = ncol(result_df)))
     names(result_final) <- names(result_df)

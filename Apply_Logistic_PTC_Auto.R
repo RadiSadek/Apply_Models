@@ -77,6 +77,7 @@ source(file.path(base_dir,"Additional_Restrictions.r"))
 source(file.path(base_dir,"Addresses.r"))
 source(file.path(base_dir,"Adjust_Scoring_Prior_Approval.r"))
 source(file.path(base_dir,"Logistic_PTC_CityCash.r"))
+source(file.path(base_dir,"Logistic_PTC_Credirect.r"))
 source(file.path(base_dir,"Useful_Functions.r"))
 source(file.path(base_dir,"Empty_Fields.r"))
 source(file.path(base_dir,"Cutoffs.r"))
@@ -157,8 +158,8 @@ total_amount_curr <- gen_query(con,
 
 
 # Read CKR 
-data_ckr_bank <- gen_query_ckr(all_df,all_credits,1)
-data_ckr_financial <- gen_query_ckr(all_df,all_credits,2)
+data_ckr_bank <- gen_query_ckr(all_df,all_credits,1,0)
+data_ckr_financial <- gen_query_ckr(all_df,all_credits,2,0)
 
 
 # Read all previous active or terminated credits of client
@@ -434,7 +435,8 @@ flag_third_side <- gen_third_side_prev(db_name,all_id,application_id)
 ####################################
 
 # Generate PTC by calling model accordingly
-all_df <- gen_ptc(all_df,flag_credirect,flag_credit_next_salary)
+all_df <- gen_ptc(all_df,all_credits,all_id,application_id,
+    flag_credirect,flag_credit_next_salary,flag_beh_company,db_name)
 
 
 

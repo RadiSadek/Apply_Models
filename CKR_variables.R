@@ -37,6 +37,9 @@ gen_ckr_variables <- function(all_df,flag_beh,flag_credirect){
   all_df$cession_fin <- ifelse(is.na(all_df$cession_fin), 0, all_df$cession_fin)	
   all_df$amount_cession_total <- ifelse(all_df$cession_bank>all_df$cession_fin, 	
          all_df$cession_bank, all_df$cession_fin)
+  all_df$overdue_principal <- 
+    ifelse(is.na(all_df$outs_overdue_bank),0,all_df$outs_overdue_bank) + 
+    ifelse(is.na(all_df$outs_overdue_fin),0,all_df$outs_overdue_fin)
   
   return(all_df)
 }

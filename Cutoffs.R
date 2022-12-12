@@ -36,6 +36,10 @@ cu_app_cred_frauds <- 0.2
 
 ########### Cutoffs for probability to churn 
 
-cu_ptc_citycash <- c(0.4,0.25,0.13)
+cu_ptc_citycash <- c(0.4,0.35,0.25,0.125)
+cu_ptc_gratis <- c(0.51,0.49,0.45,0.38)
+cu_ptc_flex <- c(0.25,0.21,0.16,0.11)
+cu_ptc_consumer_new  <- c(0.55,0.49,0.41,0.31)
+cu_ptc_consumer_rep<- c(0.4,0.3,0.2,0.11)
 
 

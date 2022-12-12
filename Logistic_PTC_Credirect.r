@@ -1,10 +1,11 @@
 
-##############################################################
-######## Functions to apply logistic regression for PTC ######
-##############################################################
+##########################################################################
+######## Functions to apply logistic regression for PTC (Credirect) ######
+##########################################################################
 
 # Apply ptc model to flex (repeat)
-gen_ptc_credirect_flex <- function(all_df,all_id,application_id){
+gen_ptc_credirect_flex <- function(all_df,all_id,application_id,all_credits,
+                                   db_name){
   
   all_df$AGE <- as.factor(
     ifelse(all_df$age<=21,"18-21",
@@ -20,17 +21,13 @@ gen_ptc_credirect_flex <- function(all_df,all_id,application_id){
     ifelse(all_df$credits_cum_credirect<=2,"3rd",
     ifelse(all_df$credits_cum_credirect<=6,"4th-7th","8th+"))))
   
-  diff_time <- difftime(
-      all_id$signed_at[all_id$id==application_id],
-      all_id$deactivated_at[all_id$id==
-      max(subset(all_id,all_id$id!=application_id & all_id$company_id==2)$id)],
-      units = c("days"))
   all_df$DAYS_SINCE_LAST <- as.factor(
-    ifelse(is.na(diff_time),"1-15",
-    ifelse(diff_time<=0,"0/16-90",
-    ifelse(diff_time<=15,"1-15",
-    ifelse(diff_time<=90,"0/16-90",
-    ifelse(diff_time<=180,"91-180","181+"))))))
+    ifelse(is.na(gen_days_since_app_ptc(all_id,application_id)),"1-15",
+    ifelse(gen_days_since_app_ptc(all_id,application_id)<=0,"0/16-90",
+    ifelse(gen_days_since_app_ptc(all_id,application_id)<=15,"1-15",
+    ifelse(gen_days_since_app_ptc(all_id,application_id)<=90,"0/16-90",
+    ifelse(gen_days_since_app_ptc(all_id,application_id)<=180,"91-180",
+           "181+"))))))
   
   all_df$YIELD <- gen_avg_profit(db_name,all_id[all_id$id==application_id,])/
     all_df$amount
@@ -61,7 +58,8 @@ gen_ptc_credirect_flex <- function(all_df,all_id,application_id){
 }
  
 # Apply ptc model to gratis
-gen_ptc_credirect_gratis <- function(all_df,all_id,application_id){
+gen_ptc_credirect_gratis <- function(all_df,all_id,application_id,all_credits,
+                                     db_name){
   
   all_df$AGE <- as.factor(
     ifelse(all_df$age<=21,"18-21",
@@ -91,16 +89,13 @@ gen_ptc_credirect_gratis <- function(all_df,all_id,application_id){
     ifelse(is.null(all_df$ckr_fin_fin),"NoDelay/NoCredit",
     ifelse(is.na(all_df$ckr_fin_fin),"NoDelay/NoCredit",
     ifelse(all_df$ckr_fin_fin==0,"NoDelay/NoCredit",
-    ifelse(all_df$other_status_finished%in%c(71:74),"31-360DaysDelay",
+    ifelse(all_df$ckr_fin_fin %in% c(71:74),"31-360DaysDelay",
             "361+DaysDelay")))))
   
-  overdue_principal <- 
-    ifelse(is.na(all_df$outs_overdue_bank),0,all_df$outs_overdue_bank) + 
-    ifelse(is.na(all_df$outs_overdue_fin),0,all_df$outs_overdue_fin)
   all_df$OVERDUE_PRINCIPAL <- as.factor(
-    ifelse(is.null(overdue_principal),"0-150",
-    ifelse(is.na(overdue_principal),"0-150",
-    ifelse(overdue_principal<=150,"0-150","150+"))))
+    ifelse(is.null(all_df$overdue_principal),"0-150",
+    ifelse(is.na(all_df$overdue_principal),"0-150",
+    ifelse(all_df$overdue_principal <=150,"0-150","150+"))))
   
   all_df$BANK_CREDITORS <- as.factor(
     ifelse(is.null(all_df$src_ent_bank),"1-3",
@@ -113,13 +108,21 @@ gen_ptc_credirect_gratis <- function(all_df,all_id,application_id){
     ifelse(is.na(all_df$ckr_act_bank),"0-30Days/NoCredit",
     ifelse(all_df$ckr_act_bank<=70,"0-30Days/NoCredit","31+Days"))))
   
+  all_df$PREVIOUS_APPS <- as.factor(
+    ifelse(gen_prev_apps_ptc(all_credits,application_id,db_name)==1,
+      "Yes","No"))
+
+  all_df$ACTIVE_CITYCASH <- as.factor(
+    ifelse(gen_active_other_brand(all_id,application_id,1)==1,"Yes","No"))
+  
   # Apply model
   return(predict(credirect_gratis_model,newdata=all_df,type="response"))
   
 }
 
 # Apply ptc model to first terminated installments
-gen_ptc_credirect_first_installments <- function(all_df,all_id,application_id){
+gen_ptc_credirect_first_installments <- function(all_df,all_id,application_id,
+                                                 all_credits,db_name){
   
   all_df$AGE <- as.factor(
     ifelse(all_df$age<40,"18-39",
@@ -137,8 +140,87 @@ gen_ptc_credirect_first_installments <- function(all_df,all_id,application_id){
     ifelse(all_df$status_finished_total<=74,"0-360DaysDelay/NoCredit", 
          "361+DaysDelay"))))
   
-  all_df$DAYS_DELAY<-as.factor(
+  all_df$DAYS_DELAY <- as.factor(
     ifelse(all_df$days_delay<=90,"0-90",     
     ifelse(all_df$days_delay<=180,"91-180","181+")))
+  
+  all_df$PREVIOUS_APPS <-as.factor(
+    ifelse(gen_prev_apps_ptc(all_credits,application_id,db_name)==1,"Yes","No"))
+  
+  all_df$ACTIVE_CITYCASH <- as.factor(
+    ifelse(gen_active_other_brand(all_id,application_id,1)==1,"Yes","No"))
+  
+  all_df$PROFIT_FROM_LAST <- as.factor(
+    ifelse(gen_profit_id(db_name,all_id,application_id)<=150,"0-150",
+    ifelse(gen_profit_id(db_name,all_id,application_id)<=250,"150-250",
+    ifelse(gen_profit_id(db_name,all_id,application_id)<=500,"250-500",
+    ifelse(gen_profit_id(db_name,all_id,application_id)<=1000,"500-1000",
+           "1000+")))))
+  
+  # Apply model
+  return(predict(credirect_consumer_new_model,newdata=all_df,type="response"))
+  
+}
+
+# Apply ptc model to repeat terminated installments
+gen_ptc_credirect_repeat_installments <- function(all_df,all_id,application_id,
+                                                  all_credits,db_name){
+  
+  all_df$AGE <- as.factor(
+    ifelse(all_df$age<30,"18-29",
+    ifelse(all_df$age<45,"30-44","45+")))
+  
+  all_df$YIELD <- gen_avg_profit(db_name,all_id[all_id$id==application_id,])/
+    all_df$amount
+  all_df$YIELD <- as.factor(
+    ifelse(all_df$YIELD<=1.1,"100-110%",
+    ifelse(all_df$YIELD<=1.3,"110-130%",
+    ifelse(all_df$YIELD<=1.8,"130-180%",
+    ifelse(all_df$YIELD<=2.1,"180-210%","210+%")))))
+  
+  all_df$credits_cum_credirect <- nrow(subset(all_id,all_id$company_id==2))
+  all_df$CONSECUTIVE_LOAN <- as.factor(
+    ifelse(all_df$credits_cum_credirect==1,"2nd",
+    ifelse(all_df$credits_cum_credirect==2,"3rd",
+    ifelse(all_df$credits_cum_credirect<=4,"4th-5th",
+    ifelse(all_df$credits_cum_credirect<=8,"6th-9th","10th+")))))
+  
+  all_df$DAYS_SINCE_LAST <- as.factor(
+    ifelse(is.na(gen_days_since_app_ptc(all_id,application_id)),
+           "15-60DaysOrImmediate",
+    ifelse(gen_days_since_app_ptc(all_id,application_id)<=0,
+           "15-60DaysOrImmediate",
+    ifelse(gen_days_since_app_ptc(all_id,application_id)<=14,"1-14Days",
+    ifelse(gen_days_since_app_ptc(all_id,application_id)<=60,
+          "15-60DaysOrImmediate","60+Days")))))
+  
+  all_df$ACTIVE_CITYCASH <- as.factor(
+    ifelse(gen_active_other_brand(all_id,application_id,1)==0,"No","Yes"))
+  
+  has_refinance <- nrow(subset(all_id,
+    all_id$sub_status==123 & all_id$company_id==2))
+  all_df$LIFETIME_REFINANCE <- as.factor(
+    ifelse(is.na(has_refinance),"0",ifelse(has_refinance==0,"0","1+")))
+  
+  all_df$NONBANK_CREDITORS <- as.factor(
+    ifelse(is.null(all_df$src_ent_fin),"0-2",
+    ifelse(is.na(all_df$src_ent_fin),"0-2",
+    ifelse(all_df$src_ent_fin<=2,"0-2",
+    ifelse(all_df$src_ent_fin<=4,"3-4","5+")))))
+  
+  status_active_bank_prev <- gen_query_ckr(all_df,all_credits,1,1)$status_active
+  status_active_fin_prev <- gen_query_ckr(all_df,all_credits,2,1)$status_active
+  all_df$status_active_total_prev <-
+    ifelse(status_active_fin_prev>status_active_bank_prev, 
+           status_active_fin_prev,status_active_bank_prev)
+  all_df$MAX_DELAY_ACTIVE_CHANGE <- as.factor(
+    ifelse(is.null(all_df$status_active_total_prev),"Same/Improved",
+    ifelse(is.na(all_df$status_active_total_prev),"Same/Improved",
+    ifelse(all_df$status_active_total_prev<all_df$status_active_total,
+           "Worsened","Same/Improved"))))
+  
+  # Apply model
+  return(predict(credirect_consumer_repeat_model,newdata=all_df,
+      type="response"))
   
 }

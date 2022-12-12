@@ -1,7 +1,7 @@
 
-##############################################################
-######## Functions to apply logistic regression for PTC ######
-##############################################################
+##########################################################################
+######## Functions to apply logistic regression for PTC (City Cash) ######
+##########################################################################
 
 # Apply ptc model to citycash
 gen_ptc_citycash <- function(all_df){
@@ -14,6 +14,7 @@ gen_ptc_citycash <- function(all_df){
   all_df$gender <- ifelse(all_df$gender==2,0,1)
   all_df$gender <- as.factor(all_df$gender)
   
+  # For age, only the name of the bin is erroneous, not the model per se 
   all_df$age <- 
     ifelse(is.na(all_df$age),"less_40",
     ifelse(all_df$age<=40,"less_40",
@@ -63,24 +64,7 @@ gen_ptc_citycash <- function(all_df){
   all_df$ratio_rej <- as.factor(all_df$ratio_rej)
   
   # Apply model
-  
   return(predict(df_Log_CityCash_PTC,newdata=all_df, type="response"))
   
-
 }
  
-
-# Apply model to all
-gen_ptc <- function(all_df,flag_credirect,flag_credit_next_salary){
-  
-  if(flag_credirect==0){
-    all_df$ptc <- gen_ptc_citycash(all_df)
-    all_df <- gen_group_scores_ptc(all_df,flag_credirect,
-      flag_credit_next_salary)
-  } else {
-    all_df$ptc <- NA 
-    all_df$ptc_score <- NA
-  }
-  
-  return(all_df)
-}

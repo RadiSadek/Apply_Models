@@ -43,7 +43,7 @@ main_dir <- "C:\\Projects\\Apply_Scoring\\"
 # Read argument of ID
 args <- commandArgs(trailingOnly = TRUE)
 #application_id <- args[1]
-application_id <- 1220604
+application_id <- 1427154
 
 
 # Load other r files
@@ -246,7 +246,7 @@ all_credit <- subset(all_credit,all_credit$max_amount>-Inf &
                                  all_credit$max_amount<Inf)
 if(nrow(all_credit)){
   if(!is.na(all_credit$company_id) & all_credit$company_id!=5){
-    all_credit <- subset(all_credit,all_credit$max_delay<=300)
+    all_credit <- subset(all_credit,all_credit$max_delay<=360)
   }
 }
 

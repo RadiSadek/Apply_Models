@@ -98,8 +98,8 @@ total_amount_curr <- gen_query(con,
 
 
 # Read CKR 
-data_ckr_bank <- gen_query_ckr(all_df,all_credits,1)
-data_ckr_financial <- gen_query_ckr(all_df,all_credits,2)
+data_ckr_bank <- gen_query_ckr(all_df,all_credits,1,0)
+data_ckr_financial <- gen_query_ckr(all_df,all_credits,2,0)
 
 
 # Read all previous active or terminated credits of client
@@ -463,7 +463,7 @@ if(is.infinite(get_max_amount)){
 
 # Make final list and return result
 final_list <- list(get_max_amount,get_max_installment,get_score,
-                   all_df$max_delay)
+   gen_query(con,gen_plan_main_select_query(db_name,application_id)))
 return(final_list)
 
 }

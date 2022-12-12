@@ -500,6 +500,20 @@ gen_avg_profit <- function(db_name,all_id){
   return(round(mean(all_id$profit),3))
 }
 
+# Compute profit on last id (for PTC)
+gen_profit_id <- function(db_name,all_id,application_id){
+  
+  all_id$amount_paid <- NA
+  all_id$amount <- NA
+  all_id <- all_id[all_id$id==application_id,]
+  all_id$amount <- gen_query(con,
+    gen_last_cred_amount_query (all_id$id,db_name))$amount
+  all_id$amount_paid <- gen_query(con,
+    gen_all_payments_with_ref_query(all_id$id,db_name))$amount_paid
+
+  return(all_id$amount_paid-all_id$amount)
+}
+
 # Compute ratio rejected applications
 gen_ratio_rej <- function(db_name,all_credits){
   
@@ -513,6 +527,3 @@ gen_ratio_rej <- function(db_name,all_credits){
     nrow(all_credits),3))
   
 }
-
-
-

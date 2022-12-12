@@ -45,7 +45,7 @@ main_dir <- "C:\\Projects\\Apply_Scoring\\"
 # Read argument of ID
 args <- commandArgs(trailingOnly = TRUE)
 application_id <- args[1]
-application_id <- 527588
+#application_id <- 1427154
 product_id <- NA
 
 
@@ -130,8 +130,8 @@ total_amount_curr <- gen_query(con,gen_total_amount_curr_query(
 
 
 # Read CKR 
-data_ckr_bank <- gen_query_ckr(all_df,all_credits,1)
-data_ckr_financial <- gen_query_ckr(all_df,all_credits,2)
+data_ckr_bank <- gen_query_ckr(all_df,all_credits,1,0)
+data_ckr_financial <- gen_query_ckr(all_df,all_credits,2,0)
 
 
 # Read all previous active or terminated credits of client
