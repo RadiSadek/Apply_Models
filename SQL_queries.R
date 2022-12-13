@@ -293,6 +293,14 @@ WHERE payed_at IS NOT NULL AND application_id=",id," AND pay_day<='",
 time_choice,"'",sep=""))
 }
 
+# Define read credits plan main (plain and simple)
+gen_get_credits_plan_main_query <- function(db_name,id){
+  return(paste(
+"SELECT pay_day
+FROM ",db_name,".credits_plan_main 
+WHERE application_id=",id,sep=""))
+}
+
 # Read PO terminated data per client_id
 gen_po_terminated_query <- function(db_name,input){
   return(paste(

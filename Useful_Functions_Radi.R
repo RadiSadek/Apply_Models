@@ -473,6 +473,30 @@ gen_flag_exclusion <- function(all_credits,flag_cashpoint,risk){
   
 }
 
+# Compute passed days of unpassed installment
+gen_ratio_unpassed_installment <- function(db_name,activated,deactivated,id){
+  
+  # Read credit plan main
+  plan <- gen_query(con,gen_get_credits_plan_main_query(db_name,id))
+  plan$paid <-  as.Date(deactivated)
+  plan_first <- plan[1,]
+  plan_first$pay_day <- as.Date(activated)
+  plan <- rbind(plan_first,plan)
+  plan$difftime <- difftime(plan$paid,plan$pay_day,units = c("days"))
+  plan$time_to_installment <- NA
+  for(i in 2:(nrow(plan))){
+    plan$time_to_installment[i] <- difftime(plan$pay_day[i],plan$pay_day[i-1],
+      units = c("days"))
+  }
+  plan <- subset(plan,plan$difftime<0 & !is.na(plan$time_to_installment))
+  if(nrow(plan)>0){
+    ratio <- round(1-abs(plan$difftime[1]/plan$time_to_installment[1]))
+  } else {
+    ratio <- 0
+  }
+  return(ratio)
+}
+
 # Compute days between last app and current terminated (for PTC)
 gen_days_since_app_ptc <- function(all_id,application_id){
   

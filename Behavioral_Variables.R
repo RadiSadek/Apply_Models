@@ -347,15 +347,24 @@ gen_prev_deactiv_date <- function(db_name,all_df,all_id,application_id){
   if(nrow(all_id_local)>0){
     all_id_local <- all_id_local[order(all_id_local$deactivated_at),]
     all_id_local <- all_id_local[nrow(all_id_local),]
-    all_id_local$next_salary <- ifelse(all_id_local$product_id %in% 
-      c(25:28,36,37,41:44,49,50,55:58), 1, 0)
+    all_id_local <- merge(all_id_local,
+      gen_query(con,gen_products_query_desc(db_name,all_id_local))[,
+      c("id","type")],by.x = "product_id",by.y = "id",all.x = TRUE)
+    all_id_local$next_salary <- ifelse(all_id_local$type==4,1,0)
     if(is.na(all_id_local$deactivated_at)){
       all_id_local$deactivated_at <- Sys.time()
     }
     
-    passed_install_at_pay <- gen_query(con,
+    # Get number of passed installments at termination of previous
+    passed_install_at_pay <- as.numeric(gen_query(con,
        gen_passed_install_before_query(db_name,
-       all_id_local$id,all_id_local$deactivated_at))$passed_installments
+       all_id_local$id,all_id_local$deactivated_at))$passed_installments)
+    
+    if(all_id_local$type!=4 & all_id_local$status!=4){
+      passed_install_at_pay  <- passed_install_at_pay + 
+        gen_ratio_unpassed_installment(db_name,all_id_local$signed_at,
+         all_id_local$deactivated_at,all_id_local$id)
+    }
     
   } else {
     passed_install_at_pay <- NA
