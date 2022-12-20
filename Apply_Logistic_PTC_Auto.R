@@ -95,8 +95,17 @@ source(file.path(base_dir,"Generate_Adjust_Score.r"))
 ########################
 
 # Load predefined libraries
-rdata <- file.path(base_dir, "rdata","citycash_ptc.rdata")
+rdata <- file.path(base_dir, "rdata","ptc_citycash.rdata")
 load(rdata)
+rdata2 <- file.path(base_dir, "rdata","ptc_credirect_gratis.rdata")
+load(rdata2)
+rdata3 <- file.path(base_dir, "rdata","ptc_credirect_flex.rdata")
+load(rdata3)
+rdata4 <- file.path(base_dir, "rdata",
+    "ptc_credirect_consumer_repeat_model.rdata")
+load(rdata4)
+rdata5 <- file.path(base_dir, "rdata","ptc_credirect_consumer_new.rdata")
+load(rdata5)
 
 
 # Load Risky Coordinates
@@ -444,11 +453,14 @@ all_df <- gen_ptc(all_df,all_credits,all_id,application_id,
 ### Write in database ###
 #########################
 
-# Update table credits applications
-update_table_extras_query <- paste("UPDATE ",db_name,
-".credits_applications SET scoring_warning = ",fraud_flag,
-" WHERE id=",application_id, sep="")
-suppressMessages(suppressWarnings(dbSendQuery(con, 
-update_table_extras_query)))
+# Make final dataframe
+all_df$current <- Sys.time()
+output <- all_df[,c("application_id","ptc","ptc_score","current")]
+names(output)[ncol(output)] <- c("created_at")
 
+update_prior_query <- paste("INSERT INTO ",db_name,
+  ".credits_applications_ptc_score VALUES ",
+  paste("(",all_df$application_id,",",all_df$ptc,",'",all_df$ptc_score,"','",
+  Sys.time(),"')",sep=""),";", sep="")
+suppressMessages(suppressWarnings(dbSendQuery(con,update_prior_query)))
 
