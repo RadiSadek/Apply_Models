@@ -281,17 +281,27 @@ po_old <- subset(po_old,po_old$time_past>0 & po_old$time_past<=360 &
 # See if any new credit created after offer
 po_old <- merge(po_old,gen_if_credit_after_po_terminated(
   all_credits_raw,po_old,"last_appl_id_citycash",1),by.x = "client_id",
-  by.y = "client_id",all.x = TRUE) 
+  by.y = "client_id",all.x = TRUE)
+names(po_old)[ncol(po_old)] <- c("signed_at_citycash")
 po_old <- merge(po_old,gen_if_credit_after_po_terminated(
   all_credits_raw,po_old,"last_appl_id_credirect",2),by.x = "client_id",
   by.y = "client_id",all.x = TRUE) 
-po_old$last_id <- ifelse(po_old$company_id==1,po_old$last_appl_id_citycash,
-    po_old$last_appl_id_credirect)
+names(po_old)[ncol(po_old)] <- c("signed_at_credirect")
+po_old <- merge(po_old,gen_if_credit_after_po_terminated(
+  all_credits_raw,po_old,"last_appl_id_cashpoint",5),by.x = "client_id",
+  by.y = "client_id",all.x = TRUE) 
+names(po_old)[ncol(po_old)] <- c("signed_at_cashpoint")
+po_old$last_id <- 
+  ifelse(po_old$company_id==1,po_old$last_appl_id_citycash,
+  ifelse(po_old$company_id==2,po_old$last_appl_id_credirect,
+                              po_old$last_appl_id_cashpoint))
 po_old <- po_old[,-which(names(po_old) %in% c("last_appl_id_credirect",
-                "last_appl_id_citycash"))]
+    "last_appl_id_citycash","last_appl_id_cashpoint"))]
 po_old$criteria <- ifelse(po_old$company_id==1,
-                   ifelse(po_old$signed_at.x>=po_old$created_at,0,1),
-                   ifelse(po_old$signed_at.y>=po_old$created_at,0,1))
+          ifelse(po_old$signed_at_citycash>=po_old$created_at,0,1),
+    ifelse(po_old$company_id==2,
+          ifelse(po_old$signed_at_credirect>=po_old$created_at,0,1),
+          ifelse(po_old$signed_at_cashpoint>=po_old$created_at,0,1)))
 po_old <- subset(po_old,po_old$criteria==1)
 
 
@@ -467,13 +477,23 @@ FROM ",db_name,".clients
 WHERE gdpr_marketing_messages=1 OR dead_at IS NOT NULL",sep="")
 special <- gen_query(con,get_special_sql)
 
+# Get those who have currently an active in corresponding company
+po_active <- subset(po_raw,is.na(po_raw$deleted_at))
+all_credits_active <- subset(all_credits,all_credits$status==4)
+po_active <- merge(po_active,
+  all_credits_active[,c("client_id","signed_at","company_id")],
+  by.x = c("client_id","company_id"),by.y = c("client_id","company_id"),
+  all.x = TRUE)
+po_active <- subset(po_active,!is.na(po_active$signed_at))
+
 # Remove special cases if has offer
 po_get_special_query <- paste(
   "SELECT id, client_id
   FROM ",db_name,".clients_prior_approval_applications
   WHERE deleted_at IS NULL",sep="")
 po_special <- gen_query(con,po_get_special_query)
-po_special <- po_special[po_special$client_id %in% special$id,]
+po_special <- rbind(po_special[po_special$client_id %in% special$id,],
+  po_special[po_special$client_id %in% po_active$client_id,])
 
 if(nrow(po_special)>0){
   po_special_query <- paste("UPDATE ",db_name,

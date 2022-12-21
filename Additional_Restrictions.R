@@ -4,7 +4,7 @@
 #############################################################
 
 # Function to apply restrictions for City Cash applications
-gen_restrict_citycash_app <- function(scoring_df){
+gen_restrict_citycash_app <- function(scoring_df,products){
   
   score_df_800 <- subset(scoring_df,scoring_df$amount>800)
   criteria_800 <- length(names(table(score_df_800$score))
@@ -22,6 +22,13 @@ gen_restrict_citycash_app <- function(scoring_df){
     ifelse(criteria_800==0 & scoring_df$amount>800,1,
     ifelse(criteria_600==0 & scoring_df$amount>600,1,
     ifelse(criteria_400==0 & scoring_df$amount>400,1,scoring_df$color)))))
+  
+  # Check if installment ratio is OK
+  if(!("installment_amount" %in% names(scoring_df))){
+    scoring_df <- merge(scoring_df,products[,c("amount","period",
+      "installment_amount")],
+    by.x = c("amount","period"),by.y = c("amount","period"),all.x = TRUE)
+  }
 
   return(scoring_df)
 }
@@ -77,6 +84,13 @@ gen_restrict_cashpoint_app <- function(scoring_df,all_df,flag_beh){
 gen_restrict_citycash_beh <- function(scoring_df,prev_amount,products,all_id,
          all_df,db_name,application_id,crit,flag_cashpoint){
   
+  # Compute allowed installment if application
+  if_new <- gen_restrict_citycash_app(scoring_df,products)
+  if_new <- subset(if_new,if_new$score %in% c("Indeterminate",
+     "Good 1","Good 2","Good 3","Good 4") & if_new$color!=1)
+  if_new_amount <- suppressWarnings(max(if_new$amount))
+  if_new_installment <- suppressWarnings(max(if_new$installment_amount))
+  
   # Check if has Good 1 at least somewhere in table
   criteria <- length(names(table(scoring_df$score))
     [names(table(scoring_df$score)) %in% 
@@ -113,6 +127,11 @@ gen_restrict_citycash_beh <- function(scoring_df,prev_amount,products,all_id,
      ifelse(scoring_df$score %in% c("Good 1","Good 2","Good 3",
      "Indeterminate") & scoring_df$amount>(max_prev_amount+400),1,
      scoring_df$color))
+  
+  # Correct if sum is less than if client is new
+  scoring_df$color <- ifelse(scoring_df$score %in% c("Good 4","Good 1",
+     "Good 2","Good 3","Indeterminate") & scoring_df$amount<=if_new_amount & 
+     scoring_df$installment_amount<=if_new_installment,3,scoring_df$color)
   
   if(flag_cashpoint==1){
     
