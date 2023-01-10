@@ -608,7 +608,7 @@ po_reload <- merge(po_reload[,c("client_id","application_id",
   all.x = TRUE)
 po_reload <- subset(po_reload,is.na(po_reload$created_at.y))
 
-# write in database
+# Write in database
 if(nrow(po_reload)>0){
   po_reload_query <- paste("UPDATE ",db_name,
   ".prior_approval_refinances SET updated_at = '",

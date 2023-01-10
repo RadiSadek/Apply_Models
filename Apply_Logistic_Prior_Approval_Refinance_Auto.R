@@ -618,6 +618,22 @@ has_credit_after <- subset(po_reload,
 po_reload <- po_reload[!(po_reload$client_id %in% has_credit_after$client_id),]
 po_reload <- po_reload[!duplicated(po_reload$client_id),]
 
+# Check if client has currently odobren
+odobren_sql <- paste(
+"SELECT client_id, created_at, sub_status, product_id
+FROM ",db_name,".credits_applications
+WHERE status = 3 AND sub_status <> 114",sep="")
+odobren <- gen_query(con,odobren_sql)
+odobren <- merge(odobren,company_id,by.x = "product_id",by.y = "id",
+  all.x = TRUE)
+po_reload <- merge(po_reload[,c("client_id","application_id",
+  "created_at","company_id.x")],
+  odobren[,c("client_id","company_id","created_at")],
+  by.x = c("client_id","company_id.x"),by.y = c("client_id","company_id"),
+  all.x = TRUE)
+po_reload <- subset(po_reload,is.na(po_reload$created_at.y))
+
+# Write in database
 if(nrow(po_reload)>0){
   po_reload_query <- paste("UPDATE ",db_name,
   ".prior_approval_refinances SET updated_at = '",
