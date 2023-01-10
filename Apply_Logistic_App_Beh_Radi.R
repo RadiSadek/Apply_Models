@@ -45,7 +45,7 @@ main_dir <- "C:\\Projects\\Apply_Scoring\\"
 # Read argument of ID
 args <- commandArgs(trailingOnly = TRUE)
 application_id <- args[1]
-#application_id <- 1427154
+application_id <- 1487650
 product_id <- NA
 
 
@@ -86,6 +86,8 @@ load("rdata\\credirect_app_fraud.rdata")
 
 # Load Risky Coordinates
 risky_address <- read.csv("risky_coordinates\\risky_coordinates.csv",sep=";")
+risky_address_credirect <- read.csv(
+  "risky_coordinates\\risky_coordinates_credirect.csv",sep=";")
 
 
 ####################################
@@ -379,7 +381,7 @@ flag_is_dead <- ifelse(is.na(gen_query(con,
 
 # Get flag if client is in a risky address
 flag_risky_address <- gen_flag_risky_address(db_name,application_id,
-                                             risky_address,all_df)
+  risky_address,risky_address_credirect,all_df,flag_credirect)
 df$risky_address <- flag_risky_address$flag_risky_address
 
 

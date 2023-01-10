@@ -45,10 +45,19 @@ gen_coordinates <- function(db_name,application_id,all_df) {
 }
 
 # Determine if address is risky or not 
-gen_flag_risky_address <- function(db_name,application_id,risky_address,all_df){
+gen_flag_risky_address <- function(db_name,application_id,risky_address,
+  risky_address_credirect,all_df,flag_credirect){
   
   # Get current address
   address <- gen_coordinates(db_name,application_id,all_df)
+  
+  # Select if Credirect
+  if(flag_credirect==1){
+    risky_address <- risky_address_credirect
+    distance <- 750
+  } else {
+    distance <- 500
+  }
   
   if(nrow(address)!=0){
     
@@ -68,7 +77,7 @@ gen_flag_risky_address <- function(db_name,application_id,risky_address,all_df){
     risky_address$distance <- 6371e3 * risky_address$cst_c
     
     # Compute flag of risky address
-    flag_risky_address <- ifelse(min(risky_address$distance)<=500 & 
+    flag_risky_address <- ifelse(min(risky_address$distance)<=distance & 
                                  address$location_precision==3,1,0)
     }
     else flag_risky_address <- NA

@@ -81,7 +81,7 @@ source(file.path(base_dir,"Useful_Functions.r"))
 
 # Read credit applications 
 get_actives_sql <- paste("
-SELECT id, status, date, product_id, client_id
+SELECT id, status, date, signed_at, product_id, client_id
 FROM ",db_name,".credits_applications 
 WHERE status in (4,5)",sep="")
 all_credits <- gen_query(con,get_actives_sql)
@@ -581,6 +581,49 @@ if(substring(Sys.time(),9,10) %in% c("01")){
       gen_string_delete_po_refinance(po_all,po_all$max_installment_updated,
       "max_installment",db_name))))
   }
+}
+
+
+
+#################################################
+### Check those who didn't amount to a credit ###
+#################################################
+
+# Reload offers which were deleted for nothing (and are relevant)
+po_sql_query <- paste(
+"SELECT application_id, product_id, created_at,deleted_at
+FROM ",db_name,".prior_approval_refinances
+WHERE LEFT(deleted_at,10) = '",
+(as.Date(Sys.time())-3),"'",sep="")
+po_reload <- gen_query(con,po_sql_query)
+po_reload <- subset(po_reload,
+ !(substring(po_reload$deleted_at,12,19)=="04:00:00"))
+po_reload <- merge(po_reload,company_id[,c("id","company_id")],
+ by.x = "product_id",by.y = "id",all.x = TRUE)
+po_reload$difftime <- round(difftime(po_reload$deleted_at,po_reload$created_at,
+ units=c("days")),2)
+po_reload <- subset(po_reload,po_reload$difftime<90)
+
+# Subset if offer but didn't amount to nothing
+po_reload <- merge(po_reload,all_credits[,c("id","client_id","status")],
+ by.x = "application_id",by.y = "id",all.x = TRUE)
+po_reload <- subset(po_reload,po_reload$status==4)
+po_reload <- merge(po_reload,
+ all_credits[,c("client_id","signed_at","company_id")],
+ by.x = "client_id",by.y = "client_id",all.x = TRUE)
+po_reload$difftime2 <- round(difftime(po_reload$signed_at,
+ po_reload$deleted_at,units=c("days")),2)
+has_credit_after <- subset(po_reload,
+ po_reload$difftime2>=-0.3 & po_reload$company_id.x==po_reload$company_id.y)
+po_reload <- po_reload[!(po_reload$client_id %in% has_credit_after$client_id),]
+po_reload <- po_reload[!duplicated(po_reload$client_id),]
+
+if(nrow(po_reload)>0){
+  po_reload_query <- paste("UPDATE ",db_name,
+  ".prior_approval_refinances SET updated_at = '",
+  substring(Sys.time(),1,19),"', deleted_at = NULL
+  WHERE application_id IN",gen_string_po_refinance(po_reload),sep="")
+  suppressMessages(suppressWarnings(dbSendQuery(con,po_reload_query)))
 }
 
 
