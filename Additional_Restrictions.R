@@ -151,7 +151,8 @@ gen_restrict_citycash_beh <- function(scoring_df,prev_amount,products,all_id,
 
 # Function to apply restrictions for Credirect applications
 gen_restrict_credirect_app <- function(scoring_df,all_df,
-     flag_credit_next_salary,flag_new_credirect_old_city,fraud_flag){
+     flag_credit_next_salary,flag_new_credirect_old_city,fraud_flag,
+     flag_risky_address){
 
   if(flag_credit_next_salary==1){
     scoring_df$color <- 
@@ -183,6 +184,13 @@ gen_restrict_credirect_app <- function(scoring_df,all_df,
   if(!is.na(fraud_flag) & fraud_flag==1){
     scoring_df$color <- ifelse(scoring_df$score %in% 
      c("Indeterminate"), 1, scoring_df$color)
+  }
+  
+  # Apply filter is location is deemed risky
+  if(!is.na(flag_risky_address$flag_risky_address) & 
+     flag_risky_address$flag_risky_address==1){
+    scoring_df$color <- ifelse(scoring_df$score %in% 
+     c("Indeterminate","Good 1"), 1, scoring_df$color)
   }
   
   return(scoring_df)

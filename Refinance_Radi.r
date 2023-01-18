@@ -372,7 +372,7 @@ scoring_df <- gen_apply_score(
 scoring_df <- gen_apply_policy(scoring_df,flag_credirect,flag_cession,
   flag_bad_ckr_citycash,all_df,all_id,flag_beh,prev_amount,products,
   application_id,flag_new_credirect_old_city,flag_credit_next_salary,
-  flag_beh_company,flag_cashpoint,1,NA)
+  flag_beh_company,flag_cashpoint,1,NA,flag_risky_address)
 
 
 # Get if self approval
