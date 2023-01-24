@@ -29,6 +29,8 @@ load_dot_env(file = here('.env'))
 
 args <- commandArgs(trailingOnly = TRUE)
 application_id <- args[1]
+product_id <- args[2]
+
 
 
 #######################
@@ -110,7 +112,9 @@ load(rdata5)
 
 # Load Risky Coordinates
 risky_address <- read.csv(file.path(base_dir, "risky_coordinates", 
-                                    "risky_coordinates.csv"),sep=";")
+    "risky_coordinates.csv"),sep=";")
+risky_address_credirect <- read.csv(file.path(base_dir, "risky_coordinates", 
+    "risky_coordinates_credirect.csv"),sep=";")
 
 
 ####################################
@@ -423,7 +427,7 @@ flag_is_dead <- ifelse(is.na(gen_query(con,
 
 # Get flag if client is in a risky address
 flag_risky_address <- gen_flag_risky_address(db_name,application_id,
-                                             risky_address,all_df)
+  risky_address,risky_address_credirect,all_df,flag_credirect)
 df$risky_address <- flag_risky_address$flag_risky_address
 
 
@@ -458,9 +462,20 @@ all_df$current <- Sys.time()
 output <- all_df[,c("application_id","ptc","ptc_score","current")]
 names(output)[ncol(output)] <- c("created_at")
 
-update_prior_query <- paste("INSERT INTO ",db_name,
-  ".credits_applications_ptc_score VALUES ",
-  paste("(",all_df$application_id,",",all_df$ptc,",'",all_df$ptc_score,"','",
-  Sys.time(),"')",sep=""),";", sep="")
-suppressMessages(suppressWarnings(dbSendQuery(con,update_prior_query)))
+# Make final dataframe
+ptc_table <- gen_query(con,paste(
+"SELECT max(id) AS id_max FROM ",db_name,".credits_applications_ptc_score",
+sep=""))
+
+# Make final dataframe
+ptc <- all_df[,c("application_id","ptc","ptc_score")]
+ptc$created_at <- Sys.time()
+ptc$id <- ptc_table$id_max + 1
+
+# Output result
+suppressMessages(dbWriteTable(con, name = "credits_applications_ptc_score", 
+value = ptc,
+field.types = c(id="integer",application_id="numeric",
+ptc="numeric", ptc_score="character(20)",created_at="datetime"),
+row.names = F, append = T))
 

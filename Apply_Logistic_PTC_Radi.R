@@ -79,6 +79,8 @@ load("rdata\\ptc_credirect_consumer_new.rdata")
 
 # Load Risky Coordinates
 risky_address <- read.csv("risky_coordinates\\risky_coordinates.csv",sep=";")
+risky_address_credirect <- read.csv(file.path(base_dir, "risky_coordinates", 
+      "risky_coordinates_credirect.csv"),sep=";")
 
 
 ####################################
@@ -390,7 +392,7 @@ flag_is_dead <- ifelse(is.na(gen_query(con,
 
 # Get flag if client is in a risky address
 flag_risky_address <- gen_flag_risky_address(db_name,application_id,
-                                             risky_address,all_df)
+  risky_address,risky_address_credirect,all_df,flag_credirect)
 df$risky_address <- flag_risky_address$flag_risky_address
 
 
@@ -413,6 +415,11 @@ flag_third_side <- gen_third_side_prev(db_name,all_id,application_id)
 # Generate PTC by calling model accordingly
 all_df <- gen_ptc(all_df,all_credits,all_id,application_id,
     flag_credirect,flag_credit_next_salary,flag_beh_company,db_name)
+
+# Make final dataframe
+ptc <- all_df[,c("application_id","ptc","ptc_score")]
+ptc$created_at <- Sys.time()
+ptc$id <- 1
 
 # Make final dataframe for output
 final <- all_df[,c("application_id","ptc","ptc_score")]
