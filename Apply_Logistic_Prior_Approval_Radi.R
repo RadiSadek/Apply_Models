@@ -486,14 +486,33 @@ po_active <- merge(po_active,
   all.x = TRUE)
 po_active <- subset(po_active,!is.na(po_active$signed_at))
 
+# Remove those who have double entry
+doubles_sql <- paste("SELECT * 
+FROM ",db_name,".clients_prior_approval_applications
+WHERE deleted_at IS NULL", sep="")
+doubles <- gen_query(con,doubles_sql)
+products_sql <-  paste("SELECT id, brand_id
+FROM ",db_name,".products",sep="")
+products <- gen_query(con,products_sql)
+doubles <- merge(doubles,products,by.x = "product_id",by.y = "id",
+    all.x = TRUE)
+doubles <- subset(doubles,doubles$brand_id==1)
+dups <- doubles[duplicated(doubles$client_id),]
+clients_dups <- doubles[doubles$client_id %in% dups$client_id,]
+clients_dups <- clients_dups[order(clients_dups$created_at),]
+clients_dups <- clients_dups[order(clients_dups$client_id),]
+clients_dups <- clients_dups[!duplicated(clients_dups$client_id),]
+
 # Remove special cases if has offer
 po_get_special_query <- paste(
   "SELECT id, client_id
   FROM ",db_name,".clients_prior_approval_applications
   WHERE deleted_at IS NULL",sep="")
 po_special <- gen_query(con,po_get_special_query)
-po_special <- rbind(po_special[po_special$client_id %in% special$id,],
-  po_special[po_special$client_id %in% po_active$client_id,])
+po_special <- rbind(
+  po_special[po_special$client_id %in% special$id,],
+  po_special[po_special$client_id %in% po_active$client_id,],
+  clients_dups)
 
 if(nrow(po_special)>0){
   po_special_query <- paste("UPDATE ",db_name,
