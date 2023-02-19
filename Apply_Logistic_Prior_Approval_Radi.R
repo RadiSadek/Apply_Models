@@ -512,7 +512,7 @@ po_special <- gen_query(con,po_get_special_query)
 po_special <- rbind(
   po_special[po_special$client_id %in% special$id,],
   po_special[po_special$client_id %in% po_active$client_id,],
-  clients_dups)
+  clients_dups[,c("id","client_id")])
 
 if(nrow(po_special)>0){
   po_special_query <- paste("UPDATE ",db_name,
