@@ -435,3 +435,42 @@ gen_thid_side <- function(db_name,input){
      WHERE id IN (",input,")",sep=""))
 }
 
+# Read all clients 
+gen_all_clients <- function(db_name){
+  return(paste(
+"SELECT 
+",db_name,".credits_applications.id, 
+",db_name,".credits_applications.signed_at,
+",db_name,".credits_applications.sub_status,
+",db_name,".credits_plan_contract.amount,
+",db_name,".credits_plan_contract.installments,
+",db_name,".credits_applications.product_id,
+",db_name,".credits_applications.client_id,
+",db_name,".products.brand_id
+FROM ",db_name,".credits_applications
+LEFT JOIN ",db_name,".credits_plan_contract
+ON ",db_name,".credits_applications.id = ",db_name,
+".credits_plan_contract.application_id
+LEFT JOIN ",db_name,".products
+ON ",db_name,".credits_applications.product_id = ",db_name,
+".products.id
+WHERE ",db_name,".credits_applications.status IN (4,5)",sep=""))
+}
+
+# Get payments of all clients
+gen_all_payments <- function(db_name){
+  return(paste(
+"SELECT object_id, SUM(amount) AS amount_paid 
+FROM ",db_name,".cash_flow
+WHERE nomenclature_id in (90,100,101,102) 
+AND deleted_at IS NULL AND object_type=4
+GROUP BY object_id",sep=""))
+}
+
+# Get score of all clients
+gen_all_scores <- function(db_name){
+  return(paste(
+"SELECT application_id, amount, period, score
+FROM ",db_name,".credits_applications_scoring",sep=""))
+}
+

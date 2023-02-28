@@ -231,10 +231,13 @@ all_df$self_approval <- gen_query(con,
   gen_self_approval_office_query(db_name,all_df$office_id))$self_approve
 
 
-# Get dataframe of API data 
+# Get dataframe of API data
+all_credits$day <- substring(all_credits$created_at,1,10)
+same_day <- subset(all_credits,all_credits$day>=as.Date(all_df$created_at) - 1)
 tryCatch(
   api_df <- gen_dataframe_json(gen_query(con,
-    gen_api_data(db_name,application_id))),
+    gen_api_data(db_name,
+      same_day$id[same_day$created_at==min(same_day$created_at)]))),
   error=function(e) 
   {api_df <- NA})
 if(!exists('api_df')){

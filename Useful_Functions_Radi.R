@@ -559,3 +559,124 @@ gen_ptc <- function(all_df,all_credits,all_id,application_id,
   return(all_df)
 }
 
+# Generate MSF score
+gen_msf <- function(input,brand){
+  
+  # Select brand id
+  input <- subset(input,input$brand_id==brand)
+  
+  # Create dataframe
+  input <- input[rev(order(input$signed_at)),]
+  input <- input[order(input$client_id),]
+  clients <- input[!duplicated(input$client_id),c("client_id","signed_at","id",
+    "sub_status")]
+  names(clients) <- c("client_id","last_signed","last_id","last_status")
+  clients$sold <- ifelse(!is.na(clients$last_status) & clients$last_status==124,
+    "sold","normal")
+  
+  # Get total number of credits
+  nb_credits <- aggregate(input$credit,by=list(input$client_id),FUN=sum)
+  clients <- merge(clients,nb_credits,by.x = "client_id",by.y = "Group.1",
+     all.x = TRUE)
+  names(clients)[ncol(clients)] <- c("tot_credits")
+  
+  # Get entry score
+  last_score <- subset(input,!is.na(input$score))
+  last_score <- last_score[rev(order(last_score$signed_at)),]
+  last_score <- last_score[order(last_score$client_id),]
+  last_score <- last_score[!duplicated(last_score$client_id),c("client_id",
+    "id","score")]
+  clients <- merge(clients,last_score[,c("client_id","score")],
+    by.x = "client_id",by.y = "client_id",all.x = TRUE)
+  names(clients)[ncol(clients)] <- c("last_score")
+  
+  # Get cltv (and removing last credit)
+  input_here <- input
+  last_credit_here <- aggregate(input_here$id,by=list(input_here$client_id),
+    FUN=max)
+  input_here <- merge(input_here,last_credit_here,by.x = "client_id",
+    by.y = "Group.1",all.x = TRUE)
+  names(input_here)[ncol(input_here)] <- c("last_id")
+  input_here <- subset(input_here,input_here$id!=input_here$last_id)
+  cltv <- aggregate(input_here$profit,by=list(input_here$client_id),FUN=sum)
+  clients <- merge(clients,cltv,by.x = "client_id",by.y = "Group.1",
+    all.x = TRUE)
+  names(clients)[ncol(clients)] <- c("profit")
+  clients$profit <- ifelse(is.na(clients$profit),0,clients$profit)
+  
+  # Create bins
+  clients$tot_credits <- clients$tot_credits - 1
+  clients$score_bin <-
+    ifelse(clients$last_score%in% c("Bad","Indeterminate"),1,
+    ifelse(clients$last_score=="Good 1",2,
+    ifelse(clients$last_score=="Good 2",3,
+    ifelse(clients$last_score=="Good 3",4,5))))
+  clients$score_bin <- ifelse(is.na(clients$score_bin),3,clients$score_bin)
+  clients$frequency <- 
+    ifelse(clients$score_bin==1,
+    ifelse(clients$tot_credits==0,0,1),ifelse(clients$tot_credits==0,1,0))
+  clients$monetary <- ifelse(clients$profit>=1000,1,0)
+  clients$rfm_raw <- clients$score_bin + clients$frequency + clients$monetary
+  
+  # Make RFM field from 0 to 1000
+  clients$rfm <- round((clients$rfm_raw - 1) /(6 - 1) * 1000)
+  clients$rfm <- ifelse(clients$rfm==0,100,clients$rfm)
+  
+  # Recorrect for Indeterminates 
+  clients$rfm <- 
+    ifelse(!(is.na(clients$last_score)) & 
+    clients$last_score=="Indeterminate" & clients$tot_credits>0,
+    clients$rfm-100,clients$rfm)
+  
+  # Recorrect some more
+  clients$rfm <- ifelse(clients$rfm==100,200,clients$rfm)
+  clients$rfm <- ifelse(clients$sold=="sold",200,clients$rfm)
+  
+  # Discretize MSF_score
+  clients$rfm_score <- 
+    ifelse(clients$rfm<=200,"very_low",
+    ifelse(clients$rfm<=400,"low",
+    ifelse(clients$rfm<=600,"medium",
+    ifelse(clients$rfm<=800,"high","very_high"))))
+
+  # Add more fields
+  clients$type <- 2
+  clients$brand <- brand
+  
+  return(clients)
+}
+
+# Define sql string query for writing in DB for RFM score 
+gen_sql_string_po_rfm <- function(input,inc){
+  return(paste("(",input$id[inc],",",
+    input$client_id[inc],",",input$rfm[inc],",'",input$rfm_score[inc],"',",
+    input$type[inc],",",input$brand[inc],",'",input$created_at[inc],"','",
+    input$updated_at[inc],"')",sep=""))
+}
+
+# Function to make string for DB update of RFM table
+gen_sql_string_update_rfm <- function(input,var,var_name,db_name,crit){
+  if(crit==0){
+    iterate_string <- paste("WHEN client_id = ",input$client_id[1]," THEN ",
+      var[1],sep="")
+  }
+  else {
+    iterate_string <- paste("WHEN client_id = ",input$client_id[1]," THEN '",
+      var[1],"'",sep="")
+  }
+  if(nrow(input)>1){
+    for(i in 2:nrow(input)){
+      if(crit==0){
+        iterate_string <- paste(iterate_string,
+          paste("WHEN client_id = ",input$client_id[i]," THEN ",var[i],sep=""))
+      } else {
+        iterate_string <- paste(iterate_string,
+          paste("WHEN client_id = ",input$client_id[i]," THEN '",var[i],
+                "'",sep="")) 
+      }
+    }
+  }
+  return(paste("UPDATE ",db_name,".credits_applications_rfm_score SET ",
+     var_name," = CASE ",iterate_string," ELSE ",var_name," END;",sep=""))
+}
+
