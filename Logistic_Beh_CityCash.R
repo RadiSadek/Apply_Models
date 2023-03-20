@@ -5,7 +5,11 @@
 
 gen_beh_citycash <- function(df,scoring_df,products,df_Log_beh_CityCash,period,
                              all_id,all_df,prev_amount,amount_tab,
-                             t_income,disposable_income_adj,crit_po){
+                             t_income,disposable_income_adj,crit_po,base_dir){
+  
+  # Load rdata
+  load(file.path(base_dir,"rdata","citycash_repeat.rdata"))
+  
   # Cut and bin
   df$age_cut <- ifelse(df$age<=29,"less_29",
      ifelse(df$age<=37,"30_37",

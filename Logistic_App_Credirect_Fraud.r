@@ -7,7 +7,10 @@
 gen_app_credirect_fraud <- function(df,scoring_df,products,
                              df_Log_Credirect_Fraud,period,
                              all_df,prev_amount,amount_tab,
-                             t_income,disposable_income_adj,db_name){
+                             t_income,disposable_income_adj,db_name,base_dir){
+  
+  # Load rdata
+  load(file.path(base_dir,"rdata","credirect_app_fraud.rdata"))
   
   # Apply credirect fraud model 
   df$age_cut <- ifelse(df$age<=28,"28_less","29_more")

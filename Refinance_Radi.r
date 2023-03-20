@@ -3,39 +3,30 @@ gen_refinance_fct <- function(con,application_id,product_id){
 
   
 # Set working directory for input (R data for logistic regression) and output #
-main_dir <-  "C:\\Projects\\Apply_Scoring\\"
-setwd(main_dir)
+base_dir <-  "C:\\Projects\\Apply_Scoring\\"
+setwd(base_dir)
 
 
 # Load other r files
-source(paste(main_dir,"Apply_Models\\Additional_Restrictions.r", sep=""))
-source(paste(main_dir,"Apply_Models\\Addresses.r", sep=""))
-source(paste(main_dir,"Apply_Models\\Adjust_Scoring_Prior_Approval.r", sep=""))
-source(paste(main_dir,"Apply_Models\\Logistic_App_CityCash.r", sep=""))
-source(paste(main_dir,"Apply_Models\\Logistic_App_Credirect_installments.r", 
+source(paste(base_dir,"Apply_Models\\Additional_Restrictions.r", sep=""))
+source(paste(base_dir,"Apply_Models\\Addresses.r", sep=""))
+source(paste(base_dir,"Apply_Models\\Adjust_Scoring_Prior_Approval.r", sep=""))
+source(paste(base_dir,"Apply_Models\\Logistic_App_CityCash.r", sep=""))
+source(paste(base_dir,"Apply_Models\\Logistic_App_Credirect_installments.r", 
        sep=""))
-source(paste(main_dir,"Apply_Models\\Logistic_App_Credirect_payday.r", sep=""))
-source(paste(main_dir,"Apply_Models\\Logistic_App_Credirect_Fraud.r", sep=""))
-source(paste(main_dir,"Apply_Models\\Logistic_Beh_CityCash.r", sep=""))
-source(paste(main_dir,"Apply_Models\\Logistic_Beh_Credirect.r", sep=""))
-source(paste(main_dir,"Apply_Models\\Useful_Functions_Radi.r", sep=""))
-source(paste(main_dir,"Apply_Models\\Empty_Fields.r", sep=""))
-source(paste(main_dir,"Apply_Models\\Cutoffs.r", sep=""))
-source(paste(main_dir,"Apply_Models\\SQL_queries.r", sep=""))
-source(paste(main_dir,"Apply_Models\\Disposable_Income.r", sep=""))
-source(paste(main_dir,"Apply_Models\\Behavioral_Variables.r", sep=""))
-source(paste(main_dir,"Apply_Models\\Normal_Variables.r", sep=""))
-source(paste(main_dir,"Apply_Models\\CKR_variables.r", sep=""))
-source(paste(main_dir,"Apply_Models\\Generate_Adjust_Score.r", sep=""))
-
-
-# Load predefined libraries
-load("rdata\\citycash_repeat.rdata")
-load("rdata\\citycash_app.rdata")
-load("rdata\\credirect_installments.rdata")
-load("rdata\\credirect_payday.rdata")
-load("rdata\\credirect_repeat.rdata")
-load("rdata\\credirect_app_fraud.rdata")
+source(paste(base_dir,"Apply_Models\\Logistic_App_Credirect_payday.r", sep=""))
+source(paste(base_dir,"Apply_Models\\Logistic_App_Credirect_Fraud.r", sep=""))
+source(paste(base_dir,"Apply_Models\\Logistic_Beh_CityCash.r", sep=""))
+source(paste(base_dir,"Apply_Models\\Logistic_Beh_Credirect.r", sep=""))
+source(paste(base_dir,"Apply_Models\\Useful_Functions_Radi.r", sep=""))
+source(paste(base_dir,"Apply_Models\\Empty_Fields.r", sep=""))
+source(paste(base_dir,"Apply_Models\\Cutoffs.r", sep=""))
+source(paste(base_dir,"Apply_Models\\SQL_queries.r", sep=""))
+source(paste(base_dir,"Apply_Models\\Disposable_Income.r", sep=""))
+source(paste(base_dir,"Apply_Models\\Behavioral_Variables.r", sep=""))
+source(paste(base_dir,"Apply_Models\\Normal_Variables.r", sep=""))
+source(paste(base_dir,"Apply_Models\\CKR_variables.r", sep=""))
+source(paste(base_dir,"Apply_Models\\Generate_Adjust_Score.r", sep=""))
 
 
 # Load Risky Coordinates
@@ -363,7 +354,7 @@ scoring_df <- gen_apply_score(
   df_Log_CityCash_App,df_Log_beh_Credirect,df_Log_Credirect_App_installments,
   df_Log_Credirect_App_payday,period,all_id,prev_amount,amount_tab,
   t_income,disposable_income_adj,flag_new_credirect_old_city,api_df,
-  flag_judicial,1,flag_third_side,flag_cashpoint)
+  flag_judicial,1,flag_third_side,flag_cashpoint,base_dir)
 
 
 ######################################

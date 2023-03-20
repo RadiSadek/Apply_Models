@@ -99,27 +99,6 @@ source(file.path(base_dir,"Generate_Adjust_Score.r"))
 ####### Settings #######
 ########################
 
-# Load predefined libraries
-rdata <- file.path(base_dir, "rdata", 
-                   "citycash_repeat.rdata")
-load(rdata)
-rdata2 <- file.path(base_dir, "rdata", 
-                    "citycash_app.rdata")
-load(rdata2)
-rdata3 <- file.path(base_dir, "rdata", 
-                    "credirect_installments.rdata")
-load(rdata3)
-rdata4 <- file.path(base_dir, "rdata", 
-                    "credirect_payday.rdata")
-load(rdata4)
-rdata5 <- file.path(base_dir, "rdata", 
-                    "credirect_repeat.rdata")
-load(rdata5)
-rdata6 <- file.path(base_dir, "rdata", 
-                    "credirect_app_fraud.rdata")
-load(rdata6)
-
-
 # Load Risky Coordinates
 risky_address <- read.csv(file.path(base_dir, "risky_coordinates", 
                     "risky_coordinates.csv"),sep=";")
@@ -450,7 +429,7 @@ scoring_df <- gen_apply_score(
   df_Log_CityCash_App,df_Log_beh_Credirect,df_Log_Credirect_App_installments,
   df_Log_Credirect_App_payday,period,all_id,prev_amount,amount_tab,
   t_income,disposable_income_adj,flag_new_credirect_old_city,api_df,
-  flag_judicial,0,flag_third_side,flag_cashpoint)
+  flag_judicial,0,flag_third_side,flag_cashpoint,base_dir)
 
 
 # Set initial scoring reason
@@ -477,7 +456,8 @@ scoring_df <- scoring_df[,c("application_id","amount","period","score","color",
 fraud_flag <- ifelse(flag_credirect==1 & flag_beh==0 & 
     empty_fields<threshold_empty, gen_app_credirect_fraud(
     df,scoring_df,products,df_Log_Credirect_Fraud,period,all_df,
-    prev_amount,amount_tab,t_income,disposable_income_adj,db_name), "NULL")
+    prev_amount,amount_tab,t_income,disposable_income_adj,db_name,base_dir), 
+    "NULL")
 
 
 # Readjust score when applicable

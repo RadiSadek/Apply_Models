@@ -53,15 +53,6 @@ source(file.path(base_dir,"Generate_Adjust_Score.r"))
 ####### Settings #######
 ########################
   
-# Load predefined libraries
-rdata <- file.path(base_dir, "rdata", 
-                   "citycash_repeat.rdata")
-load(rdata)
-rdata4 <- file.path(base_dir, "rdata", 
-                   "credirect_repeat.rdata")
-load(rdata4)
-
-
 # Load Risky Coordinates
 risky_address <- read.csv(file.path(base_dir, "risky_coordinates", 
                  "risky_coordinates.csv"),sep=";")
@@ -410,7 +401,7 @@ scoring_df <- gen_apply_score(
   df_Log_CityCash_App,df_Log_beh_Credirect,df_Log_Credirect_App_installments,
   df_Log_Credirect_App_payday,period,all_id,prev_amount,amount_tab,
   t_income,disposable_income_adj,flag_new_credirect_old_city,api_df,
-  flag_judicial,1,flag_third_side,flag_cashpoint)
+  flag_judicial,1,flag_third_side,flag_cashpoint,base_dir)
 
 
 ######################################

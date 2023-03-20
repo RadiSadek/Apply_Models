@@ -5,7 +5,11 @@
 
 gen_app_citycash <- function(df,scoring_df,products,df_Log_CityCash_App,period,
                              all_df,prev_amount,amount_tab,
-                             t_income,disposable_income_adj){
+                             t_income,disposable_income_adj,base_dir){
+  
+  # Load rdata
+  load(file.path(base_dir,"rdata","citycash_app.rdata"))
+
   # Cut and bin
   df$marital_status <- ifelse(is.na(df$marital_status),"2_3", 
     ifelse(df$marital_status %in% c(2,3), "2_3",

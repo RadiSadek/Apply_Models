@@ -5,8 +5,13 @@
 
 gen_app_credirect_installments <- function(df,scoring_df,products,
   df_Log_Credirect_App_installments,period,all_df,prev_amount,amount_tab,
-  t_income,disposable_income_adj,flag_credit_next_salary,api_df){
+  t_income,disposable_income_adj,flag_credit_next_salary,api_df,base_dir){
   
+  
+  # Load rdata
+  load(file.path(base_dir,"rdata","credirect_installments.rdata"))
+  
+  # Cut and bin
   df$age <- ifelse(df$age<=20,"20_less","more_20")
   df$age <- as.factor(df$age)
   

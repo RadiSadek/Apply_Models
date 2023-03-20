@@ -39,55 +39,47 @@ con <- dbConnect(RMariaDB::MariaDB(),dbname = "citycash",host ="192.168.2.110",
 
 
 # Define work directory
-main_dir <- "C:\\Projects\\Apply_Scoring\\"
+base_dir <- "C:/Projects/Apply_Scoring"
 
 
 # Read argument of ID
 args <- commandArgs(trailingOnly = TRUE)
 application_id <- args[1]
-#application_id <- 1539931
+application_id <- 1529542
 product_id <- NA
 
 
 # Set working directory for input (R data for logistic regression) and output #
-setwd(main_dir)
+setwd(base_dir)
 
 
 # Load other r files
-source(paste(main_dir,"Apply_Models\\Additional_Restrictions.r", sep=""))
-source(paste(main_dir,"Apply_Models\\Addresses.r", sep=""))
-source(paste(main_dir,"Apply_Models\\Adjust_Scoring_Prior_Approval.r", sep=""))
-source(paste(main_dir,"Apply_Models\\Logistic_App_CityCash.r", sep=""))
-source(paste(main_dir,"Apply_Models\\Logistic_App_Credirect_installments.r", 
+source(paste(base_dir,"/Apply_Models/Additional_Restrictions.r", sep=""))
+source(paste(base_dir,"/Apply_Models/Addresses.r", sep=""))
+source(paste(base_dir,"/Apply_Models/Adjust_Scoring_Prior_Approval.r", sep=""))
+source(paste(base_dir,"/Apply_Models/Logistic_App_CityCash.r", sep=""))
+source(paste(base_dir,"/Apply_Models/Logistic_App_Credirect_installments.r", 
        sep=""))
-source(paste(main_dir,"Apply_Models\\Logistic_App_Credirect_payday.r", sep=""))
-source(paste(main_dir,"Apply_Models\\Logistic_App_Credirect_Fraud.r", sep=""))
-source(paste(main_dir,"Apply_Models\\Logistic_Beh_CityCash.r", sep=""))
-source(paste(main_dir,"Apply_Models\\Logistic_Beh_Credirect.r", sep=""))
-source(paste(main_dir,"Apply_Models\\Useful_Functions_Radi.r", sep=""))
-source(paste(main_dir,"Apply_Models\\Empty_Fields.r", sep=""))
-source(paste(main_dir,"Apply_Models\\Cutoffs.r", sep=""))
-source(paste(main_dir,"Apply_Models\\SQL_queries.r", sep=""))
-source(paste(main_dir,"Apply_Models\\Disposable_Income.r", sep=""))
-source(paste(main_dir,"Apply_Models\\Behavioral_Variables.r", sep=""))
-source(paste(main_dir,"Apply_Models\\Normal_Variables.r", sep=""))
-source(paste(main_dir,"Apply_Models\\CKR_variables.r", sep=""))
-source(paste(main_dir,"Apply_Models\\Generate_Adjust_Score.r", sep=""))
-
-
-# Load predefined libraries
-load("rdata\\citycash_repeat.rdata")
-load("rdata\\citycash_app.rdata")
-load("rdata\\credirect_installments.rdata")
-load("rdata\\credirect_payday.rdata")
-load("rdata\\credirect_repeat.rdata")
-load("rdata\\credirect_app_fraud.rdata")
+source(paste(base_dir,"/Apply_Models/Logistic_App_Credirect_payday.r", sep=""))
+source(paste(base_dir,"/Apply_Models/Logistic_App_Credirect_Fraud.r", sep=""))
+source(paste(base_dir,"/Apply_Models/Logistic_Beh_CityCash.r", sep=""))
+source(paste(base_dir,"/Apply_Models/Logistic_Beh_Credirect.r", sep=""))
+source(paste(base_dir,"/Apply_Models/Useful_Functions_Radi.r", sep=""))
+source(paste(base_dir,"/Apply_Models/Empty_Fields.r", sep=""))
+source(paste(base_dir,"/Apply_Models/Cutoffs.r", sep=""))
+source(paste(base_dir,"/Apply_Models/SQL_queries.r", sep=""))
+source(paste(base_dir,"/Apply_Models/Disposable_Income.r", sep=""))
+source(paste(base_dir,"/Apply_Models/Behavioral_Variables.r", sep=""))
+source(paste(base_dir,"/Apply_Models/Normal_Variables.r", sep=""))
+source(paste(base_dir,"/Apply_Models/CKR_variables.r", sep=""))
+source(paste(base_dir,"/Apply_Models/Generate_Adjust_Score.r", sep=""))
 
 
 # Load Risky Coordinates
 risky_address <- read.csv("risky_coordinates\\risky_coordinates.csv",sep=";")
 risky_address_credirect <- read.csv(
   "risky_coordinates\\risky_coordinates_credirect.csv",sep=";")
+
 
 
 ####################################
@@ -419,7 +411,7 @@ scoring_df <- gen_apply_score(
   df_Log_CityCash_App,df_Log_beh_Credirect,df_Log_Credirect_App_installments,
   df_Log_Credirect_App_payday,period,all_id,prev_amount,amount_tab,
   t_income,disposable_income_adj,flag_new_credirect_old_city,api_df,
-  flag_judicial,0,flag_third_side,flag_cashpoint)
+  flag_judicial,0,flag_third_side,flag_cashpoint,base_dir)
 
 
 # Set initial scoring reason
@@ -446,7 +438,8 @@ scoring_df <- scoring_df[,c("application_id","amount","period","score","color",
 fraud_flag <- ifelse(flag_credirect==1 & flag_beh==0 & 
     empty_fields<threshold_empty, gen_app_credirect_fraud(
     df,scoring_df,products,df_Log_Credirect_Fraud,period,all_df,
-    prev_amount,amount_tab,t_income,disposable_income_adj,db_name), "NULL")
+    prev_amount,amount_tab,t_income,disposable_income_adj,db_name,base_dir), 
+    "NULL")
 
 
 # Readjust score when applicable
@@ -580,10 +573,10 @@ final$amount_cession <- df$amount_cession_total
 
 
 # Read and write
-final_exists <- read.xlsx(paste(main_dir,
+final_exists <- read.xlsx(paste(base_dir,
   "\\Monitoring\\Files\\Scored_Credits.xlsx", sep=""))
 final <- rbind(final_exists, final)
-write.xlsx(final, paste(main_dir,"\\Monitoring\\Files\\Scored_Credits.xlsx", 
+write.xlsx(final, paste(base_dir,"\\Monitoring\\Files\\Scored_Credits.xlsx", 
   sep=""))
 
 
