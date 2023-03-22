@@ -468,9 +468,10 @@ GROUP BY object_id",sep=""))
 }
 
 # Get score of all clients
-gen_all_scores <- function(db_name){
+gen_all_scores <- function(db_name,indexx){
   return(paste(
 "SELECT application_id, amount, period, score
-FROM ",db_name,".credits_applications_scoring",sep=""))
+FROM ",db_name,".credits_applications_scoring WHERE application_id>",
+indexx,sep=""))
 }
 

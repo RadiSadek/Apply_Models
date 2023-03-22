@@ -72,6 +72,10 @@ suppressWarnings(fetch(dbSendQuery(con, sqlMode),
 source(file.path(base_dir,"Useful_Functions.r"))
 source(file.path(base_dir,"SQL_queries.r"))
 
+# Load scores
+scores <- read.csv(file.path(base_dir,"scores","scores.csv"),sep=";")
+names(scores) <- c("id","score")
+
 
 
 ####################################
@@ -93,9 +97,12 @@ df$profit <- ifelse(is.na(df$amount_paid),0,df$amount_paid) - df$amount
 
 
 # Read score
-score <- gen_query(con,gen_all_scores(db_name))
+score <- gen_query(con,gen_all_scores(db_name,max(scores$id)))
 df <- merge(df,score,by.x = c("id","amount","installments"), 
    by.y = c("application_id","amount","period"),all.x = TRUE)
+df <- merge(df,scores,by.x = "id",by.y = "id",all.x = TRUE)
+df$score <- ifelse(is.na(df$score.y),df$score.x,df$score.y)
+df <- df[,-which(names(df) %in% c("score.y","score.x"))]
 df$credit <- 1
 
 
@@ -136,12 +143,14 @@ msf_cur <- subset(rfm_tot,rfm_tot$type_cur==2)
 
 # Merge with current
 msf_all <- merge(msf,
-  msf_cur[,c("client_id","rfm_cur","rfm_score_cur","type_cur","brand")],
-  by.x = c("client_id","brand"),by.y = c("client_id","brand"),all.x = TRUE)
+  msf_cur[,c("client_id","rfm_cur","rfm_score_cur","type_cur","brand_id")],
+  by.x = c("client_id","brand_id"),by.y = c("client_id","brand_id"),
+  all.x = TRUE)
 
 
 # Create dataframe for new clients 
 msf_new <- subset(msf_all,is.na(msf_all$rfm_cur))
+if(nrow(msf_new)>0){
 msf_new$id_max <- seq(id_max,id_max+nrow(msf_new)-1)
 msf_new$created_at <- Sys.time()
 msf_new$updated_at <- Sys.time()
@@ -187,7 +196,7 @@ if(nrow(msf_new)>10000){
  suppressMessages(suppressWarnings(dbSendQuery(con,paste("INSERT INTO ",db_name,
    ".credits_applications_rfm_score VALUES ",string_sql,";", sep=""))))
 }
-
+}
 
 
 #########################################
@@ -200,12 +209,22 @@ msf_update <- subset(msf_all,!is.na(msf_all$rfm_cur) &
 msf_update$updated_at <- Sys.time()
 
 
+# Reconnect to database
+con <- dbConnect(MySQL(), user=db_username, 
+                 password=db_password, dbname=db_name, 
+                 host=db_host, port = db_port)
+sqlMode <- paste("SET sql_mode=''", sep ="")
+suppressWarnings(fetch(dbSendQuery(con, sqlMode), 
+                       n=-1))
+
 # Update database
+if(nrow(msf_update)>0){
 suppressMessages(suppressWarnings(dbSendQuery(con,
  gen_sql_string_update_rfm(msf_update,msf_update$rfm,"rfm",db_name,0))))
 suppressMessages(suppressWarnings(dbSendQuery(con,
  gen_sql_string_update_rfm(msf_update,msf_update$updated_at,"updated_at",
  db_name,1))))
+}
 
 
 # End

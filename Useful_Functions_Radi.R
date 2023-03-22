@@ -581,14 +581,14 @@ gen_msf <- function(input,brand){
   names(clients)[ncol(clients)] <- c("tot_credits")
   
   # Get entry score
-  last_score <- subset(input,!is.na(input$score))
-  last_score <- last_score[rev(order(last_score$signed_at)),]
-  last_score <- last_score[order(last_score$client_id),]
-  last_score <- last_score[!duplicated(last_score$client_id),c("client_id",
+  entry_score <- subset(input,!is.na(input$score))
+  entry_score <- entry_score[order(entry_score$signed_at),]
+  entry_score <- entry_score[order(entry_score$client_id),]
+  entry_score <- entry_score[!duplicated(entry_score$client_id),c("client_id",
     "id","score")]
-  clients <- merge(clients,last_score[,c("client_id","score")],
+  clients <- merge(clients,entry_score[,c("client_id","score")],
     by.x = "client_id",by.y = "client_id",all.x = TRUE)
-  names(clients)[ncol(clients)] <- c("last_score")
+  names(clients)[ncol(clients)] <- c("entry_score")
   
   # Get cltv (and removing last credit)
   input_here <- input
@@ -607,31 +607,29 @@ gen_msf <- function(input,brand){
   # Create bins
   clients$tot_credits <- clients$tot_credits - 1
   clients$score_bin <-
-    ifelse(clients$last_score%in% c("Bad","Indeterminate"),1,
-    ifelse(clients$last_score=="Good 1",2,
-    ifelse(clients$last_score=="Good 2",3,
-    ifelse(clients$last_score=="Good 3",4,5))))
-  clients$score_bin <- ifelse(is.na(clients$score_bin),3,clients$score_bin)
+    ifelse(clients$entry_score%in% c("Bad","Indeterminate"),1,
+    ifelse(clients$entry_score=="Good 1",2,
+    ifelse(clients$entry_score=="Good 2",3,
+    ifelse(clients$entry_score=="Good 3",4,5))))
+  clients$score_bin <- ifelse(is.na(clients$entry_score),3,
+    ifelse(clients$entry_score=="",3,clients$score_bin))
   clients$frequency <- 
     ifelse(clients$score_bin==1,
     ifelse(clients$tot_credits==0,0,1),ifelse(clients$tot_credits==0,1,0))
   clients$monetary <- ifelse(clients$profit>=1000,1,0)
-  clients$rfm_raw <- clients$score_bin + clients$frequency + clients$monetary
+  
+  # Create clients field
+  clients$rfm <- clients$score_bin + clients$frequency + clients$monetary
   
   # Make RFM field from 0 to 1000
-  clients$rfm <- round((clients$rfm_raw - 1) /(6 - 1) * 1000)
+  clients$rfm <- round((clients$rfm - min(clients$rfm)) /
+     (max(clients$rfm) - min(clients$rfm)) * 1000)
   clients$rfm <- ifelse(clients$rfm==0,100,clients$rfm)
   
-  # Recorrect for Indeterminates 
-  clients$rfm <- 
-    ifelse(!(is.na(clients$last_score)) & 
-    clients$last_score=="Indeterminate" & clients$tot_credits>0,
-    clients$rfm-100,clients$rfm)
-  
-  # Recorrect some more
-  clients$rfm <- ifelse(clients$rfm==100,200,clients$rfm)
-  clients$rfm <- ifelse(clients$sold=="sold",200,clients$rfm)
-  
+  # Make RFM field from 0 to 1000
+  clients$rfm <- ifelse(clients$entry_score=="Indeterminate" & 
+    clients$tot_credits>0,clients$rfm-100,clients$rfm)
+
   # Discretize MSF_score
   clients$rfm_score <- 
     ifelse(clients$rfm<=200,"very_low",
@@ -641,7 +639,7 @@ gen_msf <- function(input,brand){
 
   # Add more fields
   clients$type <- 2
-  clients$brand <- brand
+  clients$brand_id <- brand
   
   return(clients)
 }
@@ -650,7 +648,7 @@ gen_msf <- function(input,brand){
 gen_sql_string_po_rfm <- function(input,inc){
   return(paste("(",input$id[inc],",",
     input$client_id[inc],",",input$rfm[inc],",'",input$rfm_score[inc],"',",
-    input$type[inc],",",input$brand[inc],",'",input$created_at[inc],"','",
+    input$type[inc],",",input$brand_id[inc],",'",input$created_at[inc],"','",
     input$updated_at[inc],"')",sep=""))
 }
 
