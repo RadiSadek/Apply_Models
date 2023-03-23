@@ -628,9 +628,10 @@ gen_msf <- function(input,brand){
   clients$rfm <- ifelse(clients$rfm==0,100,clients$rfm)
   
   # Make RFM field from 0 to 1000
-  clients$rfm <- ifelse(clients$entry_score=="Indeterminate" & 
-    clients$tot_credits>0,clients$rfm-100,clients$rfm)
-
+  clients$rfm <- ifelse(is.na(clients$entry_score),clients$rfm,
+    ifelse(clients$entry_score=="Indeterminate" & 
+           clients$tot_credits>0,clients$rfm-100,clients$rfm))
+  
   # Discretize MSF_score
   clients$rfm_score <- 
     ifelse(clients$rfm<=200,"very_low",
