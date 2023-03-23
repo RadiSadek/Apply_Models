@@ -475,3 +475,31 @@ FROM ",db_name,".credits_applications_scoring WHERE application_id>",
 indexx,sep=""))
 }
 
+# Get all credits in list of clients
+gen_credits_of_clients <- function(db_name,list){
+  return(paste(
+"SELECT a.client_id, a.product_id, a.sub_status, a.status, b.brand_id 
+FROM ",db_name,".credits_applications a
+LEFT JOIN ",db_name,".products b
+ON a.product_id = b.id
+WHERE client_id IN (",list,") AND STATUS IN (4,5)"
+    ,sep=""))
+}
+
+# Get ptc of credits
+gen_ptc_list_query <- function(db_name,list){
+  return(paste(
+"SELECT application_id, ptc_score
+FROM ",db_name,".credits_applications_ptc_score
+WHERE application_id IN (",list,")"
+    ,sep=""))
+}
+
+# Get if next salary
+gen_payday_query <- function(db_name){
+  return(paste(
+"SELECT id, type
+FROM ",db_name,".products",sep=""))
+}
+
+

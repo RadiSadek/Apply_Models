@@ -88,21 +88,22 @@ gen_final_df <- function(products,application_id){
 # Gen flag bad office
 flag_bad_office <- function(var_off){
   return(ifelse(
-    var_off %in% c("142","145","93","76","133","74","36","85","139","136",
-                   "140","33","73","99","120","41","28","54","51","106",
-                   "12","25","27","53","132","46","125","18","64","50","135",
-                   "134","15","100","88"
+    var_off %in% c("121","100","99","51","94","50","32","125","160","34","142",
+                   "76","57","133","42","74","136","54","33","149","161","110",
+                   "78","28","140","95","139","16","23","36","79","18","163",
+                   "58","98","83","130"
     ), 1,
     ifelse(
-      var_off %in% c("110","3","83","92","137","71","95","52","96","2","32",
-                     "42","94","16","98","17","34","23","30","5","11","8","47",
-                     "78","108","104","130","79","86","57","56","68","72","13"
+      var_off %in% c("93","52","27","85","106","55","137","53","80","159","132",
+                     "96","120","12","92","73","88","15","11","3","64","165",
+                     "56","75","47","124","108","29","46","21","71","167",
+                     "107","7","91","5","135","113"
     ), 2,
     ifelse(
-      var_off %in% c("124","58","107","118","70","81","55","75","21","128",
-                     "113","31", "7","114","97","69","59","24","87","4","1",
-                     "80","90","43","9","91","61","14","49","35","84","121",
-                     "29","10","44"
+      var_off %in% c("25","13","81","128","35","17","2","30","87","162","69",
+                     "86","104","1","24","70","59","68","49","97","72","118",
+                     "8","168","31","41","84","43","14","134","114","61","9",
+                     "4","90","164","10","172","44"
     ), 3, 2
       ))))
 }
@@ -676,5 +677,58 @@ gen_sql_string_update_rfm <- function(input,var,var_name,db_name,crit){
   }
   return(paste("UPDATE ",db_name,".credits_applications_rfm_score SET ",
      var_name," = CASE ",iterate_string," ELSE ",var_name," END;",sep=""))
+}
+
+# Generate number of credits per brand - for a list
+gen_append_nb_credits <- function(db_name,input){
+  
+  list_clients <- input$client_id[1]
+  if(nrow(input)>1){
+    for(i in 2:nrow(input)){
+      list_clients <- paste(list_clients,input$client_id[i],sep=",")
+    }
+  }
+  
+  # Get number of credits
+  get_nb_credits <- gen_query(con,gen_credits_of_clients(db_name,list_clients))
+  get_nb_credits <- subset(get_nb_credits,
+    !(get_nb_credits$sub_status %in% c(129,122)) | 
+    is.na(get_nb_credits$sub_status))
+  nb_credits <- as.data.frame((table(
+    get_nb_credits$client_id,get_nb_credits$brand_id)))
+  input <- merge(input,nb_credits,by.x = c("client_id","company_id"),
+    by.y = c("Var1","Var2"),all.x = TRUE)
+  names(input)[ncol(input)] <- c("nb_credits")
+  input$nb_credits <- ifelse(is.na(input$nb_credits),0,input$nb_credits)
+  
+  return(input)
+  
+}
+
+# Generate probability to churn
+gen_list_ptc <- function(db_name,input){
+  
+  list_ids <- input$id[1]
+  if(nrow(input)>1){
+    for(i in 2:nrow(input)){
+      list_ids <- paste(list_ids,input$id[i],sep=",")
+    }
+  }
+  
+  # Get probability to churn 
+  get_ptc <- gen_query(con,gen_ptc_list_query(db_name,list_ids))
+  input <- merge(input,get_ptc,by.x = "id",by.y = "application_id",all.x = TRUE)
+  
+  return(input)
+  
+}
+
+# Generate list of flag if pay day or not
+gen_flag_payday <- function(db_name,input){
+  
+  get_type_payday <-  gen_query(con,gen_payday_query(db_name))
+  input <- merge(input,get_type_payday,by.x = "product_id",by.y = "id",
+                 all.x = TRUE)
+  return(input)
 }
 

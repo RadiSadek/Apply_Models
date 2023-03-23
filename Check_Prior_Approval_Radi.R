@@ -252,6 +252,40 @@ if(nrow(all_credit)){
 
 
 
+#####################################
+### Assign to group for Credirect ###
+#####################################
+
+if(nrow(all_credit)>0){
+
+# Get number of credits
+all_credit <- gen_append_nb_credits(db_name,all_credit)
+
+# Get probability to ptc 
+all_credit <- gen_list_ptc(db_name,all_credit)
+
+# Get if pay day or not
+all_credit <- gen_flag_payday(db_name,all_credit)
+all_credit$payday <- ifelse(all_credit$type==4,1,
+   ifelse(all_credit$product_id %in% 
+   c(25:28,36,37,41:44,49,50,55:58,67:68),1,0))
+
+# Make groups for Credirect
+all_credit$ptc_score <- ifelse(is.na(all_credit$ptc_score),"medium")
+# all_credit$group <- 
+#   ifelse(all_credit$company_id==2,
+#   ifelse(all_credit$nb_credits==1,
+#   ifelse(all_credit$payday==0,
+#   ifelse(all_credit$ptc_score %in% c("very_high"),101,
+#         ifelse(all_credit$score_max_amount %in% c("Indeterminate","Good 1"),
+#            102,103)),
+#   ifelse(all_credit$score_max_amount %in% c("Indeterminate","Good 1"),
+#            102,103)),
+#   ifelse(all_credit$payday==0,
+#   ifelse(all_credit$ptc_score %in% c("very_low"),101,102),101)),NA)
+
+
+
 #############################################
 ### Work on final dataset and write in DB ###
 #############################################
@@ -262,13 +296,10 @@ id_max_query <- paste(
   FROM ",db_name,".clients_prior_approval_applications",sep="")
 id_max <- gen_query(con,id_max_query)$max_id+1
 
-if(nrow(all_credit)>0){
-
 # Create final dataframe for writing in DB
 offers <- all_credit
 offers$id <- seq(id_max,id_max+nrow(offers)-1,1)
 offers$application_id <- NA
-offers$group <- NA
 offers$hide_until_date <- NA
 offers$created_at <- Sys.time()
 offers$updated_at <- NA
