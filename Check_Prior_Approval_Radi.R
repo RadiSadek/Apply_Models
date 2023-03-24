@@ -258,20 +258,20 @@ if(nrow(all_credit)){
 
 if(nrow(all_credit)>0){
 
-# Get number of credits
-all_credit <- gen_append_nb_credits(db_name,all_credit)
-
-# Get probability to ptc 
-all_credit <- gen_list_ptc(db_name,all_credit)
-
-# Get if pay day or not
-all_credit <- gen_flag_payday(db_name,all_credit)
-all_credit$payday <- ifelse(all_credit$type==4,1,
-   ifelse(all_credit$product_id %in% 
-   c(25:28,36,37,41:44,49,50,55:58,67:68),1,0))
+# # Get number of credits
+# all_credit <- gen_append_nb_credits(db_name,all_credit)
+# 
+# # Get probability to ptc 
+# all_credit <- gen_list_ptc(db_name,all_credit)
+# 
+# # Get if pay day or not
+# all_credit <- gen_flag_payday(db_name,all_credit)
+# all_credit$payday <- ifelse(all_credit$type==4,1,
+#    ifelse(all_credit$product_id %in% 
+#    c(25:28,36,37,41:44,49,50,55:58,67:68),1,0))
 
 # Make groups for Credirect
-all_credit$ptc_score <- ifelse(is.na(all_credit$ptc_score),"medium")
+# all_credit$ptc_score <- ifelse(is.na(all_credit$ptc_score),"medium")
 # all_credit$group <- 
 #   ifelse(all_credit$company_id==2,
 #   ifelse(all_credit$nb_credits==1,

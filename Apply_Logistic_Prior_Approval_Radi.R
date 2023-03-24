@@ -213,17 +213,17 @@ select_credits <- subset(select_credits,select_credits$max_delay<=360)
 ### Assign to group for Credirect ###
 #####################################
 
-# Get number of credits
-select_credits <- gen_append_nb_credits(db_name,select_credits)
-
-# Get probability to ptc 
-select_credits <- gen_list_ptc(db_name,select_credits)
-
-# Get if pay day or not
-select_credits <- gen_flag_payday(db_name,select_credits)
-select_credits$payday <- ifelse(select_credits$type==4,1,
-    ifelse(select_credits$product_id %in% 
-    c(25:28,36,37,41:44,49,50,55:58,67:68),1,0))
+# # Get number of credits
+# select_credits <- gen_append_nb_credits(db_name,select_credits)
+# 
+# # Get probability to ptc 
+# select_credits <- gen_list_ptc(db_name,select_credits)
+# 
+# # Get if pay day or not
+# select_credits <- gen_flag_payday(db_name,select_credits)
+# select_credits$payday <- ifelse(select_credits$type==4,1,
+#     ifelse(select_credits$product_id %in% 
+#     c(25:28,36,37,41:44,49,50,55:58,67:68),1,0))
 
 # Make groups for Credirect
 # select_credits$group <- 
@@ -509,12 +509,13 @@ special <- gen_query(con,get_special_sql)
 
 # Get those who have currently an active in corresponding company
 po_active <- subset(po_raw,is.na(po_raw$deleted_at))
-all_credits_active <- subset(all_credits,all_credits$status==4)
+all_credits_active <- subset(all_credits_raw,all_credits_raw$status==4)
 po_active <- merge(po_active,
   all_credits_active[,c("client_id","signed_at","company_id")],
   by.x = c("client_id","company_id"),by.y = c("client_id","company_id"),
   all.x = TRUE)
 po_active <- subset(po_active,!is.na(po_active$signed_at))
+po_active <- po_active[c(1:min(nrow(po_active),100)),]
 
 # Remove those who have double entry
 doubles_sql <- paste("SELECT * 
