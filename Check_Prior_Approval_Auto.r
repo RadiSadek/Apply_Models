@@ -326,6 +326,7 @@ id_max <- gen_query(con,id_max_query)$max_id+1
 offers <- all_credit
 offers$id <- seq(id_max,id_max+nrow(offers)-1,1)
 offers$application_id <- NA
+offers$group <- NA
 offers$hide_until_date <- NA
 offers$created_at <- Sys.time()
 offers$updated_at <- NA

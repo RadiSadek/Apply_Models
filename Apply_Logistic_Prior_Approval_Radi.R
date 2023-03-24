@@ -253,6 +253,7 @@ if(nrow(select_credits)>0){
 offers <- select_credits
 offers$id <- seq(id_max,id_max+nrow(offers)-1,1)
 offers$application_id <- NA
+offers$group <- NA
 offers$hide_until_date <- NA
 offers$created_at <- Sys.time()
 offers$updated_at <- NA
