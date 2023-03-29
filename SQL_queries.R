@@ -441,6 +441,7 @@ gen_all_clients <- function(db_name){
 "SELECT 
 ",db_name,".credits_applications.id, 
 ",db_name,".credits_applications.signed_at,
+",db_name,".credits_applications.deactivated_at,
 ",db_name,".credits_applications.sub_status,
 ",db_name,".credits_plan_contract.amount,
 ",db_name,".credits_plan_contract.installments,

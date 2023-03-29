@@ -575,6 +575,13 @@ gen_msf <- function(input,brand){
   clients$sold <- ifelse(!is.na(clients$last_status) & clients$last_status==124,
     "sold","normal")
   
+  # Get time of deactivation
+  deactivated <- aggregate(input$deactivated_at,by=list(input$client_id),
+     FUN=max)
+  clients <- merge(clients,deactivated,by.x = "client_id",by.y = "Group.1",
+     all.x = TRUE)
+  names(clients)[ncol(clients)] <- c("last_deactivated")
+  
   # Get total number of credits
   nb_credits <- aggregate(input$credit,by=list(input$client_id),FUN=sum)
   clients <- merge(clients,nb_credits,by.x = "client_id",by.y = "Group.1",
@@ -644,6 +651,63 @@ gen_msf <- function(input,brand){
   clients$brand_id <- brand
   
   return(clients)
+}
+
+# Generate RFM score
+gen_rfm <- function(input,brand,df_here){
+
+  # Select brand id
+  input <- subset(input,input$brand_id==brand)
+  df_here <- subset(df,df$brand_id==brand)
+  
+  # Get input raw 
+  input_raw <- input
+  
+  # Create Recency
+  ecdf_fun <- function(x,perc) ecdf(x)(perc)
+  input$time_since <- round(difftime(Sys.time(),input$last_signed,
+    units = c("days")))
+  input$recency <- abs(1-ecdf_fun(input$time_since,input$time_since))
+  input$recency <- round(10*(input$recency-min(input$recency))/
+                           (max(input$recency)-min(input$recency)))
+
+  # Create Frequency
+  input$tot_credits <- input$tot_credits + 1
+  input$frequency <- ecdf_fun(input$tot_credits,input$tot_credits)
+  input$frequency <- round(10*(input$frequency-min(input$frequency))/
+     (max(input$frequency)-min(input$frequency)))
+  
+  # Create Monetary
+  df_here$profit <- ifelse(is.na(df_here$deactivated_at) & 
+    df_here$signed_at>(Sys.Date()-180),0,df_here$profit)
+  profit <- aggregate(df_here$profit,by=list(df_here$client_id),FUN=sum)
+  input <- merge(input,profit,by.x = "client_id",by.y = "Group.1",
+      all.x = TRUE)
+  names(input)[ncol(input)] <- c("profit2")
+  input$monetary <- ecdf_fun(input$profit2,input$profit2)
+  input$monetary <- round(10*(input$monetary-min(input$monetary))/
+                            (max(input$monetary)-min(input$monetary)))
+  
+  # Create RFM score 
+  input$rfm <- input$recency + input$frequency + 2 * input$monetary
+  input$rfm <- round((input$rfm - min(input$rfm)) /
+                         (max(input$rfm) - min(input$rfm)) * 1000)
+  
+  # Bin RFM
+  input$rfm_score <- 
+    ifelse(input$rfm<=200,"very_low",
+    ifelse(input$rfm<=400,"low",
+    ifelse(input$rfm<=600,"medium",
+    ifelse(input$rfm<=800,"high","very_high"))))
+  
+  # Make final dataframe
+  input_raw <- input_raw[,c("client_id","rfm","rfm_score","type","brand_id")]
+  input_new <- input[,c("client_id","rfm","rfm_score","type","brand_id")]
+  input_new$type <- 1
+  input_final <- rbind(input_raw,input_new)
+  
+  return(input_final)
+  
 }
 
 # Define sql string query for writing in DB for RFM score 

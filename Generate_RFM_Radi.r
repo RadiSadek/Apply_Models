@@ -44,6 +44,7 @@ source(paste(main_dir,"Apply_Models\\SQL_queries.r", sep=""))
 
 # Load scores
 scores <- read.csv("Scores\\scores.csv",sep=";")
+scores[scores== ''] <- NA
 names(scores) <- c("id","score")
 
 
@@ -71,14 +72,20 @@ score <- gen_query(con,gen_all_scores(db_name,1568339))
 df <- merge(df,score,by.x = c("id","amount","installments"), 
    by.y = c("application_id","amount","period"),all.x = TRUE)
 df <- merge(df,scores,by.x = "id",by.y = "id",all.x = TRUE)
+df$score.x <- as.character(df$score.x)
+df$score.y <- as.character(df$score.y)
 df$score <- ifelse(is.na(df$score.y),df$score.x,df$score.y)
-df$score <- ifelse(df$score=="",NA,df$score)
+df$score <- as.character(df$score)
 df <- df[,-which(names(df) %in% c("score.y","score.x"))]
 df$credit <- 1
 
 
 # Generate MSF score per brand_id
 msf <- rbind(gen_msf(df,1),gen_msf(df,2),gen_msf(df,5))
+
+
+# Generate final RFM Score
+rfm <- rbind(gen_rfm(msf,1,df),gen_rfm(msf,2,df),gen_rfm(msf,5,df))
 
 
 
@@ -102,42 +109,37 @@ if(nrow(rfm_tot)==0){
 }
 
 
-# Seperate into msf and rfm
-rfm_cur <- subset(rfm_tot,rfm_tot$type_cur==1)
-msf_cur <- subset(rfm_tot,rfm_tot$type_cur==2)
-
-
 
 #######################################
 # MSF : Get those who get to be added #
 #######################################
 
 # Merge with current
-msf_all <- merge(msf,
-  msf_cur[,c("client_id","rfm_cur","rfm_score_cur","type_cur","brand_id")],
-  by.x = c("client_id","brand_id"),by.y = c("client_id","brand_id"),
-  all.x = TRUE)
+rfm_all <- merge(rfm,
+  rfm_tot[,c("client_id","rfm_cur","rfm_score_cur","type_cur","brand_id")],
+  by.x = c("client_id","brand_id","type"),by.y = c("client_id","brand_id",
+  "type_cur"),all.x = TRUE)
 
 
 # Create dataframe for new clients 
-msf_new <- subset(msf_all,is.na(msf_all$rfm_cur))
-if(nrow(msf_new)>0){
-msf_new$id_max <- seq(id_max,id_max+nrow(msf_new)-1)
-msf_new$created_at <- Sys.time()
-msf_new$updated_at <- Sys.time()
+rfm_new <- subset(rfm_all,is.na(rfm_all$rfm_cur))
+if(nrow(rfm_new)>0){
+rfm_new$id_max <- seq(id_max,id_max+nrow(rfm_new)-1)
+rfm_new$created_at <- Sys.time()
+rfm_new$updated_at <- Sys.time()
 
 
 # Append new clients to database
-if(nrow(msf_new)>10000){
+if(nrow(rfm_new)>10000){
   
-  length_df <- seq(1,nrow(msf_new),by=10000)
+  length_df <- seq(1,nrow(rfm_new),by=10000)
   
   for(i in 1:(length(length_df)-1)){
-    msf_here <- msf_new[c(length_df[i]:(length_df[i+1]-1)),]
-    string_sql <- gen_sql_string_po_rfm(msf_here,1)
-    if(nrow(msf_here)>1){
-      for(j in 2:nrow(msf_here)){
-        string_sql <- paste(string_sql,gen_sql_string_po_rfm(msf_here,j),
+    rfm_here <- rfm_new[c(length_df[i]:(length_df[i+1]-1)),]
+    string_sql <- gen_sql_string_po_rfm(rfm_here,1)
+    if(nrow(rfm_here)>1){
+      for(j in 2:nrow(rfm_here)){
+        string_sql <- paste(string_sql,gen_sql_string_po_rfm(rfm_here,j),
                             sep=",")
       }
     }
@@ -145,11 +147,11 @@ if(nrow(msf_new)>10000){
      db_name,".credits_applications_rfm_score VALUES ",string_sql,";", 
      sep=""))))
   }
-  msf_here <- msf_new[c(length_df[length(length_df)]:nrow(msf_new)),]
-  string_sql <- gen_sql_string_po_rfm(msf_here,1)
-  if(nrow(msf_here)>1){
-    for(j in 2:nrow(msf_here)){
-      string_sql <- paste(string_sql,gen_sql_string_po_rfm(msf_here,j),
+  rfm_here <- rfm_new[c(length_df[length(length_df)]:nrow(rfm_new)),]
+  string_sql <- gen_sql_string_po_rfm(rfm_here,1)
+  if(nrow(rfm_here)>1){
+    for(j in 2:nrow(rfm_here)){
+      string_sql <- paste(string_sql,gen_sql_string_po_rfm(rfm_here,j),
                           sep=",")
     }
   }
@@ -157,10 +159,10 @@ if(nrow(msf_new)>10000){
      db_name,".credits_applications_rfm_score VALUES ",string_sql,";", 
      sep=""))))
 } else {
-  string_sql <- gen_sql_string_po_rfm(msf_new,1)
-  if(nrow(msf_new)>1){
-    for(i in 2:nrow(msf_new)){
-      string_sql <- paste(string_sql,gen_sql_string_po_rfm(msf_new,i),
+  string_sql <- gen_sql_string_po_rfm(rfm_new,1)
+  if(nrow(rfm_new)>1){
+    for(i in 2:nrow(rfm_new)){
+      string_sql <- paste(string_sql,gen_sql_string_po_rfm(rfm_new,i),
                           sep=",")
     }
   }
@@ -175,10 +177,10 @@ if(nrow(msf_new)>10000){
 #########################################
 
 # Update older clients
-msf_update <- subset(msf_all,!is.na(msf_all$rfm_cur) & 
-  msf_all$rfm!=msf_all$rfm_cur)
-msf_update$updated_at <- Sys.time()
-
+rfm_update <- subset(rfm_all,!is.na(rfm_all$rfm_cur) & 
+  rfm_all$rfm!=rfm_all$rfm_cur)
+if(nrow(rfm_update)>0){
+rfm_update$updated_at <- Sys.time()
 
 # Reconnect to database
 con <- dbConnect(MySQL(), user=db_username, 
@@ -189,11 +191,10 @@ suppressWarnings(fetch(dbSendQuery(con, sqlMode),
                        n=-1))
 
 # Update database
-if(nrow(msf_update)>0){
 suppressMessages(suppressWarnings(dbSendQuery(con,
- gen_sql_string_update_rfm(msf_update,msf_update$rfm,"rfm",db_name,0))))
+ gen_sql_string_update_rfm(rfm_update,rfm_update$rfm,"rfm",db_name,0))))
 suppressMessages(suppressWarnings(dbSendQuery(con,
- gen_sql_string_update_rfm(msf_update,msf_update$updated_at,"updated_at",
+ gen_sql_string_update_rfm(rfm_update,rfm_update$updated_at,"updated_at",
  db_name,1))))
 }
 
