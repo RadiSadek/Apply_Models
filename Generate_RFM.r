@@ -74,6 +74,7 @@ source(file.path(base_dir,"SQL_queries.r"))
 
 # Load scores
 scores <- read.csv(file.path(base_dir,"scores","scores.csv"),sep=";")
+scores[scores== ''] <- NA
 names(scores) <- c("id","score")
 
 
@@ -101,8 +102,10 @@ score <- gen_query(con,gen_all_scores(db_name,1568339))
 df <- merge(df,score,by.x = c("id","amount","installments"), 
    by.y = c("application_id","amount","period"),all.x = TRUE)
 df <- merge(df,scores,by.x = "id",by.y = "id",all.x = TRUE)
+df$score.x <- as.character(df$score.x)
+df$score.y <- as.character(df$score.y)
 df$score <- ifelse(is.na(df$score.y),df$score.x,df$score.y)
-df$score <- ifelse(df$score=="",NA,df$score)
+df$score <- as.character(df$score)
 df <- df[,-which(names(df) %in% c("score.y","score.x"))]
 df$credit <- 1
 
@@ -207,8 +210,8 @@ if(nrow(msf_new)>10000){
 # Update older clients
 msf_update <- subset(msf_all,!is.na(msf_all$rfm_cur) & 
   msf_all$rfm!=msf_all$rfm_cur)
+if(nrow(msf_update)>0){
 msf_update$updated_at <- Sys.time()
-
 
 # Reconnect to database
 con <- dbConnect(MySQL(), user=db_username, 
@@ -219,7 +222,6 @@ suppressWarnings(fetch(dbSendQuery(con, sqlMode),
                        n=-1))
 
 # Update database
-if(nrow(msf_update)>0){
 suppressMessages(suppressWarnings(dbSendQuery(con,
  gen_sql_string_update_rfm(msf_update,msf_update$rfm,"rfm",db_name,0))))
 suppressMessages(suppressWarnings(dbSendQuery(con,
