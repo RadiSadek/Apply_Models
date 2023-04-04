@@ -575,13 +575,6 @@ gen_msf <- function(input,brand){
   clients$sold <- ifelse(!is.na(clients$last_status) & clients$last_status==124,
     "sold","normal")
   
-  # Get time of deactivation
-  deactivated <- aggregate(input$deactivated_at,by=list(input$client_id),
-     FUN=max)
-  clients <- merge(clients,deactivated,by.x = "client_id",by.y = "Group.1",
-     all.x = TRUE)
-  names(clients)[ncol(clients)] <- c("last_deactivated")
-  
   # Get total number of credits
   nb_credits <- aggregate(input$credit,by=list(input$client_id),FUN=sum)
   clients <- merge(clients,nb_credits,by.x = "client_id",by.y = "Group.1",
@@ -659,10 +652,10 @@ gen_rfm <- function(input,brand,df_here){
   # Select brand id
   input <- subset(input,input$brand_id==brand)
   df_here <- subset(df,df$brand_id==brand)
-  
+
   # Get input raw 
   input_raw <- input
-  
+
   # Create Recency
   ecdf_fun <- function(x,perc) ecdf(x)(perc)
   input$time_since <- round(difftime(Sys.time(),input$last_signed,
@@ -680,6 +673,7 @@ gen_rfm <- function(input,brand,df_here){
   # Create Monetary
   df_here$profit <- ifelse(is.na(df_here$deactivated_at) & 
     df_here$signed_at>(Sys.Date()-180),0,df_here$profit)
+  df_here$profit <- as.numeric(as.character(df_here$profit))
   profit <- aggregate(df_here$profit,by=list(df_here$client_id),FUN=sum)
   input <- merge(input,profit,by.x = "client_id",by.y = "Group.1",
       all.x = TRUE)
