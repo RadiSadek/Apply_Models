@@ -115,7 +115,7 @@ gen_restrict_citycash_beh <- function(scoring_df,prev_amount,products,all_id,
        by.x = c("amount","period"),by.y = c("amount","period"),all.x = TRUE)
   }
   allowed_installment <- gen_installment_ratio(db_name,all_id,all_df,
-      application_id,crit,flag_cashpoint,max_prev_amount)
+      application_id,crit,flag_cashpoint,max_prev_amount,scoring_df)
   for(i in 1:nrow(scoring_df)){
     if(scoring_df$installment_amount[i]>allowed_installment){
       scoring_df$color[i] <- 1

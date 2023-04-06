@@ -256,7 +256,7 @@ gen_prev_max_installment <- function(db_name,input,all_df,application_id,crit,
 
 # Function to compute installment ratio 
 gen_installment_ratio <- function(db_name,all_id,all_df,application_id,crit,
-     flag_cashpoint,max_prev_amount){
+     flag_cashpoint,max_prev_amount,scoring_df){
   
   # Join DPD of past credits
   all_id_here <- all_id[all_id$status %in% c(4,5) & 
@@ -264,67 +264,46 @@ gen_installment_ratio <- function(db_name,all_id,all_df,application_id,crit,
   if(crit==0){
     all_id_here <- all_id_here[all_id_here$id!=application_id,]
   }
-  for (i in 1:nrow(all_id_here)){
-    all_id_here$max_delay[i] <- gen_query(con,
-      gen_plan_main_select_query(db_name,all_id_here$id[i]))$max_delay
-  }
   
   # Joint company ID to all_df
   all_df$company_id <- gen_query(con,
     gen_products_query_desc(db_name,all_df))$company_id
-  
-  # Subset two dataframes , one with same company ID , one with different
-  all_id_here_other_company <-  subset(all_id_here,
-    all_id_here$company_id!=all_df$company_id)
-  all_id_here <- subset(all_id_here,
-    all_id_here$company_id==all_df$company_id)
-  
-  # Take the right dataframe
-  if(nrow(all_id_here)==0 & nrow(all_id_here_other_company)>0){
-    all_id_here <- all_id_here_other_company
-  }
 
   # Subset into active and terminated
   all_id_local <- subset(all_id_here,all_id_here$status %in% c(5))
   all_id_local2 <- subset(all_id_here,all_id_here$status %in% c(4))
-  all_id_local_activ_not_ok <- subset(all_id_local2,
-          all_id_local2$max_delay>60)
   
-  if(nrow(all_id_local)>0 | nrow(all_id_local2)>0){
+  # Get highest score
+  highest_score <-  
+    ifelse("Good 4" %in% names(table(scoring_df$score)),5,
+    ifelse("Good 3" %in% names(table(scoring_df$score)),4,  
+    ifelse("Good 2" %in% names(table(scoring_df$score)),3,   
+    ifelse("Good 1" %in% names(table(scoring_df$score)),2,
+    ifelse("Indeterminate" %in% names(table(scoring_df$score)),1,1)))))  
 
-    # Get DPD of terminated credits
-    all_id_local_tot <- all_id_local
-    all_id_local_ok <- subset(all_id_local_tot,
-                              all_id_local_tot$max_delay<=60)
-    all_id_local_not_ok <- subset(all_id_local_tot,
-                              all_id_local_tot$max_delay>60)
+  if(nrow(all_id_local)>0 | nrow(all_id_local2)>0){
     
     # Compute optimized previous installment amount
     if(max_prev_amount<=500){
-      allowed_ratio <- c(0.6,2,2,2,2)
+      allowed_ratio_active <- c(0.6,1.8,2,2.5,3)[highest_score]
+      allowed_ratio_term <- c(2,2,2,2.5,3)[highest_score]
     } else {
-      allowed_ratio <- c(0.6,1.3,1.1,1.1,1)
+      allowed_ratio_active <- c(0.6,1,1.1,1.3,1.5)[highest_score]
+      allowed_ratio_term <- c(1,1.1,1.2,1.3,1.5)[highest_score]
     }
     
     final_prev_installment_amount <-
-      ifelse(nrow(all_id_local_activ_not_ok)>0,allowed_ratio[1]*
-               gen_prev_max_installment(db_name,all_id_local2,
-                 all_df,application_id,crit,flag_cashpoint),
-      ifelse(nrow(all_id_local_ok)>0 & nrow(all_id_local_not_ok)==0,
-             allowed_ratio[2]*gen_prev_max_installment(db_name,rbind(
-               all_id_local_ok,all_id_local2),all_df,application_id,crit,
-               flag_cashpoint),
-      ifelse(nrow(all_id_local_ok)>0 & nrow(all_id_local_not_ok)>0,
-             allowed_ratio[3]*gen_prev_max_installment(db_name,rbind(
-               all_id_local_ok,all_id_local2),all_df,application_id,crit,
-               flag_cashpoint),
       ifelse(nrow(all_id_local2)>0,
-             allowed_ratio[4]*gen_prev_max_installment(db_name,all_id_local2,
-                all_df,application_id,crit,flag_cashpoint),
-             allowed_ratio[5]*gen_prev_max_installment(db_name,
-                all_id_local_not_ok,all_df,application_id,crit,
-                flag_cashpoint)))))                          
-         
+             allowed_ratio_active*
+               gen_prev_max_installment(db_name,all_id_local2,
+                  all_df,application_id,crit,flag_cashpoint),
+      ifelse(nrow(all_id_local)>0 & nrow(all_id_local2)==0,
+             allowed_ratio_term*
+               gen_prev_max_installment(db_name,all_id_local,
+                  all_df,application_id,crit,flag_cashpoint),
+             allowed_ratio_term*
+               gen_prev_max_installment(db_name,all_id_local,
+                  all_df,application_id,crit,flag_cashpoint)))
   } else {
     final_prev_installment_amount <- Inf
   }
