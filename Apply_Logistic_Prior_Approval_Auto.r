@@ -248,7 +248,7 @@ select_credits <- subset(select_credits,select_credits$max_delay<=360)
 # select_credits <- gen_flag_payday(db_name,select_credits)
 # select_credits$payday <- ifelse(select_credits$type==4,1,
 #     ifelse(select_credits$product_id %in% 
-#     c(25:28,36,37,41:44,49,50,55:58,67:68),1,0))
+#     c(25:28,36,37,41:44,49,50,55:58,67:68,78:81),1,0))
 
 # Make groups for Credirect
 # select_credits$group <- 
@@ -295,8 +295,9 @@ offers[is.na(offers)] <- "NULL"
 
 
 # Adjust product ID
-offers$product_id <- ifelse(offers$product_id %in% c(43,44,49,50,57,58),55,
-                            offers$product_id)
+offers$product_id <- 
+   ifelse(offers$product_id %in% c(43,44,49,50,57,58),55,
+   ifelse(offers$product_id %in% c(78,79,80,81),78,offers$product_id))
 
 
 # Make result ready for SQL query

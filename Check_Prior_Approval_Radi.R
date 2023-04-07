@@ -134,7 +134,7 @@ FROM ",db_name,".products
 WHERE id= ",all_credit$product_id,sep="")
 all_credit$period <- gen_query(con,get_period_sql)$period
 flag_credit_next_salary <- ifelse(all_credit$product_id %in% 
-    c(25:28,36,37,41:44,49,50,55:58,67,68), 1, 0)
+    c(25:28,36,37,41:44,49,50,55:58,67,68,78:81), 1, 0)
 if((flag_credit_next_salary==1 & all_credit$passed_installments==0) |
    (flag_credit_next_salary!=1 & all_credit$period==3 & 
     all_credit$passed_installments<2 & all_credit$tot_installments<4 & 
@@ -268,7 +268,7 @@ if(nrow(all_credit)>0){
 # all_credit <- gen_flag_payday(db_name,all_credit)
 # all_credit$payday <- ifelse(all_credit$type==4,1,
 #    ifelse(all_credit$product_id %in% 
-#    c(25:28,36,37,41:44,49,50,55:58,67:68),1,0))
+#    c(25:28,36,37,41:44,49,50,55:58,67:68,78:81),1,0))
 
 # Make groups for Credirect
 # all_credit$ptc_score <- ifelse(is.na(all_credit$ptc_score),"medium")
@@ -317,8 +317,9 @@ offers[is.na(offers)] <- "NULL"
 
 
 # Adjust product ID
-offers$product_id <- ifelse(offers$product_id %in% c(43,44,49,50,57,58),55,
-                            offers$product_id)
+offers$product_id <- 
+  ifelse(offers$product_id %in% c(43,44,49,50,57,58),55,
+  ifelse(offers$product_id %in% c(78,79,80,81),78,offers$product_id))
 
 
 # Make result ready for SQL query
