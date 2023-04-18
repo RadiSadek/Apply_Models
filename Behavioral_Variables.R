@@ -270,8 +270,10 @@ gen_installment_ratio <- function(db_name,all_id,all_df,application_id,crit,
     gen_products_query_desc(db_name,all_df))$company_id
 
   # Subset into active and terminated
-  all_id_local <- subset(all_id_here,all_id_here$status %in% c(5))
-  all_id_local2 <- subset(all_id_here,all_id_here$status %in% c(4))
+  all_id_local <- subset(all_id_here,all_id_here$status %in% c(5) & 
+      all_id_here$company_id==all_df$company_id)
+  all_id_local2 <- subset(all_id_here,all_id_here$status %in% c(4) & 
+      all_id_here$company_id==all_df$company_id)
   
   # Get highest score
   highest_score <-  

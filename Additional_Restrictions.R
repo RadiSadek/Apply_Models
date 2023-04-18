@@ -107,6 +107,16 @@ gen_restrict_citycash_beh <- function(scoring_df,prev_amount,products,all_id,
   max_prev_amount <- max(all_id$amount[ 
         all_id$company_id==all_id$company_id[all_id$id==application_id] & 
         all_id$status %in% c(4,5)])
+  if(nrow(all_id[all_id$company_id==all_id$company_id[
+    all_id$id==application_id] & all_id$status %in% c(4),])>0){
+    max_prev_amount_spec <- max(all_id$amount[ 
+      all_id$company_id==all_id$company_id[all_id$id==application_id] & 
+        all_id$status %in% c(4)])
+  } else {
+    max_prev_amount_spec <- max(all_id$amount[ 
+      all_id$company_id==all_id$company_id[all_id$id==application_id] & 
+        all_id$status %in% c(5)])
+  }
   
   # Check if installment ratio is OK
   if(!("installment_amount" %in% names(scoring_df))){
@@ -115,7 +125,7 @@ gen_restrict_citycash_beh <- function(scoring_df,prev_amount,products,all_id,
        by.x = c("amount","period"),by.y = c("amount","period"),all.x = TRUE)
   }
   allowed_installment <- gen_installment_ratio(db_name,all_id,all_df,
-      application_id,crit,flag_cashpoint,max_prev_amount,scoring_df)
+      application_id,crit,flag_cashpoint,max_prev_amount_spec,scoring_df)
   for(i in 1:nrow(scoring_df)){
     if(scoring_df$installment_amount[i]>allowed_installment){
       scoring_df$color[i] <- 1
