@@ -146,7 +146,7 @@ if(nrow(rfm_tot)==0){
 
 # Merge with current
 rfm_all <- merge(rfm,
-  rfm_tot[,c("client_id","rfm_cur","rfm_score_cur","type_cur","brand_id")],
+  rfm_tot[,c("id","client_id","rfm_cur","rfm_score_cur","type_cur","brand_id")],
   by.x = c("client_id","brand_id","type"),by.y = c("client_id","brand_id",
   "type_cur"),all.x = TRUE)
 
@@ -154,7 +154,7 @@ rfm_all <- merge(rfm,
 # Create dataframe for new clients 
 rfm_new <- subset(rfm_all,is.na(rfm_all$rfm_cur))
 if(nrow(rfm_new)>0){
-rfm_new$id_max <- seq(id_max,id_max+nrow(rfm_new)-1)
+rfm_new$id <- seq(id_max,id_max+nrow(rfm_new)-1)
 rfm_new$created_at <- Sys.time()
 rfm_new$updated_at <- Sys.time()
 
@@ -223,6 +223,9 @@ suppressWarnings(fetch(dbSendQuery(con, sqlMode),
 # Update database
 suppressMessages(suppressWarnings(dbSendQuery(con,
  gen_sql_string_update_rfm(rfm_update,rfm_update$rfm,"rfm",db_name,0))))
+suppressMessages(suppressWarnings(dbSendQuery(con,
+ gen_sql_string_update_rfm(rfm_update,rfm_update$rfm_score,"rfm_score",db_name,
+ 0))))
 suppressMessages(suppressWarnings(dbSendQuery(con,
  gen_sql_string_update_rfm(rfm_update,rfm_update$updated_at,"updated_at",
  db_name,1))))

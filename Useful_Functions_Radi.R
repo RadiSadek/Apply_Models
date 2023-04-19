@@ -715,21 +715,21 @@ gen_sql_string_po_rfm <- function(input,inc){
 # Function to make string for DB update of RFM table
 gen_sql_string_update_rfm <- function(input,var,var_name,db_name,crit){
   if(crit==0){
-    iterate_string <- paste("WHEN client_id = ",input$client_id[1]," THEN ",
+    iterate_string <- paste("WHEN id = ",input$id[1]," THEN ",
       var[1],sep="")
   }
   else {
-    iterate_string <- paste("WHEN client_id = ",input$client_id[1]," THEN '",
+    iterate_string <- paste("WHEN id = ",input$id[1]," THEN '",
       var[1],"'",sep="")
   }
   if(nrow(input)>1){
     for(i in 2:nrow(input)){
       if(crit==0){
         iterate_string <- paste(iterate_string,
-          paste("WHEN client_id = ",input$client_id[i]," THEN ",var[i],sep=""))
+          paste("WHEN id = ",input$id[i]," THEN ",var[i],sep=""))
       } else {
         iterate_string <- paste(iterate_string,
-          paste("WHEN client_id = ",input$client_id[i]," THEN '",var[i],
+          paste("WHEN id = ",input$id[i]," THEN '",var[i],
                 "'",sep="")) 
       }
     }
