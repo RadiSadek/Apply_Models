@@ -225,7 +225,7 @@ suppressMessages(suppressWarnings(dbSendQuery(con,
  gen_sql_string_update_rfm(rfm_update,rfm_update$rfm,"rfm",db_name,0))))
 suppressMessages(suppressWarnings(dbSendQuery(con,
  gen_sql_string_update_rfm(rfm_update,rfm_update$rfm_score,"rfm_score",db_name,
- 0))))
+ 1))))
 suppressMessages(suppressWarnings(dbSendQuery(con,
  gen_sql_string_update_rfm(rfm_update,rfm_update$updated_at,"updated_at",
  db_name,1))))
