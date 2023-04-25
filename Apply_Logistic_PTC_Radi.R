@@ -44,7 +44,7 @@ main_dir <- "C:\\Projects\\Apply_Scoring\\"
 # Read argument of ID
 args <- commandArgs(trailingOnly = TRUE)
 application_id <- args[1]
-application_id <- 1370762
+#application_id <- 1370762
 product_id <- NA
 
 
@@ -79,8 +79,8 @@ load("rdata\\ptc_credirect_consumer_new.rdata")
 
 # Load Risky Coordinates
 risky_address <- read.csv("risky_coordinates\\risky_coordinates.csv",sep=";")
-risky_address_credirect <- read.csv(file.path(base_dir, "risky_coordinates", 
-      "risky_coordinates_credirect.csv"),sep=";")
+risky_address_credirect <- read.csv(
+  "risky_coordinates\\risky_coordinates_credirect.csv",sep=";")
 
 
 ####################################
