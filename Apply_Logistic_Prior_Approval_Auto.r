@@ -239,29 +239,29 @@ select_credits <- subset(select_credits,select_credits$max_delay<=360)
 #####################################
 
 # Get number of credits
-# select_credits <- gen_append_nb_credits(db_name,select_credits)
-# 
-# # Get probability to ptc 
-# select_credits <- gen_list_ptc(db_name,select_credits)
-# 
-# # Get if pay day or not
-# select_credits <- gen_flag_payday(db_name,select_credits)
-# select_credits$payday <- ifelse(select_credits$type==4,1,
-#     ifelse(select_credits$product_id %in% 
-#     c(25:28,36,37,41:44,49,50,55:58,67:68,78:81),1,0))
+select_credits <- gen_append_nb_credits(db_name,select_credits)
+ 
+# Get probability to ptc 
+select_credits <- gen_list_ptc(db_name,select_credits)
+ 
+# Get if pay day or not
+select_credits <- gen_flag_payday(db_name,select_credits)
+select_credits$payday <- ifelse(select_credits$type==4,1,
+     ifelse(select_credits$product_id %in% 
+     c(25:28,36,37,41:44,49,50,55:58,67:68,78:81),1,0))
 
 # Make groups for Credirect
-# select_credits$group <- 
-#   ifelse(select_credits$company_id==2,
-#   ifelse(select_credits$nb_credits==1,
-#   ifelse(select_credits$payday==0,
-#       ifelse(select_credits$ptc_score %in% c("very_high"),101,
-#       ifelse(select_credits$score_max_amount %in% c("Indeterminate","Good 1"),
-#              102,103)),
-#       ifelse(select_credits$score_max_amount %in% c("Indeterminate","Good 1"),
-#              102,103)),
-#   ifelse(select_credits$payday==0,
-#       ifelse(select_credits$ptc_score %in% c("very_low"),101,102),101)),NA)
+select_credits$group <- 
+ ifelse(select_credits$company_id==2,
+ ifelse(select_credits$nb_credits==1,
+ ifelse(select_credits$payday==0,
+ ifelse(select_credits$ptc_score %in% c("very_high"),101,
+ ifelse(select_credits$score_max_amount %in% c("Indeterminate","Good 1"),
+             102,103)),
+ ifelse(select_credits$score_max_amount %in% c("Indeterminate","Good 1"),
+             102,103)),
+ ifelse(select_credits$payday==0,
+ ifelse(select_credits$ptc_score %in% c("very_low"),101,102),101)),NA)
 
 
 
@@ -278,7 +278,6 @@ if(nrow(select_credits)>0){
 offers <- select_credits
 offers$id <- seq(id_max,id_max+nrow(offers)-1,1)
 offers$application_id <- NA
-offers$group <- NA
 offers$hide_until_date <- NA
 offers$created_at <- Sys.time()
 offers$updated_at <- NA
