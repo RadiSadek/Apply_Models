@@ -240,10 +240,10 @@ select_credits <- subset(select_credits,select_credits$max_delay<=360)
 
 # Get number of credits
 select_credits <- gen_append_nb_credits(db_name,select_credits)
- 
+
 # Get probability to ptc 
 select_credits <- gen_list_ptc(db_name,select_credits)
- 
+
 # Get if pay day or not
 select_credits <- gen_flag_payday(db_name,select_credits)
 select_credits$payday <- ifelse(select_credits$type==4,1,
@@ -295,8 +295,11 @@ offers[is.na(offers)] <- "NULL"
 
 # Adjust product ID
 offers$product_id <- 
-   ifelse(offers$product_id %in% c(43,44,49,50,57,58),55,
-   ifelse(offers$product_id %in% c(78,79,80,81),78,offers$product_id))
+  ifelse(offers$product_id %in% c(43,44,49,50,57,58,55),78,
+  ifelse(offers$product_id %in% c(78,79,80,81),78,
+  ifelse(offers$product_id %in% c(9),82,
+  ifelse(offers$product_id %in% c(48),77,
+         offers$product_id))))
 
 
 # Make result ready for SQL query

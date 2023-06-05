@@ -271,7 +271,8 @@ all_credit$payday <- ifelse(all_credit$type==4,1,
     c(25:28,36,37,41:44,49,50,55:58,67:68,78:81),1,0))
   
 # Make groups for Credirect
-all_credit$ptc_score <- ifelse(is.na(all_credit$ptc_score),"medium")
+all_credit$ptc_score <- ifelse(is.na(all_credit$ptc_score),"medium",
+   all_credit$ptc_score)
 all_credit$group <- 
    ifelse(all_credit$company_id==2,
    ifelse(all_credit$nb_credits==1,
@@ -317,8 +318,11 @@ offers[is.na(offers)] <- "NULL"
 
 # Adjust product ID
 offers$product_id <- 
-  ifelse(offers$product_id %in% c(43,44,49,50,57,58),55,
-  ifelse(offers$product_id %in% c(78,79,80,81),78,offers$product_id))
+  ifelse(offers$product_id %in% c(43,44,49,50,57,58,55),78,
+  ifelse(offers$product_id %in% c(78,79,80,81),78,
+  ifelse(offers$product_id %in% c(9),82,
+  ifelse(offers$product_id %in% c(48),77,
+         offers$product_id))))
 
 
 # Make result ready for SQL query
