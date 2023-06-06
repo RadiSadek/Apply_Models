@@ -256,7 +256,7 @@ select <- select[,c(names_b4,"is_vip")]
 # Remove Flex credits and other Ipoteki
 select <- subset(select,!(select$product_id %in%
   c(25,36,41,43,50,28,26,37,42,44,49,27,55,58,57,56,22,3,53,54,51,65,12,13,
-    62,63,61,64,59,60,78,79,80,81)))
+    62,63,61,64,59,60,78,79,80,81,67,68,89,90)))
 
 
 
@@ -407,6 +407,14 @@ names(select)[1] <- "application_id"
 
 # Replace NAs by NULLs
 select[is.na(select)] <- "NULL"
+
+
+# Make final check 
+current <- gen_query(con, paste("
+SELECT application_id, max_amount 
+FROM ",db_name,".prior_approval_refinances
+WHERE deleted_at IS NULL",sep=""))
+select <- select[!(select$application_id %in% current$application_id),]
 
 
 # Make result ready for SQL query

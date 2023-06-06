@@ -791,3 +791,12 @@ gen_flag_payday <- function(db_name,input){
   return(input)
 }
 
+
+# Define sql string query for writing in DB for provisions
+gen_sql_string_prov <- function(input,inc){
+  return(paste("(",input$id[inc],",",
+      input$application_id[inc],",",
+      input$type[inc],",",input$provision[inc],",'",input$created_at[inc],"','",
+      input$updated_at[inc],"')",sep=""))
+}
+

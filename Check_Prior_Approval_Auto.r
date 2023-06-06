@@ -140,7 +140,7 @@ if(flag_gdpr==1 & !is.na(flag_gdpr)){
 
 
 # Select based on product_id
-if(all_credit$product_id %in% c(12,13,59:65,53,54,51,22)){
+if(all_credit$product_id %in% c(12,13,59:65,53,54,51,22,69,70,91,92)){
   quit()
 }
 
@@ -160,7 +160,7 @@ FROM ",db_name,".products
 WHERE id= ",all_credit$product_id,sep="")
 all_credit$period <- gen_query(con,get_period_sql)$period
 flag_credit_next_salary <- ifelse(all_credit$product_id %in% 
-    c(25:28,36,37,41:44,49,50,55:58,67,68,78:81), 1, 0)
+    c(25:28,36,37,41:44,49,50,55:58,67,68,78:81,89:90), 1, 0)
 if((flag_credit_next_salary==1 & all_credit$passed_installments==0) |
    (flag_credit_next_salary!=1 & all_credit$period==3 & 
     all_credit$passed_installments<2 & all_credit$tot_installments<4 & 
@@ -294,7 +294,7 @@ all_credit <- gen_list_ptc(db_name,all_credit)
 all_credit <- gen_flag_payday(db_name,all_credit)
 all_credit$payday <- ifelse(all_credit$type==4,1,
     ifelse(all_credit$product_id %in% 
-    c(25:28,36,37,41:44,49,50,55:58,67:68,78:81),1,0))
+    c(25:28,36,37,41:44,49,50,55:58,67:68,78:81,89:90),1,0))
 
 # Make groups for Credirect
 all_credit$ptc_score <- ifelse(is.na(all_credit$ptc_score),"medium",

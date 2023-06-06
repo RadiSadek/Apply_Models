@@ -189,7 +189,7 @@ select_credits <- select_credits[,c(names_b4,"is_vip")]
 
 # Remove Big Fin and other Ipoteki
 select_credits <- subset(select_credits,!(select_credits$product_id %in%
-   c(12,13,59:65,53,54,51,22)))
+   c(12,13,59:65,53,54,51,22,69,70,91,92)))
 
 
 #####################
@@ -248,7 +248,7 @@ select_credits <- gen_list_ptc(db_name,select_credits)
 select_credits <- gen_flag_payday(db_name,select_credits)
 select_credits$payday <- ifelse(select_credits$type==4,1,
      ifelse(select_credits$product_id %in% 
-     c(25:28,36,37,41:44,49,50,55:58,67:68,78:81),1,0))
+     c(25:28,36,37,41:44,49,50,55:58,67:68,78:81,89:90),1,0))
 
 # Make groups for Credirect
 select_credits$group <- 
