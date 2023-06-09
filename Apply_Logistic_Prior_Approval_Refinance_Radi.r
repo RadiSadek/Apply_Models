@@ -345,14 +345,22 @@ select$nb_term_credirect <- ifelse(is.na(select$nb_term_credirect),0,
                                   select$nb_term_credirect)
 
 
+# Check if first is refinanced
+con <- dbConnect(MySQL(), user=db_username,password=db_password,dbname=db_name,
+    host=db_host, port = db_port)
+select <- gen_if_first_was_ref(db_name,select)
+
+
 # Refilter according to aformentioned 2 criteria
 select$nb_criteria <- ifelse(select$company_id==1,select$nb_term_citycash,
    select$nb_term_credirect)
 select$filter_criteria <- ifelse(select$company_id==2,
   (ifelse(select$nb_criteria==0,0.5,
-   ifelse(select$score_max_amount %in% c("Good 4"), 0.2,
-   ifelse(select$score_max_amount %in% c("Good 3"), 0.3,
-   ifelse(select$score_max_amount %in% c("Good 2"), 0.35,0.4))))),                               
+   ifelse(select$ref_first==1 & select$nb_term_credirect<=2,0.01,
+   ifelse(select$score_max_amount %in% c("Good 4"), 0.1,
+   ifelse(select$score_max_amount %in% c("Good 3"), 0.1,
+   ifelse(select$score_max_amount %in% c("Good 2"), 0.1,
+   ifelse(select$score_max_amount %in% c("Good 1"), 0.2,0.3))))))),                               
   (ifelse(select$nb_criteria==0,0.5,
    ifelse(select$score_max_amount %in% c("Good 4"), 0.3,
    ifelse(select$score_max_amount %in% c("Good 3"), 0.4,

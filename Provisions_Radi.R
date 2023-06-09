@@ -4,72 +4,40 @@
 #               Script to write provisions into database                       #
 ################################################################################
 
-
-
-########################
-### Initial settings ###
-########################
-
-# Libraries
-suppressMessages(suppressWarnings(library(RMySQL)))
+# Library
+suppressMessages(suppressWarnings(library(RMariaDB)))
+suppressMessages(suppressWarnings(library(DBI)))
+suppressMessages(suppressWarnings(library(Rcpp)))
+#suppressMessages(suppressWarnings(library(RMySQL)))
 suppressMessages(suppressWarnings(library(here)))
 suppressMessages(suppressWarnings(library(dotenv)))
 suppressMessages(suppressWarnings(require("reshape")))
+suppressMessages(suppressWarnings(library(openxlsx)))
 suppressMessages(suppressWarnings(require(jsonlite)))
 
 
-# Defines the directory where custom .env file is located
-load_dot_env(file = here('.env'))
+# Database
+db_name <- "citycash"
+con <- dbConnect(RMariaDB::MariaDB(),dbname = "citycash",host ="192.168.2.110",
+                 port = 3306,user = "userro1",password = "DHng_2pg5zdL0yI9x@")
 
 
-
-#######################
-### Manual settings ###
-#######################
-
-# Defines the directory where the RScript is located
-base_dir <- Sys.getenv("SCORING_PATH", unset = "", names = FALSE)
+# Define work directory
+base_dir <- "C:/Projects/Apply_Scoring"
 
 
+# Set working directory for input (R data for logistic regression) and output #
+setwd(base_dir)
 
-#####################
-####### MySQL #######
-#####################
-
-db_host <- Sys.getenv("DB_HOST", 
-                      unset = "localhost", 
-                      names = FALSE)
-db_port <- strtoi(Sys.getenv("DB_PORT", 
-                             unset = "3306", 
-                             names = FALSE))
-db_name <- Sys.getenv("DB_DATABASE", 
-                      unset = "citycash", 
-                      names = FALSE)
-db_username <- Sys.getenv("DB_USERNAME", 
-                          unset = "root", 
-                          names = FALSE)
-db_password <- Sys.getenv("DB_PASSWORD", 
-                          unset = "secret", 
-                          names = FALSE)
-con <- dbConnect(MySQL(), user=db_username, 
-                 password=db_password, dbname=db_name, 
-                 host=db_host, port = db_port)
-sqlMode <- paste("SET sql_mode=''", sep ="")
-suppressWarnings(fetch(dbSendQuery(con, sqlMode), 
-                       n=-1))
-
-
-#################################
-####### Load source files #######
-#################################
 
 # Load other r files
-source(file.path(base_dir,"Useful_Functions.r"))
+source(paste(base_dir,"/Apply_Models/Useful_Functions_Radi.r", sep=""))
+
 
 # Load Provision file 
-load(file.path(base_dir,"provisions","provisions.rdata"))
+load("C:\\Projects\\Apply_Scoring\\provisions\\provisions.rdata")
 provisions <- provisions[,c("credit_number","EL","month_provisions",
-  "year_provisions")]
+   "year_provisions")]
 names(provisions) <- c("credit_number","provision","month","year")
 provisions$provision <- round(provisions$provision,2)
 
@@ -130,7 +98,6 @@ if(nrow(provisions)>10000){
                             sep=",")
       }
     }
-    print(substring(string_sql,1,100))
     suppressMessages(suppressWarnings(dbSendQuery(con,paste("INSERT INTO ",
         db_name,".credits_provisions VALUES ",string_sql,";", 
         sep=""))))

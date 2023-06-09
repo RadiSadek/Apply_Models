@@ -381,6 +381,11 @@ all_credits_id <- subset(all_credits_id,all_credits_id$id!=application_id &
   all_credits_id$status==5 & all_credits_id$company_id==select$company_id)
 
 
+# Check if first is refinanced
+select <- gen_if_first_was_ref(db_name,select)
+select$tot_credits <- nrow(all_credits_id)
+
+
 # Refilter according to aformentioned criteria
 if(nrow(all_credits_id)>0){
   select$nb_criteria <- 1
@@ -389,9 +394,11 @@ if(nrow(all_credits_id)>0){
 }
 if(select$company_id==2){
   select$filter_criteria <- ifelse(select$nb_criteria==0,0.5,
-    ifelse(select$score_max_amount %in% c("Good 4"), 0.2,
-    ifelse(select$score_max_amount %in% c("Good 3"), 0.3,
-    ifelse(select$score_max_amount %in% c("Good 2"), 0.35,0.4))))
+    ifelse(select$ref_first==1 & select$tot_credits<=2,0.5,
+    ifelse(select$score_max_amount %in% c("Good 4"), 0.1,
+    ifelse(select$score_max_amount %in% c("Good 3"), 0.1,
+    ifelse(select$score_max_amount %in% c("Good 2"), 0.1,
+    ifelse(select$score_max_amount %in% c("Good 1"), 0.2,0.3)))))) 
 } else {
   select$filter_criteria <- ifelse(select$nb_criteria==0,0.5,
     ifelse(select$score_max_amount %in% c("Good 4"), 0.3,

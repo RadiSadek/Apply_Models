@@ -791,7 +791,6 @@ gen_flag_payday <- function(db_name,input){
   return(input)
 }
 
-
 # Define sql string query for writing in DB for provisions
 gen_sql_string_prov <- function(input,inc){
   return(paste("(",input$id[inc],",",
@@ -799,3 +798,47 @@ gen_sql_string_prov <- function(input,inc){
       input$type[inc],",",input$provision[inc],",'",input$created_at[inc],"','",
       input$updated_at[inc],"')",sep=""))
 }
+
+# Check if first is refinanced
+gen_if_first_was_ref <- function(db_name,input){
+  
+  # Create string to get all credits from client
+  string_sql <- input$client_id[1]
+  if(nrow(input)>1){
+    for(i in 2:nrow(input)){
+      string_sql<- paste(string_sql,input$client_id[i],
+                         sep=",")}}
+  
+  # Get all credits 
+  all_credits <- gen_query(con,gen_all_credits_list_query(db_name,string_sql))
+  all_credits <- subset(all_credits,!(all_credits$sub_status %in% c(129,122)) | 
+      is.na(all_credits$sub_status))
+  all_credits <- merge(all_credits,input[,c("client_id","company_id")],
+       by.x = "client_id",by.y = "client_id",all.x = TRUE)
+  all_credits <- subset(all_credits,all_credits$company_id==
+       all_credits$brand_id)
+  
+  # Get if first was refinanced
+  first <- all_credits[order(all_credits$signed_at),]
+  first <- first[order(first$client_id),]
+  first <- first[!duplicated(first[c("client_id","brand_id")]),]
+  second <- all_credits[!(all_credits$id %in% first$id),]
+  second <- second[order(second$signed_at),]
+  second <- second[!duplicated(second[c("client_id","brand_id")]),]
+  second <- second[order(second$signed_at),]
+  get_first <- merge(
+    first[,c("client_id","brand_id","created_at","deactivated_at")],
+    second[,c("client_id","brand_id","created_at")],
+    by.x = c("client_id","brand_id"),by.y = c("client_id","brand_id"),
+    all.x = TRUE)
+  get_first$ref_first <-
+    ifelse(is.na(get_first$deactivated_at),1,
+    ifelse(substring(get_first$deactivated_at,1,10)==
+           substring(get_first$created_at.y,1,10),1,0))
+  input <- merge(input,get_first[,c("client_id","brand_id","ref_first")]
+                 ,by.x = c("client_id","company_id"),
+                 by.y = c("client_id","brand_id"),all.x = TRUE)
+
+  return(input)
+}
+

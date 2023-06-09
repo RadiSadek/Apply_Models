@@ -503,4 +503,11 @@ gen_payday_query <- function(db_name){
 FROM ",db_name,".products",sep=""))
 }
 
-
+# Define query for getting all credits for client 
+gen_all_credits_list_query <- function(db_name,string_list){
+  return(paste("SELECT a.id, a.client_id, a.signed_at, a.created_at, 
+  a.deactivated_at, a.status, a.sub_status, b.brand_id
+  FROM ",db_name,".credits_applications a
+  LEFT JOIN ",db_name,".products b ON a.product_id = b.id 
+  WHERE a.client_id IN (",string_list,") AND a.status IN (4,5)",sep =""))
+}
