@@ -130,7 +130,8 @@ gen_sql_string_po_terminated <- function(input,inc){
     input$application_id[inc],",",input$credit_amount[inc],",",
     input$installment_amount[inc],",",input$credit_amount_updated[inc],",",
     input$installment_amount_updated[inc],",",input$hide_until_date[inc],",",
-    input$consultant_id[inc],",'",input$created_at[inc],"',",
+    input$consultant_id[inc],",",input$active_from[inc],",",
+    input$active_to[inc],",'",input$created_at[inc],"',",
     input$updated_at[inc],",",input$deleted_at[inc],")",
     sep=""))
 }
