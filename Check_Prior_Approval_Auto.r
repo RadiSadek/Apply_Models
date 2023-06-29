@@ -286,10 +286,10 @@ if(nrow(all_credit)>0){
 
 # # Get number of credits
 all_credit <- gen_append_nb_credits(db_name,all_credit)
- 
+
 # Get probability to ptc 
 all_credit <- gen_list_ptc(db_name,all_credit)
- 
+
 # Get if pay day or not
 all_credit <- gen_flag_payday(db_name,all_credit)
 all_credit$payday <- ifelse(all_credit$type==4,1,
@@ -333,10 +333,13 @@ offers$updated_at <- NA
 offers$deleted_at <- NA
 offers$credit_amount_updated <- NA
 offers$installment_amount_updated <- NA
+offers$active_from <- NA
+offers$active_to <- NA
 offers <- offers[,c("id","office_id","client_id","group","product_id",
     "application_id","max_amount","max_installment_amount",
     "credit_amount_updated","installment_amount_updated","hide_until_date",
-    "consultant_id","created_at","updated_at","deleted_at")]
+    "consultant_id","active_from","active_to",
+    "created_at","updated_at","deleted_at")]
 names(offers)[names(offers)=="max_amount"] <- "credit_amount"
 names(offers)[names(offers)=="max_installment_amount"] <- "installment_amount"
 offers[is.na(offers)] <- "NULL"
