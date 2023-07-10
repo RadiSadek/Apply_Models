@@ -217,23 +217,25 @@ gen_query_ckr <- function(all_df,all_credits,type_of,crit){
                  "outstanding_performing_principal",
                  "outstanding_overdue_principal","amount_cession")
   query_ckr <- paste("SELECT 
-  ",db_name,".clients_ckr_files.client_id,
-  ",db_name,".clients_ckr_files.created_at,
-  ",db_name,".clients_ckr_files.application_id,
-  ",db_name,".clients_ckr_files_data.current_status_active, 
-  ",db_name,".clients_ckr_files_data.status_active, 
-  ",db_name,".clients_ckr_files_data.status_finished,
-  ",db_name,".clients_ckr_files_data.source_entity_count,
-  ",db_name,".clients_ckr_files_data.amount_drawn,
-  ",db_name,".clients_ckr_files_data.cred_count,
-  ",db_name,".clients_ckr_files_data.outstanding_performing_principal,
-  ",db_name,".clients_ckr_files_data.outstanding_overdue_principal,	
-  ",db_name,".clients_ckr_files_data.amount_cession
-  FROM ",db_name,".clients_ckr_files_data
-  INNER JOIN ",db_name,".clients_ckr_files
-  ON ",db_name,".clients_ckr_files.id=",db_name,".clients_ckr_files_data.file_id
-  WHERE ",db_name,".clients_ckr_files_data.type=",type_of," AND ",db_name,
-                     ".clients_ckr_files.client_id=",all_df$client_id, sep ="")
+  ",db_name,".ckr_reports.reportable_id,
+  ",db_name,".ckr_reports.created_at,
+  ",db_name,".ckr_reports.application_id,
+  ",db_name,".ckr_report_data.current_status_active, 
+  ",db_name,".ckr_report_data.status_active, 
+  ",db_name,".ckr_report_data.status_finished,
+  ",db_name,".ckr_report_data.source_entity_count,
+  ",db_name,".ckr_report_data.amount_drawn,
+  ",db_name,".ckr_report_data.cred_count,
+  ",db_name,".ckr_report_data.outstanding_performing_principal,
+  ",db_name,".ckr_report_data.outstanding_overdue_principal,	
+  ",db_name,".ckr_report_data.amount_cession
+  FROM ",db_name,".ckr_report_data
+  INNER JOIN ",db_name,".ckr_reports
+  ON ",db_name,".ckr_reports.id=",db_name,".ckr_report_data.report_id
+  WHERE ",db_name,".ckr_report_data.type=",type_of," AND ",db_name,
+  ".ckr_reports.reportable_id=",all_df$client_id,
+  " AND ",db_name,".ckr_reports.reportable_type=
+  'App\\\\Models\\\\Clients\\\\Client'",sep ="")
   result_df <- gen_query(con,query_ckr)
 
   if(nrow(result_df)==0){
