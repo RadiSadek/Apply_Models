@@ -65,6 +65,12 @@ gen_restrict_cashpoint_app <- function(scoring_df,all_df,flag_beh){
   # No Indeterminates
   scoring_df$color <- ifelse(scoring_df$score %in% c("Bad","Indeterminate"),
     1, scoring_df$color)  
+  
+  # No Gratis and not Good 4
+  if(all_df$product_id %in% c(68,90)){
+    scoring_df$color <- ifelse(scoring_df$score %in% c("Indeterminate",
+      "Good 1","Good 2","Good 3"),1,scoring_df$color) 
+  }
 
   # Apply according to office
   if(all_df$office_id %in% c(155,156,150,154)){
@@ -152,7 +158,13 @@ gen_restrict_citycash_beh <- function(scoring_df,prev_amount,products,all_id,
     # Apply according to office
     if(all_df$office_id %in% c(155,156,150,154)){
       scoring_df$color <- ifelse(scoring_df$score %in% c("Good 1"),
-                                 1, scoring_df$color)  
+                                 1, scoring_df$color)
+    }
+    
+    # No Gratis and not Good 4
+    if(all_df$product_id %in% c(68,90)){
+      scoring_df$color <- ifelse(scoring_df$score %in% c("Indeterminate",
+      "Good 1","Good 2","Good 3"),1,scoring_df$color) 
     }
   }
 
