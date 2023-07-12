@@ -343,6 +343,13 @@ gen_restrict_credirect_beh <- function(scoring_df,all_df,all_id,application_id,
       scoring_df$color <- ifelse(scoring_df$amount>scoring_df$allowed_amount,
                                  1,scoring_df$color)
   }
+  
+  # Set hard max credit amounts
+  scoring_df$color <- 
+     ifelse(scoring_df$score %in% c("Indeterminate") & scoring_df$amount>2000,1,
+     ifelse(scoring_df$score %in% c("Good 1") & scoring_df$amount>4000,1,
+     ifelse(scoring_df$score %in% c("Good 2","Good 3","Good 4") & 
+            scoring_df$amount>6000,1,scoring_df$color)))
 
   return(scoring_df)
 }
