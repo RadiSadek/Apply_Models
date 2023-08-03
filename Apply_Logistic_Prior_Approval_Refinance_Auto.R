@@ -684,7 +684,7 @@ po_special <- po_special[po_special$client_id %in% special$id,]
 
 # Remove Credirect if amount is less than due 
 po_special_credirect <- subset(po_special_raw,
-  po_special_raw$product_id %in% c(48))
+  po_special_raw$product_id %in% c(48,77))
 
 all_apps <- po_special_credirect$application_id[1]
 if(nrow(po_special_credirect)>1){
