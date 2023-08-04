@@ -23,7 +23,8 @@ gen_norm_var <- function(period,all_df,products,criteria_age){
     all_df$dob <- NA
     all_df$age <- 18
   } else{
-    all_df$dob <- as.Date(ifelse(as.character(substring(all_df$egn,1,2)) %in% 
+    all_df$dob <- tryCatch({
+      as.Date(ifelse(as.character(substring(all_df$egn,1,2)) %in% 
       c("00","01","02","03","04","05","06","07","08","09","10","11","12",
         "13","14","15"),
       as.Date(paste("20",substring(all_df$egn,1,2),"-",
@@ -32,7 +33,7 @@ gen_norm_var <- function(period,all_df,products,criteria_age){
       ifelse(as.character(substring(all_df$egn,1,2)) %in% c("10","11"), NA,
       as.Date(paste("19",substring(all_df$egn,1,2),"-",
       substring(all_df$egn,3,4),"-",substring(all_df$egn,5,6), sep="")))), 
-        origin="1970-01-01")
+        origin="1970-01-01")},error=function(e){all_df$dob <- NA})
     if(criteria_age==1){
       date_ref <- all_df$date
     } else {

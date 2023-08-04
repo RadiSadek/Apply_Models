@@ -843,3 +843,35 @@ gen_if_first_was_ref <- function(db_name,input){
   return(input)
 }
 
+# Get latest work data
+gen_work_data <- function(db_name,input,all_df){
+  
+  # Get list of all application_id
+  string_sql <- input$id[1]
+  if(nrow(input)>1){
+    for(i in 2:nrow(input)){
+      string_sql <- paste(string_sql,input$id[i],sep=",")
+    }
+  }
+  
+  all_works <- gen_query(con,gen_get_work_info_query(db_name,string_sql))
+  all_status <- subset(all_works,!is.na(all_works$status_work))
+  all_exp <- subset(all_works,!is.na(all_works$experience_employer))
+  
+  # Get latest non-NA status work and experience employer
+  if(nrow(all_status)>0){
+    all_df$status_work <- subset(all_status,all_status$application_id==
+         max(all_status$application_id))$status_work 
+  } else {
+    all_df$status_work <- NA
+  }
+  if(nrow(all_exp)>0){
+    all_df$experience_employer <- subset(all_exp,all_exp$application_id==
+        max(all_exp$application_id))$experience_employer
+  } else {
+    all_df$experience_employer <- NA
+  }
+  
+  return(all_df)
+
+}

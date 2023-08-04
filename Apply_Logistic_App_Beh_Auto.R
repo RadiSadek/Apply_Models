@@ -136,6 +136,10 @@ all_credits$date <- ifelse(all_credits$status %in% c(4,5),
       all_credits$signed_at, all_credits$created_at)
 
 
+# Get status work 
+all_df <- gen_work_data(db_name,all_credits,all_df)
+
+
 # Check if client has a risk profile
 risk <- gen_query(con,gen_risky_query(db_name,all_df))
 

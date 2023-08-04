@@ -499,6 +499,58 @@ if(nrow(po_reload)>0){
    substring(Sys.time(),1,19),"', deleted_at = NULL
    WHERE id IN",gen_string_po_terminated(po_reload),sep="")
   suppressMessages(suppressWarnings(dbSendQuery(con,po_reload_query)))
+  
+}
+
+
+
+#################################################
+### Correct those for flex credit (Credirect) ###
+#################################################
+
+# Read flex gratis period and amounts
+flex_gratis <- gen_query(con,paste("
+SELECT amount,installment_amount
+FROM ",db_name,".products_periods_and_amounts
+WHERE product_id = 80",sep=""))
+
+# Correct amount and installment amount to relevant client ids
+campaign_180_360 <- gen_query(con,paste("
+SELECT client_id, created_at
+FROM ",db_name,".call_center_campaigns_clients
+WHERE campaign_id IN (302) AND deleted_AT IS NULL",sep=""))
+po_updated_c_180_360 <- subset(po_raw,po_raw$company_id==2)
+po_updated_c_180_360 <- po_updated_c_180_360[po_updated_c_180_360$client_id 
+  %in% campaign_180_360$client_id,]
+po_updated_c_180_360 <- 
+  po_updated_c_180_360[rev(order(po_updated_c_180_360$created_at)),]
+po_updated_c_180_360 <- 
+  po_updated_c_180_360[order(po_updated_c_180_360$client_id),]
+po_updated_c_180_360 <- 
+  po_updated_c_180_360[!duplicated(po_updated_c_180_360$client_id),]
+po_updated_c_180_360$credit_amount <-
+  ifelse(po_updated_c_180_360$credit_amount==-999,300,
+  ifelse(po_updated_c_180_360$credit_amount>1000,1000,
+         po_updated_c_180_360$credit_amount))
+po_updated_c_180_360 <- po_updated_c_180_360 [ ,
+  !names(po_updated_c_180_360 ) %in% c("installment_amount")]
+po_updated_c_180_360 <- merge(po_updated_c_180_360,flex_gratis,
+  by.x = "credit_amount",by.y = "amount",all.x = TRUE)
+
+# Write in database
+if(nrow(po_updated_c_180_360)>0){
+  po_change_query <- paste("UPDATE ",db_name,
+   ".clients_prior_approval_applications SET deleted_at = NULL,
+   product_id = 80, updated_at = '",
+   substring(Sys.time(),1,19),"' WHERE id IN",
+   gen_string_po_terminated(po_updated_c_180_360), sep="")
+  suppressMessages(suppressWarnings(dbSendQuery(con,po_change_query)))
+  suppressMessages(suppressWarnings(dbSendQuery(con,
+    gen_string_delete_po_terminated(po_updated_c_180_360,
+    po_updated_c_180_360$credit_amount,"credit_amount",db_name))))
+  suppressMessages(suppressWarnings(dbSendQuery(con,
+    gen_string_delete_po_terminated(po_updated_c_180_360,
+    po_updated_c_180_360$installment_amount,"installment_amount",db_name))))
 }
 
 

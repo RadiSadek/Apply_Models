@@ -45,7 +45,7 @@ base_dir <- "C:/Projects/Apply_Scoring"
 # Read argument of ID
 args <- commandArgs(trailingOnly = TRUE)
 application_id <- args[1]
-application_id <- 1529542
+application_id <- 1487652
 product_id <- NA
 
 
@@ -108,6 +108,10 @@ products_desc <- gen_query(con,gen_products_query_desc(db_name,all_df))
 # Read all previous credits or applications of client
 all_credits <- gen_query(con,gen_all_credits_query(db_name,all_df))
 all_credits <- gen_time_format(all_credits)
+
+
+# Get status work 
+all_df <- gen_work_data(db_name,all_credits,all_df)
 
 
 # Check if client has a risk profile

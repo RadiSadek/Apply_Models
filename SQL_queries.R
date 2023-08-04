@@ -16,8 +16,6 @@ big_sql_query <- paste("SELECT
 ",db_name,".credits_applications_clients.marital_status,
 ",db_name,".credits_applications_clients.has_viber,
 ",db_name,".credits_applications_data_other.purpose,
-",db_name,".credits_applications_clients_work.experience_employer,
-",db_name,".credits_applications_clients_work.status AS status_work,
 ",db_name,".credits_plan_contract.amount,
 ",db_name,".credits_plan_contract.installments,
 ",db_name,".credits_applications.signed_at,
@@ -514,3 +512,11 @@ gen_all_credits_list_query <- function(db_name,string_list){
   LEFT JOIN ",db_name,".products b ON a.product_id = b.id 
   WHERE a.client_id IN (",string_list,") AND a.status IN (4,5)",sep =""))
 }
+
+# Get status of work and employement
+gen_get_work_info_query <- function(db_name,string_list){
+   return(paste("SELECT application_id, experience_employer, 
+    status AS status_work FROM ",db_name,".credits_applications_clients_work 
+    WHERE application_id IN (",string_list,")",sep=""))
+}
+
