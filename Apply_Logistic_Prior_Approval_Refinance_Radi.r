@@ -56,7 +56,7 @@ product_id <- NA
 
 # Read credit applications 
 get_actives_sql <- paste("
-SELECT id, status, date, signed_at, product_id, client_id
+SELECT id, status, date, signed_at, product_id, client_id, third_side_date
 FROM ",db_name,".credits_applications 
 WHERE status in (4,5)",sep="")
 all_credits <- gen_query(con,get_actives_sql)
@@ -356,7 +356,7 @@ select$nb_criteria <- ifelse(select$company_id==1,select$nb_term_citycash,
    select$nb_term_credirect)
 select$filter_criteria <- ifelse(select$company_id==2,
   (ifelse(select$nb_criteria==0,0.5,
-   ifelse(select$ref_first==1 & select$nb_term_credirect<=2,0.01,
+   ifelse(select$ref_first==1 & select$nb_term_credirect<=2,0.5,
    ifelse(select$score_max_amount %in% c("Good 4"), 0.1,
    ifelse(select$score_max_amount %in% c("Good 3"), 0.1,
    ifelse(select$score_max_amount %in% c("Good 2"), 0.1,
@@ -652,10 +652,14 @@ po_special_sql_query <- paste(
   FROM ",db_name,".prior_approval_refinances
   WHERE deleted_at IS NULL",sep="")
 po_special <- gen_query(con,po_special_sql_query)
-po_special <- merge(po_special,all_credits[,c("id","client_id")],
-                    by.x = "application_id",by.y = "id",all.x = TRUE)
+po_special <- merge(po_special,all_credits[,c("id","client_id",
+  "third_side_date")],by.x = "application_id",by.y = "id",all.x = TRUE)
 po_special_raw <- po_special
 po_special <- po_special[po_special$client_id %in% special$id,]
+po_special_3rd_side <- subset(po_special_raw,
+   !is.na(po_special_raw$third_side_date))
+po_special_3rd_side <- po_special_3rd_side[,c("application_id","created_at",
+   "product_id","max_amount","client_id")]
 
 # Remove Credirect if amount is less than due 
 po_special_credirect <- subset(po_special_raw,
@@ -707,9 +711,10 @@ po_special_credirect$left_to_pay <- po_special_credirect$claims -
   po_special_credirect$balance_after
 po_special_credirect <- subset(po_special_credirect,
   po_special_credirect$max_amount<po_special_credirect$left_to_pay)
-po_special <- rbind(po_special,
+po_special <- rbind(po_special,po_special_3rd_side,
      po_special_credirect[,c("application_id","created_at",
                             "product_id","max_amount","client_id")])
+po_special <- po_special[!duplicated(po_special$application_id),]
 
 if(nrow(po_special)>0){
   po_special_query <- paste("UPDATE ",db_name,
