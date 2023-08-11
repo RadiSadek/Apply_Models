@@ -351,7 +351,13 @@ offers$product_id <-
   ifelse(offers$product_id %in% c(78,79,80,81),78,
   ifelse(offers$product_id %in% c(9),82,
   ifelse(offers$product_id %in% c(48),77,
-         offers$product_id))))
+  ifelse(offers$product_id %in% c(66),85,
+  ifelse(offers$product_id %in% c(67),89,
+  ifelse(offers$product_id %in% c(68),90,
+  ifelse(offers$product_id %in% c(71),83,
+  ifelse(offers$product_id %in% c(72),84,
+  ifelse(offers$product_id %in% c(75),87,
+         offers$product_id))))))))))
 
 
 # Make result ready for SQL query
