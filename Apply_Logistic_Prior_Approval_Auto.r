@@ -145,7 +145,7 @@ select_credits  <- subset(all_credits,is.na(all_credits$tot_varnat) |
 # Remove credits with already an offer of corresponding company
 po_sql_query <- paste(
   "SELECT id, client_id, product_id, application_id, created_at, credit_amount,
-  installment_amount,deleted_at,updated_at
+  installment_amount,deleted_at,updated_at, `group`, active_from, active_to
   FROM ",db_name,".clients_prior_approval_applications",sep="")
 po <- gen_query(con,po_sql_query)
 po <- merge(po,company_id,by.x = "product_id",by.y = "id",all.x = TRUE)
@@ -627,7 +627,6 @@ po_special <- rbind(
   po_special[po_special$client_id %in% po_active$client_id,],
   clients_dups[,c("id","client_id")])
 
-
 if(nrow(po_special)>0){
   po_special_query <- paste("UPDATE ",db_name,
    ".clients_prior_approval_applications SET updated_at = '",
@@ -637,6 +636,49 @@ if(nrow(po_special)>0){
   suppressMessages(suppressWarnings(dbSendQuery(con,po_special_query)))
 }
 
+
+####################################
+### Reactivate those from groups ###
+####################################
+
+po_group <- subset(po_raw,!is.na(po_raw$active_from))
+po_group <- subset(po_group,!is.na(po_group$group) & 
+    Sys.Date()>po_group$active_from & Sys.Date()>po_group$active_to &
+    !is.na(po_group$deleted_at) & po_group$created_at>(Sys.Date()-180))
+all_credits_active <- subset(all_credits_raw,all_credits_raw$status==4)
+po_group <- merge(po_group,
+    all_credits_active[,c("client_id","signed_at","company_id")],
+    by.x = c("client_id","company_id"),by.y = c("client_id","company_id"),
+    all.x = TRUE)
+po_group <- subset(po_group,is.na(po_group$signed_at) | 
+    po_group$signed_at<po_group$created_at)
+if(nrow(po_group)>0){
+  po_change_query <- paste("UPDATE ",db_name,
+    ".clients_prior_approval_applications SET deleted_at = NULL,
+    `group` = NULL, updated_at = '",
+    substring(Sys.time(),1,19),"' WHERE id IN",
+  gen_string_po_terminated(po_group), sep="")
+  suppressMessages(suppressWarnings(dbSendQuery(con,po_change_query)))
+}
+
+
+##################################
+### Rearrange for new products ###
+##################################
+
+# Correct for new products of CashPoint
+po_rearrange_query <- paste("UPDATE ",db_name,
+".clients_prior_approval_applications SET product_id=
+IF(product_id=66,85,
+IF(product_id=67,89,
+IF(product_id=68,90,
+IF(product_id=69,92,
+IF(product_id=70,91,
+IF(product_id=71,83,
+IF(product_id=72,84,87)))))))
+WHERE product_id IN (66,67,68,69,70,71,72,75)
+AND deleted_at IS NULL", sep="")
+suppressMessages(suppressWarnings(dbSendQuery(con,po_rearrange_query)))
 
 
 ###########
