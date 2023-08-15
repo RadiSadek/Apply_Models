@@ -641,23 +641,39 @@ if(nrow(po_special)>0){
 ### Reactivate those from groups ###
 ####################################
 
+# Get those who meet criteria
 po_group <- subset(po_raw,!is.na(po_raw$active_from))
 po_group <- subset(po_group,!is.na(po_group$group) & 
     Sys.Date()>po_group$active_from & Sys.Date()>po_group$active_to &
     !is.na(po_group$deleted_at) & po_group$created_at>(Sys.Date()-180))
+
+# Remove those with an active credit 
 all_credits_active <- subset(all_credits_raw,all_credits_raw$status==4)
 po_group <- merge(po_group,
     all_credits_active[,c("client_id","signed_at","company_id")],
     by.x = c("client_id","company_id"),by.y = c("client_id","company_id"),
     all.x = TRUE)
 po_group <- subset(po_group,is.na(po_group$signed_at) | 
-    po_group$signed_at<po_group$created_at)
+                   po_group$signed_at<po_group$created_at)
+
+# Remove those with a terminated credit after creation of offer
+po_group <- po_group[ , !names(po_group) %in% c("signed_at")]
+all_credits_term <- subset(all_credits_raw,all_credits_raw$status==5)
+po_group_check <-  merge(po_group,
+  all_credits_term[,c("client_id","signed_at","company_id")],
+  by.x = c("client_id","company_id"),by.y = c("client_id","company_id"),
+  all.x = TRUE)
+po_group_check <- subset(po_group_check,
+  po_group_check$signed_at>po_group_check$created_at)
+po_group <- po_group[!(po_group$id %in% po_group_check$id),]
+
+# Write in database
 if(nrow(po_group)>0){
   po_change_query <- paste("UPDATE ",db_name,
     ".clients_prior_approval_applications SET deleted_at = NULL,
     `group` = NULL, updated_at = '",
     substring(Sys.time(),1,19),"' WHERE id IN",
-  gen_string_po_terminated(po_group), sep="")
+    gen_string_po_terminated(po_group), sep="")
   suppressMessages(suppressWarnings(dbSendQuery(con,po_change_query)))
 }
 
