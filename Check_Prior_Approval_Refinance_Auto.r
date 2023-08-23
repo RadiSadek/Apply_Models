@@ -213,7 +213,8 @@ if(nrow(select)==0){
 # Get final credit amount
 credit_amount_sql <- paste("
 SELECT application_id,final_credit_amount, amount as credit_amount
-FROM ",db_name,".credits_plan_contract", sep ="")
+FROM ",db_name,".credits_plan_contract WHERE application_id = ",application_id,
+       sep ="")
 credit_amount <- gen_query(con,credit_amount_sql)
 select <- merge(select,credit_amount,by.x = "id",
    by.y = "application_id",all.x = TRUE)
