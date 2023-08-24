@@ -193,10 +193,10 @@ if(nrow(all_credit_varnat)>1){
 po_sql_query <- paste(
   "SELECT id, client_id, product_id, application_id, created_at, credit_amount,
   installment_amount,deleted_at,updated_at
-  FROM ",db_name,".clients_prior_approval_applications",sep="")
+  FROM ",db_name,".clients_prior_approval_applications WHERE client_id = ",
+  all_credit$client_id,sep="")
 po <- gen_query(con, po_sql_query)
 po_raw <- po
-po <- subset(po,po$client_id==all_credit$client_id)
 po <- merge(po,company_id,by.x = "product_id",by.y = "id",all.x = TRUE)
 po <- subset(po,po$company_id==all_credit$company_id & is.na(po$deleted_at))
 if(nrow(po)>0){
@@ -221,7 +221,7 @@ if(nrow(all_credit_active)>0){
 names_b4 <- names(all_credit)
 is_vip_query <- paste(
   "SELECT client_id, brand_id, is_vip
-   FROM ",db_name,".client_brand",sep="")
+   FROM ",db_name,".client_brand WHERE client_id=",all_credit$client_id,sep="")
 is_vip <- gen_query(con,is_vip_query)
 all_credit <- merge(all_credit,is_vip,
   by.x = c("client_id","company_id"),

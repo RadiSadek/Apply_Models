@@ -45,7 +45,7 @@ base_dir <- "C:/Projects/Apply_Scoring"
 # Read argument of ID
 args <- commandArgs(trailingOnly = TRUE)
 application_id <- args[1]
-application_id <- 1487652
+#application_id <- 1487652
 product_id <- NA
 
 
@@ -575,6 +575,7 @@ final$api_amount <- api_df$amount
 final$api_payment <- api_df$payment_method
 final$days_play <- days_play
 final$amount_cession <- df$amount_cession_total
+final$office_id <- all_df$office_id
 
 
 # Read and write

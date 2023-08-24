@@ -252,7 +252,8 @@ paid <- paid[paid$object_id %in% daily$application_id,]
 # Get products periods and amounts of products
 products <- gen_query(con, paste("
 SELECT product_id, amount 
-FROM ",db_name,".products_periods_and_amounts",sep=""))
+FROM ",db_name,".products_periods_and_amounts WHERE product_id=",
+select$product_id,sep=""))
 
 
 # Get hitherto payments and ratios
@@ -276,8 +277,8 @@ if(!is.na(select$left_to_pay) & select$left_to_pay==0){
 # Check if client has still VIP status
 names_b4 <- names(select)
 is_vip_query <- paste(
-  "SELECT client_id, brand_id, is_vip
-   FROM ",db_name,".client_brand",sep="")
+"SELECT client_id, brand_id, is_vip
+FROM ",db_name,".client_brand WHERE client_id=",select$client_id,sep="")
 is_vip <- gen_query(con,is_vip_query)
 select <- merge(select,is_vip,
    by.x = c("client_id","company_id"),
@@ -374,8 +375,6 @@ all_credits_id <- gen_query(con,get_actives_sql)
 
 
 # Join company ID
-company_id <- gen_query(con,
-  gen_get_company_id_query(db_name))
 all_credits_id <- merge(all_credits_id,company_id,by.x = "product_id",
                 by.y = "id",all.x = TRUE)
 all_credits_id <- subset(all_credits_id,all_credits_id$id!=application_id & 
