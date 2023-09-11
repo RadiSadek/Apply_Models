@@ -425,6 +425,15 @@ ptc <- all_df[,c("application_id","ptc","ptc_score")]
 ptc$created_at <- Sys.time()
 ptc$id <- 1
 
+# Check if duplicate in PTC table
+current <- gen_query(con,paste("SELECT id, application_id FROM ",db_name,
+".credits_applications_ptc_score WHERE application_id=",application_id,sep=""))
+if(nrow(current)>0){
+  suppressMessages(suppressWarnings(dbSendQuery(con,paste("DELETE FROM ",
+  db_name,".credits_applications_ptc_score WHERE application_id=",
+  application_id,sep=""))))
+}
+
 # Make final dataframe for output
 final <- all_df[,c("application_id","ptc","ptc_score")]
 final_exists <- read.xlsx(paste(main_dir,
