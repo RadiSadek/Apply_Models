@@ -89,12 +89,16 @@ all_credits <- rbind(
 
 
 # Get last credit amount
-credit_amount_sql <- paste("
-SELECT application_id , amount as credit_amount
-FROM ",db_name,".credits_plan_contract", sep ="")
-credit_amount <- gen_query(con,credit_amount_sql)
-all_credits <- merge(all_credits,credit_amount,by.x = "id",
-                     by.y = "application_id",all.x = TRUE)
+id_list <- paste(all_credits$id,collapse=",")
+if(nrow(all_credits)>0){
+  credit_amount_sql <- paste("
+  SELECT application_id , amount as credit_amount
+  FROM ",db_name,".credits_plan_contract WHERE application_id IN (",id_list,")",
+         sep ="")
+  credit_amount <- gen_query(con,credit_amount_sql)
+  all_credits <- merge(all_credits,credit_amount,by.x = "id",
+         by.y = "application_id",all.x = TRUE)
+}
 all_credits <- all_credits[rev(order(all_credits$date)),]
 all_credits <- all_credits[order(all_credits$client_id), ]
 all_credits <- all_credits[!duplicated(all_credits$client_id),]

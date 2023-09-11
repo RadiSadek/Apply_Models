@@ -157,9 +157,11 @@ select <- subset(select,select$installment_ratio>=0.3 &
 
 
 # Get final credit amount
+id_list <- paste(select$id,collapse=",")
 credit_amount_sql <- paste("
 SELECT application_id,final_credit_amount, amount as credit_amount
-FROM ",db_name,".credits_plan_contract", sep ="")
+FROM ",db_name,".credits_plan_contract WHERE application_id IN (",id_list ,")",
+  sep ="")
 credit_amount <- gen_query(con,credit_amount_sql)
 select <- merge(select,credit_amount,by.x = "id",
    by.y = "application_id",all.x = TRUE)
@@ -736,9 +738,10 @@ po_special_credirect$left_to_pay <- po_special_credirect$claims -
   po_special_credirect$balance_after
 po_special_credirect <- subset(po_special_credirect,
   po_special_credirect$max_amount<po_special_credirect$left_to_pay)
-po_special <- rbind(po_special,po_special_3rd_side,
+po_special <- rbind(po_special[,c("application_id","created_at",
+      "product_id","max_amount","client_id")],po_special_3rd_side,
      po_special_credirect[,c("application_id","created_at",
-                            "product_id","max_amount","client_id")])
+      "product_id","max_amount","client_id")])
 po_special <- po_special[!duplicated(po_special$application_id),]
 
 if(nrow(po_special)>0){
