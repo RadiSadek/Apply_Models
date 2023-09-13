@@ -656,6 +656,19 @@ if(nrow(po_group)>0){
   suppressMessages(suppressWarnings(dbSendQuery(con,po_change_query)))
 }
 
+#  Redelete group for those activated and obsolete 
+po_group <- subset(po_raw,!is.na(po_raw$active_from))
+po_group <- subset(po_group,!is.na(po_group$group) & 
+   Sys.Date()>po_group$active_from & Sys.Date()>po_group$active_to &
+   is.na(po_group$deleted_at) & po_group$created_at>(Sys.Date()-180))
+if(nrow(po_group)>0){
+  po_change_query <- paste("UPDATE ",db_name,
+    ".clients_prior_approval_applications SET `group` = NULL, updated_at = '",
+     substring(Sys.time(),1,19),"' WHERE id IN",
+     gen_string_po_terminated(po_group), sep="")
+  suppressMessages(suppressWarnings(dbSendQuery(con,po_change_query)))
+}
+
 
 ##################################
 ### Rearrange for new products ###
