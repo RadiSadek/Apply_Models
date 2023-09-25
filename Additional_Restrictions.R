@@ -73,7 +73,7 @@ gen_restrict_cashpoint_app <- function(scoring_df,all_df,flag_beh){
   }
 
   # Apply according to office
-  if(all_df$office_id %in% c(155,156,150,154)){
+  if(all_df$office_id %in% c(150,151,154,155,170,171,179,188,190)){
     scoring_df$color <- ifelse(scoring_df$score %in% c("Good 1"),
      1, scoring_df$color)  
   }
@@ -156,7 +156,7 @@ gen_restrict_citycash_beh <- function(scoring_df,prev_amount,products,all_id,
                                1, scoring_df$color)  
     
     # Apply according to office
-    if(all_df$office_id %in% c(155,156,150,154)){
+    if(all_df$office_id %in% c(150,151,154,155,170,171,179,188,190)){
       scoring_df$color <- ifelse(scoring_df$score %in% c("Good 1"),
                                  1, scoring_df$color)
     }
