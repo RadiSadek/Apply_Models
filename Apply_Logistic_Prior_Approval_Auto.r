@@ -193,7 +193,7 @@ select_credits <- select_credits[,c(names_b4,"is_vip")]
 
 # Remove Big Fin and other Ipoteki
 select_credits <- subset(select_credits,!(select_credits$product_id %in%
-   c(12,13,59:65,53,54,51,22,69,70,91,92)))
+   c(12,13,59:65,53,54,51,22,69,70,91,92,93,94)))
 
 
 #####################

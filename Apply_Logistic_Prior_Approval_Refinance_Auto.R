@@ -283,7 +283,7 @@ select <- select[,c(names_b4,"is_vip")]
 # Remove Flex credits and other Ipoteki
 select <- subset(select,!(select$product_id %in%
   c(25,36,41,43,50,28,26,37,42,44,49,27,55,58,57,56,22,3,53,54,51,65,12,13,
-    62,63,61,64,59,60,78,79,80,81,67,68,89,90)))
+    62,63,61,64,59,60,78,79,80,81,67,68,89,90,93,94)))
 
 
 
