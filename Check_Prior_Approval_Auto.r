@@ -247,6 +247,8 @@ for(i in 1:nrow(all_credit)){
   suppressWarnings(tryCatch({
     if(all_credit$product_id[i]==8 & all_credit$is_vip[i]==0){
       product_id <- 5
+    } else if(all_credit$product_id[i] %in% c(55:58,78:81)){
+      product_id <- 82
     } else {
       product_id <- NA
     }
@@ -260,6 +262,12 @@ for(i in 1:nrow(all_credit)){
     all_credit$max_delay[i] <- as.numeric(calc[[4]])
   }, error=function(e){}))
 }
+
+# Rechange for flexes
+all_credit$product_id <- 
+  ifelse(is.na(all_credit$product_id),all_credit$product_id,
+         ifelse(all_credit$product_id %in% c(55:58,78:81),82,
+                all_credit$product_id))
 
 
 
