@@ -405,9 +405,11 @@ for (i in 1:nrow(select)){
 
 
 # Set all credirect offers to one and only product
-select$product_id <- ifelse(is.na(select$product_id),select$product_id,
-                     ifelse(select$product_id==9,48,select$product_id))
-
+select$product_id <- 
+  ifelse(is.na(select$product_id),select$product_id,
+  ifelse(select$product_id %in% c(9),48,
+  ifelse(select$product_id %in% c(82),77,select$product_id)))
+  
 
 # Write in Database
 select$ref_application_id <- NA
