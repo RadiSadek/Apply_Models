@@ -52,7 +52,7 @@ gen_app_credirect_installments <- function(df,scoring_df,products,
   
   api_df$payment_method <- as.numeric(api_df$payment_method)
   df$API_payment_method <- ifelse(is.na(api_df$payment_method), "other",
-    ifelse(api_df$payment_method==2, "2",
+    ifelse(api_df$payment_method %in% c(2,5), "2",
     ifelse(api_df$payment_method==3, "other", "other")))
   df$API_payment_method <- as.factor(df$API_payment_method)
   

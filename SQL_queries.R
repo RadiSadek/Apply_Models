@@ -26,6 +26,7 @@ big_sql_query <- paste("SELECT
 ",db_name,".credits_applications.sub_status,
 ",db_name,".credits_applications.product_id,
 ",db_name,".credits_applications.deactivated_at,
+",db_name,".credits_applications.source,
 ",db_name,".credits_applications.is_online,
 ",db_name,".credits_applications.third_side_date
 FROM ",db_name,".credits_applications_clients

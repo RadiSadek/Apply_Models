@@ -4,7 +4,7 @@
 #############################################################
 
 # Function to apply restrictions for City Cash applications
-gen_restrict_citycash_app <- function(scoring_df,products){
+gen_restrict_citycash_app <- function(scoring_df,products,all_df){
   
   score_df_800 <- subset(scoring_df,scoring_df$amount>800)
   criteria_800 <- length(names(table(score_df_800$score))
@@ -22,6 +22,10 @@ gen_restrict_citycash_app <- function(scoring_df,products){
     ifelse(criteria_800==0 & scoring_df$amount>800,1,
     ifelse(criteria_600==0 & scoring_df$amount>600,1,
     ifelse(criteria_400==0 & scoring_df$amount>400,1,scoring_df$color)))))
+  
+  # No Indeterminates if online
+  scoring_df$color <- ifelse(scoring_df$score %in% c("Bad","Indeterminate") &
+     !is.na(all_df$source) & all_df$source %in% c(4,5,6,8),1, scoring_df$color)  
   
   # Check if installment ratio is OK
   if(!("installment_amount" %in% names(scoring_df))){
@@ -91,7 +95,7 @@ gen_restrict_citycash_beh <- function(scoring_df,prev_amount,products,all_id,
          all_df,db_name,application_id,crit,flag_cashpoint){
   
   # Compute allowed installment if application
-  if_new <- gen_restrict_citycash_app(scoring_df,products)
+  if_new <- gen_restrict_citycash_app(scoring_df,products,all_df)
   if_new <- subset(if_new,if_new$score %in% c("Indeterminate",
      "Good 1","Good 2","Good 3","Good 4") & if_new$color!=1)
   if_new_amount <- suppressWarnings(max(if_new$amount))
