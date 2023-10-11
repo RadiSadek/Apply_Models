@@ -4,7 +4,7 @@
 #############################################################
 
 # Function to apply restrictions for City Cash applications
-gen_restrict_citycash_app <- function(scoring_df,products,all_df){
+gen_restrict_citycash_app <- function(scoring_df,products,all_df,all_id){
   
   score_df_800 <- subset(scoring_df,scoring_df$amount>800)
   criteria_800 <- length(names(table(score_df_800$score))
@@ -25,7 +25,13 @@ gen_restrict_citycash_app <- function(scoring_df,products,all_df){
   
   # No Indeterminates if online
   scoring_df$color <- ifelse(scoring_df$score %in% c("Bad","Indeterminate") &
-     !is.na(all_df$source) & all_df$source %in% c(4,5,6,8),1, scoring_df$color)  
+     !is.na(all_df$source) & all_df$source %in% c(4,5,6,8),1, scoring_df$color)
+  
+  # Correct if has cession in Credirect
+  if(gen_cession_credirect(all_id)==1){
+    scoring_df$color <- ifelse(scoring_df$score %in% c("Bad","Indeterminate",
+    "Good 1","Good 2","Good 3","Good 4"), 1, scoring_df$color)
+  }
   
   # Check if installment ratio is OK
   if(!("installment_amount" %in% names(scoring_df))){
@@ -95,7 +101,7 @@ gen_restrict_citycash_beh <- function(scoring_df,prev_amount,products,all_id,
          all_df,db_name,application_id,crit,flag_cashpoint){
   
   # Compute allowed installment if application
-  if_new <- gen_restrict_citycash_app(scoring_df,products,all_df)
+  if_new <- gen_restrict_citycash_app(scoring_df,products,all_df,all_id)
   if_new <- subset(if_new,if_new$score %in% c("Indeterminate",
      "Good 1","Good 2","Good 3","Good 4") & if_new$color!=1)
   if_new_amount <- suppressWarnings(max(if_new$amount))
@@ -152,6 +158,12 @@ gen_restrict_citycash_beh <- function(scoring_df,prev_amount,products,all_id,
   scoring_df$color <- ifelse(scoring_df$score %in% c("Good 4","Good 1",
      "Good 2","Good 3","Indeterminate") & scoring_df$amount<=if_new_amount & 
      scoring_df$installment_amount<=if_new_installment,3,scoring_df$color)
+  
+  # Correct if has cession in Credirect
+  if(gen_cession_credirect(all_id)==1){
+    scoring_df$color <- ifelse(scoring_df$score %in% c("Bad","Indeterminate",
+    "Good 1","Good 2"),1, scoring_df$color)
+  }
   
   if(flag_cashpoint==1){
     

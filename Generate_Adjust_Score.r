@@ -78,7 +78,7 @@ gen_apply_policy <- function(scoring_df,flag_credirect,flag_cession,
   }
   if(flag_beh_company==0 & flag_credirect==0 & flag_cashpoint==0 & 
      all_df$product_id!=22){
-    scoring_df <- gen_restrict_citycash_app(scoring_df,products,all_df)
+    scoring_df <- gen_restrict_citycash_app(scoring_df,products,all_df,all_id)
   }
   if(flag_beh_company==0 & flag_credirect==0 & all_df$product_id==22){
     scoring_df <- gen_restrict_big_fin_app(scoring_df)

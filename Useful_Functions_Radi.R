@@ -459,13 +459,13 @@ gen_group_scores_ptc <- function(all_df,cutoffs){
 }
 
 # Compute flag exclusion
-gen_flag_exclusion <- function(all_credits,flag_cashpoint,risk){
+gen_flag_exclusion <- function(all_credits,flag_credirect,risk){
   
   all_credits <- merge(all_credits,
      gen_query(con,gen_get_company_id_query(db_name)),by.x = "product_id",
      by.y = "id",all.x = TRUE)
   
-  if(flag_cashpoint==1){
+  if(flag_credirect==0){
     all_credits <- subset(all_credits,all_credits$company_id!=2)
   } 
   flag_exclusion <- ifelse(length(which(names(
@@ -873,5 +873,14 @@ gen_work_data <- function(db_name,input,all_df){
   }
 
   return(all_df)
+
+}
+
+# Get if cession in credirect
+gen_cession_credirect <- function(all_id){
+  
+  cession <- subset(all_id,all_id$sub_status==124 & all_id$company_id==2)
+  cession_flag <- ifelse(nrow(cession)>0,1,0)
+  return(cession_flag)
   
 }

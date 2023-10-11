@@ -45,7 +45,7 @@ base_dir <- "C:/Projects/Apply_Scoring"
 # Read argument of ID
 args <- commandArgs(trailingOnly = TRUE)
 application_id <- args[1]
-#application_id <- 1487652
+#application_id <- 1779536
 product_id <- NA
 
 
@@ -223,7 +223,7 @@ flag_cashpoint <- ifelse(products_desc$company_id==5, 1, 0)
 
 
 # Compute flag if client has previous otpisan or tsediran
-flag_exclusion <- gen_flag_exclusion(all_credits,flag_cashpoint,risk)
+flag_exclusion <- gen_flag_exclusion(all_credits,flag_credirect,risk)
 
 
 # Get and rename columns for CKR variables
@@ -554,6 +554,7 @@ final$flag_active_hidden <- flag_active[1,2]
 final$flag_risky_address <- flag_risky_address$flag_risky_address
 final$flag_judicial <- flag_judicial
 final$flag_third_side <- flag_third_side
+final$flag_cession_credirect <- gen_cession_credirect(all_id)
 final$lat <- flag_risky_address$lat
 final$lon <- flag_risky_address$lon
 final$type <- flag_risky_address$hierarchy

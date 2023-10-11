@@ -249,7 +249,7 @@ flag_cashpoint <- ifelse(products_desc$company_id==5, 1, 0)
 
 
 # Compute flag if client has previous otpisan or tsediran
-flag_exclusion <- gen_flag_exclusion(all_credits,flag_cashpoint,risk)
+flag_exclusion <- gen_flag_exclusion(all_credits,flag_credirect,risk)
 
 
 # Get and rename columns for CKR variables
