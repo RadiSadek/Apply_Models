@@ -10,7 +10,8 @@ gen_apply_score <- function(empty_fields,threshold_empty,flag_exclusion,
   df_Log_CityCash_App,df_Log_beh_Credirect,df_Log_Credirect_App_installments,
   df_Log_Credirect_App_payday,period,all_id,prev_amount,amount_tab,
   t_income,disposable_income_adj,flag_new_credirect_old_city,api_df,
-  flag_judicial,criteria_po,flag_third_side,flag_cashpoint,base_dir){
+  flag_judicial,criteria_po,flag_third_side,flag_cashpoint,base_dir,
+  flag_prescore){
   
   # Apply model coefficients according to type of credit 
   if (empty_fields>=threshold_empty){
@@ -33,29 +34,51 @@ gen_apply_score <- function(empty_fields,threshold_empty,flag_exclusion,
     scoring_df$score <- "Bad"
     scoring_df$color <- 1
     
+  } else  if(flag_beh==0 & flag_cashpoint==0 & flag_credirect==0 & 
+             flag_prescore==1){
+    
+    scoring_df <- gen_app_citycash_prescore(df,all_df,base_dir,scoring_df)
+    
+  } else  if(flag_beh==1 & flag_cashpoint==0 & flag_credirect==0 & 
+             flag_prescore==1){
+    
+    scoring_df <- gen_beh_citycash(df,scoring_df,products,df_Log_beh_CityCash,
+        period,all_id,all_df,prev_amount,amount_tab,
+        t_income,disposable_income_adj,criteria_po,base_dir)
+    
   } else if (flag_beh==1 & flag_credirect==0){
+    
     scoring_df <- gen_beh_citycash(df,scoring_df,products,df_Log_beh_CityCash,
       period,all_id,all_df,prev_amount,amount_tab,
       t_income,disposable_income_adj,criteria_po,base_dir)
+    
   } else if (flag_beh==1 & flag_credirect==1){
+    
     scoring_df <- gen_beh_credirect(df,scoring_df,products,df_Log_beh_Credirect,
       period,all_df,prev_amount,amount_tab,t_income,
       disposable_income_adj,criteria_po,flag_new_credirect_old_city,api_df,
       base_dir)
+    
   } else if (flag_beh==0 & flag_credirect==0){
+    
     scoring_df <- gen_app_citycash(df,scoring_df,products,df_Log_CityCash_App,
       period,all_df,prev_amount,amount_tab,
       t_income,disposable_income_adj,base_dir)
+    
   } else if (flag_beh==0 & flag_credirect==1 & flag_credit_next_salary==1){
+    
     scoring_df <- gen_app_credirect_payday(df,scoring_df,products,
       df_Log_Credirect_App_payday,period,all_df,prev_amount,
       amount_tab,t_income,disposable_income_adj,
       flag_credit_next_salary,api_df,base_dir)
+    
   } else {
+    
     scoring_df <- gen_app_credirect_installments(df,scoring_df,products,
       df_Log_Credirect_App_installments,period,all_df,
       prev_amount,amount_tab,t_income,disposable_income_adj,
       flag_credit_next_salary,api_df,base_dir)
+    
   }
   
   return(scoring_df)

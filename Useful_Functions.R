@@ -884,3 +884,22 @@ gen_cession_credirect <- function(all_id){
   return(cession_flag)
   
 }
+
+
+# Define function to get apply cutoffs for prescores
+gen_group_scores_prescore <- function(var,flag_beh,flag_credirect){
+  if(flag_beh==0){
+      cutoffs <- cu_app_city_prescore 
+  } else {
+      cutoffs <- cu_app_city_prescore 
+  }
+  if (var>cutoffs[1]){output="Bad"} 
+  else if (var>cutoffs[2]) {output="Indeterminate"} 
+  else if (var>cutoffs[3]) {output="Good 1"} 
+  else if (var>cutoffs[4]) {output="Good 2"} 
+  else if (var>cutoffs[5]) {output="Good 3"} 
+  else {output="Good 4"}
+  return (output)
+}
+
+

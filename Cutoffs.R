@@ -43,3 +43,9 @@ cu_ptc_consumer_new  <- c(0.55,0.49,0.41,0.31)
 cu_ptc_consumer_rep<- c(0.4,0.3,0.2,0.11)
 
 
+########## Cutoffs for prescore
+
+cu_app_city_prescore <- c(0.375,0.325,0.3,0.25,0.2)
+
+
+

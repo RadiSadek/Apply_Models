@@ -730,6 +730,19 @@ if(nrow(po_special)>0){
 
 
 
+######################################
+# Recorrect for Credirect brand City #
+######################################
+
+po_correct_ref_credirect <- paste("UPDATE ",db_name,
+".prior_approval_refinances SET product_id=95, updated_at = '",
+substring(Sys.time(),1,19),"', deleted_at = '",
+paste(substring(Sys.time(),1,10),"04:00:00",sep=),"'
+WHERE product_id IN (9,48) AND deleted_at IS NULL", sep="")
+suppressMessages(suppressWarnings(dbSendQuery(con,po_correct_ref_credirect)))
+
+
+
 #########
 ## END ##
 #########
