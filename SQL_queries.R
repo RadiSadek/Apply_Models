@@ -317,13 +317,12 @@ gen_po_terminated_query <- function(db_name,input){
 gen_po_refinance_query <- function(db_name,input){
   return(paste(
     "SELECT application_id, max_amount, max_installment,
-     deleted_at, product_id
+     deleted_at, created_at, product_id
      FROM ",db_name,".prior_approval_refinances 
-     WHERE deleted_at IS NOT NULL AND application_id IN (", 
-     input,")",sep=""))
+     WHERE application_id IN (", input,")",sep=""))
 }
 
-# Read PO refinance data per client_id
+# Read if client is dead
 gen_flag_is_dead <- function(db_name,input){
   return(paste(
     "SELECT dead_at 
