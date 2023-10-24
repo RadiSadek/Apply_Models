@@ -286,9 +286,9 @@ if(nrow(all_credit)){
 
 
 
-#####################################
-### Assign to group for Credirect ###
-#####################################
+###################################################
+### Assign to group for Credirect and City Cash ###
+###################################################
 
 if(nrow(all_credit)>0){
 
@@ -308,6 +308,7 @@ all_credit$payday <- ifelse(all_credit$type==4,1,
 all_credit$ptc_score <- ifelse(is.na(all_credit$ptc_score),"medium",
    all_credit$ptc_score)
 all_credit$group <- 
+   ifelse(!is.na(all_credit$office_id) & all_credit$office_id==215,120,
    ifelse(all_credit$company_id==2,
    ifelse(all_credit$nb_credits==1,
    ifelse(all_credit$payday==0,
@@ -317,7 +318,7 @@ all_credit$group <-
    ifelse(all_credit$score_max_amount %in% c("Indeterminate","Good 1"),
           102,103)),
    ifelse(all_credit$payday==0,
-   ifelse(all_credit$ptc_score %in% c("very_low"),101,102),101)),NA)
+   ifelse(all_credit$ptc_score %in% c("very_low"),101,102),101)),NA))
 
 
 

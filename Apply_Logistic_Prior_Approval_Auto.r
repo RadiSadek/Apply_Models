@@ -246,9 +246,9 @@ select_credits <- subset(select_credits,select_credits$max_delay<=360)
 
 
 
-#####################################
-### Assign to group for Credirect ###
-#####################################
+###################################################
+### Assign to group for Credirect and City Cash ###
+###################################################
 
 # Get number of credits
 select_credits <- gen_append_nb_credits(db_name,select_credits)
@@ -262,8 +262,9 @@ select_credits$payday <- ifelse(select_credits$type==4,1,
      ifelse(select_credits$product_id %in% 
      c(25:28,36,37,41:44,49,50,55:58,67:68,78:81,89:90),1,0))
 
-# Make groups for Credirect
+# Assign group
 select_credits$group <- 
+ ifelse(!is.na(select_credits$office_id) & select_credits$office_id==215,120,
  ifelse(select_credits$company_id==2,
  ifelse(select_credits$nb_credits==1,
  ifelse(select_credits$payday==0,
@@ -273,7 +274,7 @@ select_credits$group <-
  ifelse(select_credits$score_max_amount %in% c("Indeterminate","Good 1"),
              102,103)),
  ifelse(select_credits$payday==0,
- ifelse(select_credits$ptc_score %in% c("very_low"),101,102),101)),NA)
+ ifelse(select_credits$ptc_score %in% c("very_low"),101,102),101)),NA))
 
 
 
