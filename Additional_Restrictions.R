@@ -5,34 +5,28 @@
 
 # Function to apply restrictions for City Cash applications
 gen_restrict_citycash_app <- function(scoring_df,products,all_df,all_id){
-  
-  score_df_800 <- subset(scoring_df,scoring_df$amount>800)
-  criteria_800 <- length(names(table(score_df_800$score))
-     [names(table(score_df_800$score)) %in% c("Good 4")])
-  score_df_600 <- subset(scoring_df,scoring_df$amount>600)
-  criteria_600 <- length(names(table(score_df_600$score))
-    [names(table(score_df_600$score)) %in% c("Good 2","Good 3","Good 4")])
-  score_df_400 <- subset(scoring_df,scoring_df$amount>400)
-  criteria_400 <- length(names(table(score_df_400$score))
-    [names(table(score_df_400$score)) %in% c("Good 1","Good 2",
-    "Good 3","Good 4")])
-  
-  scoring_df$color <- ifelse(scoring_df$score %in% c("NULL"),scoring_df$color,
-    ifelse(scoring_df$amount>1000,1,
-    ifelse(criteria_800==0 & scoring_df$amount>800,1,
-    ifelse(criteria_600==0 & scoring_df$amount>600,1,
-    ifelse(criteria_400==0 & scoring_df$amount>400,1,scoring_df$color)))))
-  
-  # No Indeterminates if online
-  scoring_df$color <- ifelse(scoring_df$score %in% c("Bad","Indeterminate") &
-     !is.na(all_df$source) & all_df$source %in% c(4,5,6,8),1, scoring_df$color)
-  
-  # Correct if has cession in Credirect
-  if(gen_cession_credirect(all_id)==1){
-    scoring_df$color <- ifelse(scoring_df$score %in% c("Bad","Indeterminate",
-    "Good 1","Good 2","Good 3","Good 4"), 1, scoring_df$color)
-  }
-  
+
+  scoring_df$color <- 
+    ifelse(scoring_df$score %in% c("NULL"),scoring_df$color,
+    ifelse(scoring_df$score %in% c("Good 3","Good 4") & 
+           scoring_df$amount>1000,1,
+    ifelse(scoring_df$score %in% c("Good 1","Good 2") & 
+          scoring_df$amount>800,1,
+           
+    ifelse(scoring_df$score %in% c("Indeterminate") & scoring_df$amount>600 & 
+           is.na(flag_bad_office(all_df$office_id)),1,
+    ifelse(scoring_df$score %in% c("Indeterminate") & scoring_df$amount>600 & 
+           flag_bad_office(all_df$office_id)!=1 & scoring_df$pd<0.4,1,
+    ifelse(scoring_df$score %in% c("Indeterminate") & scoring_df$amount>400 & 
+           flag_bad_office(all_df$office_id)!=1 & scoring_df$pd>=0.4,1,
+    ifelse(scoring_df$score %in% c("Indeterminate") & scoring_df$amount>600 & 
+           flag_bad_office(all_df$office_id)==1 & scoring_df$pd<0.34,1,
+    ifelse(scoring_df$score %in% c("Indeterminate") & scoring_df$amount>400 & 
+           flag_bad_office(all_df$office_id)==1 & scoring_df$pd>=0.34,1,
+           
+           scoring_df$color))))))))
+    
+                             
   # Check if installment ratio is OK
   if(!("installment_amount" %in% names(scoring_df))){
     scoring_df <- merge(scoring_df,products[,c("amount","period",

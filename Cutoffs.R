@@ -8,10 +8,10 @@
 ############# City Cash 
 
 # Application City Cash - worst Offices
-cu_app_city_bad_offices <- c(0.39,0.35,0.3,0.22,0.17)
+cu_app_city_bad_offices <- c(0.35,0.32,0.28,0.22,0.15)
 
 # Application City Cash - normal Offices
-cu_app_city_norm_offices <- c(0.46,0.35,0.3,0.22,0.17)
+cu_app_city_norm_offices <- c(0.42,0.35,0.3,0.22,0.15)
 
 # Repeat City Cash
 cu_beh_city <- c(0.4,0.3,0.225,0.15,0.075)
@@ -46,6 +46,7 @@ cu_ptc_consumer_rep<- c(0.4,0.3,0.2,0.11)
 ########## Cutoffs for prescore
 
 cu_app_city_prescore <- c(0.375,0.325,0.3,0.25,0.2)
+
 
 
 

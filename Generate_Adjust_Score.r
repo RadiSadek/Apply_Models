@@ -66,19 +66,19 @@ gen_apply_score <- function(empty_fields,threshold_empty,flag_exclusion,
       t_income,disposable_income_adj,base_dir)
     
   } else if (flag_beh==0 & flag_credirect==1 & flag_credit_next_salary==1){
-    
+   
     scoring_df <- gen_app_credirect_payday(df,scoring_df,products,
       df_Log_Credirect_App_payday,period,all_df,prev_amount,
       amount_tab,t_income,disposable_income_adj,
       flag_credit_next_salary,api_df,base_dir)
-    
+     
   } else {
-    
+   
     scoring_df <- gen_app_credirect_installments(df,scoring_df,products,
       df_Log_Credirect_App_installments,period,all_df,
       prev_amount,amount_tab,t_income,disposable_income_adj,
       flag_credit_next_salary,api_df,base_dir)
-    
+     
   }
   
   return(scoring_df)
