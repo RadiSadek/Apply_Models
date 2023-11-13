@@ -38,37 +38,29 @@ gen_restrict_citycash_app <- function(scoring_df,products,all_df,all_id){
 }
 
 # Function to apply restrictions for City Cash applications
-gen_restrict_cashpoint_app <- function(scoring_df,all_df,flag_beh){
+gen_restrict_cashpoint_app <- function(scoring_df,all_df,flag_beh,
+                                       flag_parallel){
   
-  # Apply policy accroding to score 
-  score_df_800 <- subset(scoring_df,scoring_df$amount>800)
-  criteria_800 <- length(names(table(score_df_800$score))
-     [names(table(score_df_800$score)) %in% c("Good 4")])
-  
-  score_df_600 <- subset(scoring_df,scoring_df$amount>600)
-  criteria_600 <- length(names(table(score_df_600$score))
-     [names(table(score_df_600$score)) %in% c("Good 3","Good 4")])
-  
-  score_df_400 <- subset(scoring_df,scoring_df$amount>400)
-  criteria_400 <- length(names(table(score_df_400$score))
-     [names(table(score_df_400$score)) %in% c("Good 2",
-     "Good 3","Good 4")])
-  
-  score_df_0 <- subset(scoring_df,scoring_df$amount>0)
-  criteria_0 <- length(names(table(score_df_0$score))
-     [names(table(score_df_0$score)) %in% c("Good 1","Good 2",
-     "Good 3","Good 4")])
-  
-  scoring_df$color <- ifelse(scoring_df$score %in% c("NULL"),scoring_df$color,
-    ifelse(scoring_df$amount>1000,1,
-    ifelse(criteria_800==0 & scoring_df$amount>800,1,
-    ifelse(criteria_600==0 & scoring_df$amount>600,1,
-    ifelse(criteria_400==0 & scoring_df$amount>400,1,
-    ifelse(criteria_0==0 & scoring_df$amount>0,1,scoring_df$color))))))
-  
+  scoring_df$color <- 
+    ifelse(scoring_df$score %in% c("NULL"),scoring_df$color,
+    ifelse(scoring_df$score %in% c("Good 4") & scoring_df$amount>1000,1,
+    ifelse(scoring_df$score %in% c("Good 3") & scoring_df$amount>800,1,
+    ifelse(scoring_df$score %in% c("Good 2") & scoring_df$amount>600,1,
+    ifelse(scoring_df$score %in% c("Good 1") & scoring_df$amount>400,1,
+    ifelse(scoring_df$score %in% c("Indeterminate") & scoring_df$amount>400,1,
+           scoring_df$color))))))
+              
   # No Indeterminates
   scoring_df$color <- ifelse(scoring_df$score %in% c("Bad","Indeterminate"),
-    1, scoring_df$color)  
+    1, scoring_df$color)
+  
+  # Treat if has parallel and depending on DPD
+  scoring_df$color <- ifelse(scoring_df$score %in% c("Bad","Indeterminate",
+    "Good 1","Good 2","Goood 3","Good 4") & flag_parallel[[1]]==1 & 
+    !is.na(flag_parallel[[2]]) & flag_parallel[[2]]>=180,1, 
+    ifelse(scoring_df$score %in% c("Bad","Indeterminate",
+    "Good 1","Good 2") & flag_parallel[[1]]==1 & !is.na(flag_parallel[[2]]) & 
+    flag_parallel[[2]]>=90,1,scoring_df$color))
   
   # No Gratis and not Good 4
   if(all_df$product_id %in% c(68,90)){
@@ -92,7 +84,7 @@ gen_restrict_cashpoint_app <- function(scoring_df,all_df,flag_beh){
 
 # Function to apply restrictions for City Cash repeats
 gen_restrict_citycash_beh <- function(scoring_df,prev_amount,products,all_id,
-         all_df,db_name,application_id,crit,flag_cashpoint){
+         all_df,db_name,application_id,crit,flag_cashpoint,flag_parallel){
   
   # Compute allowed installment if application
   if_new <- gen_restrict_citycash_app(scoring_df,products,all_df,all_id)
@@ -153,6 +145,16 @@ gen_restrict_citycash_beh <- function(scoring_df,prev_amount,products,all_id,
      "Good 2","Good 3","Indeterminate") & scoring_df$amount<=if_new_amount & 
      scoring_df$installment_amount<=if_new_installment,3,scoring_df$color)
   
+  # Treat if has parallel and depending on DPD
+  if(flag_cashpoint==1){
+    scoring_df$color <- ifelse(scoring_df$score %in% c("Bad","Indeterminate",
+       "Good 1","Good 2","Goood 3","Good 4") & flag_parallel[[1]]==1 & 
+       !is.na(flag_parallel[[2]]) & flag_parallel[[2]]>=180,1, 
+       ifelse(scoring_df$score %in% c("Bad","Indeterminate","Good 1","Good 2") 
+       & flag_parallel[[1]]==1 & !is.na(flag_parallel[[2]]) & 
+         flag_parallel[[2]]>=90,1,scoring_df$color))
+  }
+
   # Correct if has cession in Credirect
   if(gen_cession_credirect(all_id)==1){
     scoring_df$color <- ifelse(scoring_df$score %in% c("Bad","Indeterminate",

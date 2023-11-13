@@ -394,6 +394,10 @@ flag_judicial <- ifelse(
 flag_third_side <- gen_third_side_prev(db_name,all_id,application_id)
 
 
+# Compute flag if parallel 
+flag_parallel <- gen_flag_parallel(db_name,all_id,application_id)
+
+
 
 ############################################################
 ### Apply model coefficients according to type of credit ###
@@ -418,7 +422,7 @@ scoring_df <- gen_apply_score(
 scoring_df <- gen_apply_policy(scoring_df,flag_credirect,flag_cession,
   flag_bad_ckr_citycash,all_df,all_id,flag_beh,prev_amount,products,
   application_id,flag_new_credirect_old_city,flag_credit_next_salary,
-  flag_beh_company,flag_cashpoint,1,NA,flag_risky_address)
+  flag_beh_company,flag_cashpoint,1,NA,flag_risky_address,flag_parallel)
 
 
 # Apply criteria according to when the last credit was terminated

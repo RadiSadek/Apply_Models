@@ -901,3 +901,22 @@ gen_group_scores_prescore <- function(var,flag_beh,flag_credirect){
   return (output)
 }
 
+# Get flag if parallel
+gen_flag_parallel <- function(db_name,all_id,flag_cashpoint){
+  
+  para <- subset(all_id,all_id$status==4)
+  has_para <- ifelse(nrow(para)>0,1,0)
+  
+  # No parallel if cashpoint
+  if(flag_cashpoint==1){
+    has_para_city <- subset(para,para$company_id==1)
+    if(nrow(has_para_city)>0){
+      max_dpd <- gen_query(con,gen_plan_main_select_query(db_name,
+        paste(has_para_city$id,collapse=",")))$max_delay
+    }
+  }
+  if(!exists("max_dpd")){max_dpd <- NA}
+  return(list(has_para,max_dpd))
+}
+
+

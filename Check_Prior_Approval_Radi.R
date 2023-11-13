@@ -43,7 +43,7 @@ main_dir <- "C:\\Projects\\Apply_Scoring\\"
 # Read argument of ID
 args <- commandArgs(trailingOnly = TRUE)
 #application_id <- args[1]
-application_id <- 1792567
+application_id <- 1694644
 
 
 # Load other r files
@@ -235,6 +235,12 @@ for(i in 1:nrow(all_credit)){
     all_credit$score_max_amount[i] <- calc[[3]]
     all_credit$max_delay[i] <- as.numeric(calc[[4]])
   }, error=function(e){}))
+}
+
+# Remove offers of certain offers for Cashpoint 
+if(all_credit$company_id %in% c(5) & !is.na(all_credit$score_max_amount) & 
+   all_credit$score_max_amount %in% c("Indeterminate","Good 1")){
+  quit()
 }
 
 # Rechange for flexes

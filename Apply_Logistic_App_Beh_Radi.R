@@ -45,7 +45,7 @@ base_dir <- "C:/Projects/Apply_Scoring"
 # Read argument of ID
 args <- commandArgs(trailingOnly = TRUE)
 application_id <- args[1]
-#application_id <- 1779536
+application_id <- 1799858
 product_id <- NA
 
 
@@ -404,6 +404,10 @@ flag_judicial <- ifelse(
 flag_third_side <- gen_third_side_prev(db_name,all_id,application_id)
 
 
+# Compute flag if parallel 
+flag_parallel <- gen_flag_parallel(db_name,all_id,application_id)
+
+
 
 ############################################################
 ### Apply model coefficients according to type of credit ###
@@ -451,7 +455,8 @@ fraud_flag <- ifelse(flag_credirect==1 & flag_beh==0 &
 scoring_df <- gen_apply_policy(scoring_df,flag_credirect,flag_cession,
    flag_bad_ckr_citycash,all_df,all_id,flag_beh,prev_amount,products,
    application_id,flag_new_credirect_old_city,flag_credit_next_salary,
-   flag_beh_company,flag_cashpoint,0,fraud_flag,flag_risky_address)
+   flag_beh_company,flag_cashpoint,0,fraud_flag,flag_risky_address,
+   flag_parallel)
 scoring_decision <- gen_decline_reason(scoring_df,all_df,15,scoring_decision)
 
 
@@ -577,6 +582,7 @@ final$api_payment <- api_df$payment_method
 final$days_play <- days_play
 final$amount_cession <- df$amount_cession_total
 final$office_id <- all_df$office_id
+final$bad_office <- flag_bad_office(all_df$office_id)
 
 
 # Read and write

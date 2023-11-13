@@ -82,6 +82,8 @@ all_credits <- subset(all_credits, is.na(all_credits$sub_status) |
 all_credits <- rbind(
   subset(all_credits,all_credits$company_id==2 & 
     substring(all_credits$deactivated_at,1,10)==(as.Date(Sys.time())-2)),
+  subset(all_credits,all_credits$company_id==5 & 
+    substring(all_credits$deactivated_at,1,10)==(as.Date(Sys.time())-7)),
   subset(all_credits,all_credits$company_id==1 & all_credits$sub_status==128 & 
     substring(all_credits$deactivated_at,1,10)==(as.Date(Sys.time())-3)),
   subset(all_credits,all_credits$company_id==1 & all_credits$sub_status==123 & 
@@ -99,9 +101,12 @@ if(nrow(all_credits)>0){
   all_credits <- merge(all_credits,credit_amount,by.x = "id",
          by.y = "application_id",all.x = TRUE)
 }
+
+# Remove duplicates by company_id 
 all_credits <- all_credits[rev(order(all_credits$date)),]
-all_credits <- all_credits[order(all_credits$client_id), ]
-all_credits <- all_credits[!duplicated(all_credits$client_id),]
+all_credits <- all_credits[order(all_credits$client_id),]
+all_credits <- all_credits[!duplicated(all_credits[c("client_id",
+    "company_id")]),] 
 
 
 
@@ -129,27 +134,21 @@ po_sql_query <- paste(
 po <- gen_query(con,po_sql_query)
 po <- merge(po,company_id,by.x = "product_id",by.y = "id",all.x = TRUE)
 po_raw <- po
-po_select_citycash <- po[is.na(po$deleted_at) & po$company_id==1,]
-po_select_credirect <- po[is.na(po$deleted_at) & po$company_id==2,]
-select_credits_citycash <- select_credits[!(select_credits$client_id %in% 
-    po_select_citycash$client_id) & select_credits$company_id==1,]
-select_credits_credirect <- select_credits[!(select_credits$client_id %in% 
-    po_select_credirect$client_id) & select_credits$company_id==2,]
-select_credits <- rbind(select_credits_citycash,select_credits_credirect)
+po_check <- po[is.na(po$deleted_at),]
+po_check$has_offer_cur <- 1
+select_credits <- merge(select_credits,po_check[,c("client_id","company_id",
+  "has_offer_cur")],by.x = c("client_id","company_id"),by.y = c("client_id",
+  "company_id"),all.x = TRUE)
+select_credits <- subset(select_credits,is.na(select_credits$has_offer_cur))
 
 
 # Remove those who have active credit of corresponding company
-actives_cur_citycash <- subset(all_credits_raw,all_credits_raw$status %in% c(4)
-   & all_credits_raw$company_id==1)
-actives_cur_credirect <- subset(all_credits_raw,all_credits_raw$status %in% c(4)
-   & all_credits_raw$company_id==2)
-select_credits_citycash <- subset(select_credits,
-   !(select_credits$client_id %in% actives_cur_citycash$client_id) & 
-     select_credits$company_id==1)
-select_credits_credirect <- subset(select_credits,
-   !(select_credits$client_id %in% actives_cur_credirect$client_id) & 
-     select_credits$company_id==2)
-select_credits <- rbind(select_credits_citycash,select_credits_credirect)
+actives_cur <- subset(all_credits_raw,all_credits_raw$status %in% c(4))
+actives_cur$has_active_cur <- 1
+select_credits <- merge(select_credits,actives_cur[,c("client_id","company_id",
+  "has_active_cur")],by.x = c("client_id","company_id"),by.y = c("client_id",
+  "company_id"),all.x = TRUE)
+select_credits <- subset(select_credits,is.na(select_credits$has_active_cur))
 
 
 # Join if VIP
@@ -286,11 +285,17 @@ offers[is.na(offers)] <- "NULL"
 
 # Adjust product ID
 offers$product_id <- 
-  ifelse(offers$product_id %in% c(43,44,49,50,57,58,55),78,
+  ifelse(offers$product_id %in% c(43,44,49,50,55,57,58),78,
   ifelse(offers$product_id %in% c(78,79,80,81),78,
   ifelse(offers$product_id %in% c(9),82,
   ifelse(offers$product_id %in% c(48),77,
-         offers$product_id))))
+  ifelse(offers$product_id %in% c(66),85,
+  ifelse(offers$product_id %in% c(67),89,
+  ifelse(offers$product_id %in% c(68),90,
+  ifelse(offers$product_id %in% c(71),83,
+  ifelse(offers$product_id %in% c(72),84,
+  ifelse(offers$product_id %in% c(75),87,
+         offers$product_id))))))))))
 
 
 # Make result ready for SQL query
@@ -326,33 +331,6 @@ po_old$time_past <- as.numeric(
   as.Date(substring(po_old$created_at,1,10)),units=c("days")),2))
 po_old <- subset(po_old,po_old$time_past>0 & po_old$time_past<=360 &
   po_old$time_past%%30==0 & is.na(po_old$deleted_at))
-
-
-# See if any new credit created after offer
-po_old <- merge(po_old,gen_if_credit_after_po_terminated(
-  all_credits_raw,po_old,"last_appl_id_citycash",1),by.x = "client_id",
-  by.y = "client_id",all.x = TRUE)
-names(po_old)[ncol(po_old)] <- c("signed_at_citycash")
-po_old <- merge(po_old,gen_if_credit_after_po_terminated(
-  all_credits_raw,po_old,"last_appl_id_credirect",2),by.x = "client_id",
-  by.y = "client_id",all.x = TRUE) 
-names(po_old)[ncol(po_old)] <- c("signed_at_credirect")
-po_old <- merge(po_old,gen_if_credit_after_po_terminated(
-  all_credits_raw,po_old,"last_appl_id_cashpoint",5),by.x = "client_id",
-  by.y = "client_id",all.x = TRUE) 
-names(po_old)[ncol(po_old)] <- c("signed_at_cashpoint")
-po_old$last_id <- 
-  ifelse(po_old$company_id==1,po_old$last_appl_id_citycash,
-  ifelse(po_old$company_id==2,po_old$last_appl_id_credirect,
-                              po_old$last_appl_id_cashpoint))
-po_old <- po_old[,-which(names(po_old) %in% c("last_appl_id_credirect",
-    "last_appl_id_citycash","last_appl_id_cashpoint"))]
-po_old$criteria <- ifelse(po_old$company_id==1,
-          ifelse(po_old$signed_at_citycash>=po_old$created_at,0,1),
-    ifelse(po_old$company_id==2,
-          ifelse(po_old$signed_at_credirect>=po_old$created_at,0,1),
-          ifelse(po_old$signed_at_cashpoint>=po_old$created_at,0,1)))
-po_old <- subset(po_old,po_old$criteria==1)
 
 
 # Recheck if client still has vip status

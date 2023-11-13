@@ -263,6 +263,12 @@ for(i in 1:nrow(all_credit)){
   }, error=function(e){}))
 }
 
+# Remove offers of certain offers for Cashpoint 
+if(all_credit$company_id %in% c(5) & !is.na(all_credit$score_max_amount) & 
+   all_credit$score_max_amount %in% c("Indeterminate","Good 1")){
+  quit()
+}
+
 # Rechange for flexes
 all_credit$product_id <- 
   ifelse(is.na(all_credit$product_id),all_credit$product_id,
