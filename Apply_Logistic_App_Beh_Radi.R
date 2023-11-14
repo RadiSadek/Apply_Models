@@ -405,7 +405,7 @@ flag_third_side <- gen_third_side_prev(db_name,all_id,application_id)
 
 
 # Compute flag if parallel 
-flag_parallel <- gen_flag_parallel(db_name,all_id,application_id)
+flag_parallel <- gen_flag_parallel(db_name,all_id,flag_cashpoint)
 
 
 
