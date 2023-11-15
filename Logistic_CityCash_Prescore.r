@@ -13,7 +13,7 @@ gen_app_citycash_prescore <- function(df,all_df,base_dir,scoring_df){
     ifelse(df$age<=20,"20_less",
     ifelse(df$age<=30,"21_30",
     ifelse(df$age<=45,"31_45",
-    ifelse(df$age<=50,"45_58","58_more"))))
+    ifelse(df$age<=58,"45_58","58_more"))))
   df$age <- as.factor(df$age_cut)
   df$gender <- as.factor(df$gender)
   df$status_finished_total_cut <- ifelse(is.na(df$status_finished_total),
