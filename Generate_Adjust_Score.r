@@ -19,12 +19,12 @@ gen_apply_score <- function(empty_fields,threshold_empty,flag_exclusion,
     scoring_df$score <- "NULL"
     scoring_df$color <- 2
     
-  } else if ((flag_exclusion==1 | flag_judicial==1) & flag_cashpoint==0){
+  } else if (flag_judicial==1 & flag_cashpoint==0){
     
       scoring_df$score <- "Bad"
       scoring_df$color <- 1
       
-  } else if (flag_varnat==1 | flag_is_dead==1){  
+  } else if (flag_exclusion==1 | flag_varnat==1 | flag_is_dead==1){  
     
     scoring_df$score <- "Bad"
     scoring_df$color <- 1
