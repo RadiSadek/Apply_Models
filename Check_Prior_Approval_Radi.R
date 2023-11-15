@@ -221,6 +221,16 @@ for(i in 1:nrow(all_credit)){
   suppressWarnings(tryCatch({
     if(all_credit$product_id[i]==8 & all_credit$is_vip[i]==0){
       product_id <- 5
+    } else if(all_credit$product_id[i]==76 & all_credit$is_vip[i]==0){
+      product_id <- 1
+    } else if(all_credit$product_id[i]==96 & all_credit$is_vip[i]==0){
+      product_id <- 7
+    } else if(all_credit$product_id[i]==1 & all_credit$is_vip[i]==1){
+      product_id <- 76
+    } else if(all_credit$product_id[i]==5 & all_credit$is_vip[i]==1){
+      product_id <- 8
+    } else if(all_credit$product_id[i]==7 & all_credit$is_vip[i]==1){
+      product_id <- 96
     } else if(all_credit$product_id[i] %in% c(55:58,78:81)){
       product_id <- 82
     } else {

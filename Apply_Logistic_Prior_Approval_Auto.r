@@ -211,6 +211,16 @@ for(i in 1:nrow(select_credits)){
   suppressWarnings(tryCatch({
     if(select_credits$product_id[i]==8 & select_credits$is_vip[i]==0){
       product_id <- 5
+    } else if(select_credits$product_id[i]==76 & select_credits$is_vip[i]==0){
+      product_id <- 1
+    } else if(select_credits$product_id[i]==96 & select_credits$is_vip[i]==0){
+      product_id <- 7
+    } else if(select_credits$product_id[i]==1 & select_credits$is_vip[i]==1){
+      product_id <- 76
+    } else if(select_credits$product_id[i]==5 & select_credits$is_vip[i]==1){
+      product_id <- 8
+    } else if(select_credits$product_id[i]==7 & select_credits$is_vip[i]==1){
+      product_id <- 96
     } else if(select_credits$product_id[i] %in% c(55:58,78:81)){
       product_id <- 82
     } else {
