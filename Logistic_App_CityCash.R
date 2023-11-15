@@ -15,7 +15,7 @@ gen_app_citycash <- function(df,scoring_df,products,df_Log_CityCash_App,period,
     ifelse(df$age<=20,"20_less",
     ifelse(df$age<=30,"21_30",
     ifelse(df$age<=45,"31_45",
-    ifelse(df$age<=50,"45_58","58_more"))))
+    ifelse(df$age<=58,"45_58","58_more"))))
   df$age <- as.factor(df$age_cut)
   df$gender <- as.factor(df$gender)
   df$education_cut <- 
