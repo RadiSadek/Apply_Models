@@ -6,7 +6,8 @@
 gen_app_citycash_prescore <- function(df,all_df,base_dir,scoring_df){
   
   # Load rdata
-  load(file.path(base_dir,"rdata","citycash_app_prescore.rdata"))
+  load(file.path(base_dir,"rdata","citycash_app_prescore_coeffs.rdata"))
+  names(coefficients) <- c("coeff")
 
   # Cut and bin
   df$age_cut <- 
@@ -30,8 +31,7 @@ gen_app_citycash_prescore <- function(df,all_df,base_dir,scoring_df){
   df$outs_overdue_ratio_total <- as.factor(df$outs_overdue_ratio_total_cut)
   
   # Apply logisic regression
-  apply_logit <- predict(df_Log_CityCash_App_prescore,newdata=df,
-                         type="response")
+  apply_logit <- gen_apply_model(df,coefficients)
   scoring_df$score <- gen_group_scores_prescore(apply_logit,0,0)
   scoring_df$pd <- round(apply_logit,3)
   scoring_df$color <- ifelse(scoring_df$score=="Bad", 1, 

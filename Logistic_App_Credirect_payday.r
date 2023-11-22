@@ -9,7 +9,8 @@ gen_app_credirect_payday <- function(df,scoring_df,products,
   
   
   # Load rdata
-  load(file.path(base_dir,"rdata","credirect_payday.rdata"))
+  load(file.path(base_dir,"rdata","credirect_payday_coeffs.rdata"))
+  names(coefficients) <- c("coeff")
   
   # Cut and bin
   df$age <- ifelse(df$age<=20,"20_less",
@@ -107,8 +108,7 @@ gen_app_credirect_payday <- function(df,scoring_df,products,
     period_tab <- as.numeric(scoring_df$period[i])
     amount_tab <- as.numeric(scoring_df$amount[i])
     
-    apply_logit <- predict(df_Log_Credirect_App_payday, 
-                           newdata=df, type="response")
+    apply_logit <- gen_apply_model(df,coefficients)
     scoring_df$score[i] <- apply_logit
     scoring_df$score[i] <- gen_group_scores(scoring_df$score[i],
            all_df$office_id,0,1,1)

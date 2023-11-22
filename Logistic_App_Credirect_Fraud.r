@@ -10,7 +10,8 @@ gen_app_credirect_fraud <- function(df,scoring_df,products,
                              t_income,disposable_income_adj,db_name,base_dir){
   
   # Load rdata
-  load(file.path(base_dir,"rdata","credirect_app_fraud.rdata"))
+  load(file.path(base_dir,"rdata","credirect_app_fraud_coeffs.rdata"))
+  names(coefficients) <- c("coeff")
   
   # Apply credirect fraud model 
   df$age_cut <- ifelse(df$age<=28,"28_less","29_more")
@@ -54,7 +55,7 @@ gen_app_credirect_fraud <- function(df,scoring_df,products,
   df$whatsapp_registered_cut <- "other"
   df$whatsapp_registered <- as.factor(df$whatsapp_registered_cut)
   
-  apply_logit <- predict(df_Log_Credirect_Fraud, newdata=df, type="response")
+  apply_logit <- gen_apply_model(df,coefficients)
   fraud_flag  <- gen_group_scores_fraud(apply_logit)
   
   # Apply check for phone number

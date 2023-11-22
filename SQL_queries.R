@@ -516,3 +516,18 @@ gen_get_work_info_query <- function(db_name,string_list){
     WHERE application_id IN (",string_list,")",sep=""))
 }
 
+# Get api scoring data
+gen_api_score_query <- function(db_name,application_id){
+  return(paste("SELECT CAST(request_payload AS CHAR) AS request_payload, 
+  created_at FROM ",db_name,".api_scoring WHERE request_id IN
+  (",application_id,")",sep=""))
+}
+
+# Get client_id if has egn
+gen_client_id_query <- function(db_name,all_df){
+  return(paste("SELECT id FROM ",db_name,".clients WHERE egn = 
+  (",all_df$egn,")",sep=""))
+}
+
+
+

@@ -10,7 +10,8 @@ gen_beh_credirect <- function(df,scoring_df,products,df_Log_beh_Credirect,
   
   
   # Load rdata
-  load(file.path(base_dir,"rdata","credirect_repeat.rdata"))
+  load(file.path(base_dir,"rdata","credirect_repeat_coeffs.rdata"))
+  names(coefficients) <- c("coeff")
   
   #  Cut and bin
   df$ownership <- ifelse(is.na(df$ownership),"1_2_3",
@@ -122,7 +123,7 @@ gen_beh_credirect <- function(df,scoring_df,products,df_Log_beh_Credirect,
     period_tab <- as.numeric(scoring_df$period[i])
     amount_tab <- as.numeric(scoring_df$amount[i])
     
-    apply_logit <- predict(df_Log_beh_Credirect, newdata=df, type="response")
+    apply_logit <- gen_apply_model(df,coefficients)
     scoring_df$score[i] <- apply_logit
     scoring_df$score[i] <- gen_group_scores(scoring_df$score[i],
          all_df$office_id,1,1,0)

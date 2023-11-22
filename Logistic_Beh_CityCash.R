@@ -8,7 +8,8 @@ gen_beh_citycash <- function(df,scoring_df,products,df_Log_beh_CityCash,period,
                              t_income,disposable_income_adj,crit_po,base_dir){
   
   # Load rdata
-  load(file.path(base_dir,"rdata","citycash_repeat.rdata"))
+  load(file.path(base_dir,"rdata","citycash_repeat_coeffs.rdata"))
+  names(coefficients) <- c("coeff")
   
   # Cut and bin
   df$age_cut <- ifelse(df$age<=29,"less_29",
@@ -94,7 +95,7 @@ gen_beh_citycash <- function(df,scoring_df,products,df_Log_beh_CityCash,period,
     amount_tab <- as.numeric(scoring_df$amount[i])
     
     if(df$total_income<100 | is.na(df$total_income)){
-      ratio_tab <- 0.08}
+      ratio_tab <- 0.08} 
     else {
       ratio_tab <- products[products$period == period_tab & 
             products$amount == amount_tab & 
@@ -120,7 +121,7 @@ gen_beh_citycash <- function(df,scoring_df,products,df_Log_beh_CityCash,period,
     df$maturity <- as.factor(df$maturity)
     
     # Apply logistic model to each amount and installment
-    apply_logit <- predict(df_Log_beh_CityCash, newdata=df, type="response")
+    apply_logit <- gen_apply_model(df,coefficients)
     scoring_df$score[i] <- apply_logit
     scoring_df$score[i] <- gen_group_scores(scoring_df$score[i],
                                             all_df$office_id,1,0,0)

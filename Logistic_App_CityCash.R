@@ -8,7 +8,8 @@ gen_app_citycash <- function(df,scoring_df,products,df_Log_CityCash_App,period,
                              t_income,disposable_income_adj,base_dir){
   
   # Load rdata
-  load(file.path(base_dir,"rdata","citycash_app.rdata"))
+  load(file.path(base_dir,"rdata","citycash_app_coeffs.rdata"))
+  names(coefficients) <- c("coeff")
 
   # Cut and bin
   df$age_cut <- 
@@ -83,7 +84,7 @@ gen_app_citycash <- function(df,scoring_df,products,df_Log_CityCash_App,period,
     df$ratio_installment_income<- as.factor(df$ratio_installment_income_cut)
     
     # Apply logistic model to each amount and installment
-    apply_logit <- predict(df_Log_CityCash_App, newdata=df, type="response")
+    apply_logit <- gen_apply_model(df,coefficients)
     scoring_df$score[i] <- apply_logit
     scoring_df$score[i] <- gen_group_scores(scoring_df$score[i],
                                             all_df$office_id,0,0,0)

@@ -885,7 +885,6 @@ gen_cession_credirect <- function(all_id){
   
 }
 
-
 # Define function to get apply cutoffs for prescores
 gen_group_scores_prescore <- function(var,flag_beh,flag_credirect){
   if(flag_beh==0){
@@ -918,5 +917,48 @@ gen_flag_parallel <- function(db_name,all_id,flag_cashpoint){
   }
   if(!exists("max_dpd")){max_dpd <- NA}
   return(list(has_para,max_dpd))
+}
+
+# Set new names for api scoring
+gen_col_names_api <- function(input){
+  
+  colnames(input)[colnames(input) == "hasViber"] <- "has_viber"
+  colnames(input)[colnames(input) == "statusWork"] <- "status_work"
+  colnames(input)[colnames(input) == "timeOnAddress"] <- "on_address"
+  colnames(input)[colnames(input) == "companyExperience"] <- 
+    "experience_employer"
+  colnames(input)[colnames(input) == "maritalStatus"] <- "marital_status"
+  colnames(input)[colnames(input) == "CKR.active.activeCreditCount"] <- 
+    "cred_count_total"
+  colnames(input)[colnames(input) == "CKR.history.overduePaymentPeriod"] <- 
+    "status_finished_total"
+  colnames(input)[colnames(input) == "CKR.active.overduePaymentPeriod"] <- 
+    "status_active_total"
+  input$outs_overdue_ratio_total <-
+    ifelse(!is.na(input$CKR.outstandingOverduePrincipal) & 
+           !is.na(input$CKR.outstandingPerformingPrincipal),
+           round(as.numeric(input$CKR.outstandingOverduePrincipal)/
+                 as.numeric(input$CKR.outstandingPerformingPrincipal),3))
+  input$source_entity_count <- NA
+  return(input)
+}
+
+# Apply general linear models
+gen_apply_model <- function(input,coefficients){
+  
+  input <- as.data.frame(t(input))
+  input$vars <- rownames(input)
+  names(input) <- c("values","vars")
+  input$vars_value <- paste(input$vars,input$values,sep="")
+  coefficients$vars <- rownames(coefficients)
+  result <- merge(input,coefficients,by.x = "vars_value",by.y = "vars")
+  if(nrow(result)>0){
+    pd <- 1/(1+exp(-sum(result$coeff,coefficients$coeff
+                        [coefficients$vars=="(Intercept)"])))
+  } else{
+    pd <- 1/(1+exp(-sum(coefficients$coeff
+                        [coefficients$vars=="(Intercept)"])))
+  }
+  return(pd)
 }
 
