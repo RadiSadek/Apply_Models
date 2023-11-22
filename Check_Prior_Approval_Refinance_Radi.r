@@ -42,7 +42,7 @@ main_dir <- "C:\\Projects\\Apply_Scoring\\"
 # Read argument of ID
 args <- commandArgs(trailingOnly = TRUE)
 #application_id <- args[1]
-application_id <- 1583861
+application_id <- 1582578
 
 
 # Load other r files
@@ -388,7 +388,9 @@ select$next_amount_diff <- select$max_amount - select$left_to_pay
 
 # Subset based on if next amount is higher than hitherto due amount
 select <- subset(select,select$next_amount_diff>=0)
-
+if(nrow(select)==0){
+  quit()
+}
 
 
 #########################################################

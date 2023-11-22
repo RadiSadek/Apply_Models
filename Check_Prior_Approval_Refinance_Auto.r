@@ -416,7 +416,9 @@ select$next_amount_diff <- select$max_amount - select$left_to_pay
 
 # Subset based on if next amount is higher than hitherto due amount
 select <- subset(select,select$next_amount_diff>=0)
-
+if(nrow(select)==0){
+  quit()
+}
 
 
 #########################################################
