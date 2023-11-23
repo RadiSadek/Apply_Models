@@ -259,6 +259,18 @@ for(i in 1:nrow(all_credit)){
       product_id <- 96
     } else if(all_credit$product_id[i] %in% c(55:58,78:81)){
       product_id <- 82
+    } else if(all_credit$product_id[i] %in% c(66)){
+      product_id <- 85
+    } else if(all_credit$product_id[i] %in% c(67)){
+      product_id <- 89
+    } else if(all_credit$product_id[i] %in% c(68)){
+      product_id <- 90
+    } else if(all_credit$product_id[i] %in% c(71)){
+      product_id <- 83
+    } else if(all_credit$product_id[i] %in% c(72)){
+      product_id <- 84
+    } else if(all_credit$product_id[i] %in% c(75)){
+      product_id <- 87
     } else {
       product_id <- NA
     }
