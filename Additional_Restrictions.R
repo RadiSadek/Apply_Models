@@ -472,7 +472,7 @@ gen_restrict_beh_refinance <- function(db_name,all_df,all_id,
     }
     
      # If Credirect : Reject if product is not CreDirect Потребителски - Рефинанс
-     if(all_df$product_id!=48 & flag_credirect==1){
+     if(!(all_df$product_id %in% c(48,95,77)) & flag_credirect==1){
        scoring_df$color <- ifelse(scoring_df$color>1 & scoring_df$score!=
                                     "NULL",1,scoring_df$color)
     }
