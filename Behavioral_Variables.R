@@ -517,3 +517,22 @@ gen_ratio_rej <- function(db_name,all_credits){
     nrow(all_credits),3))
   
 }
+
+# Function to get if previous credit is credirect or not 
+gen_prev_other_brand <- function(db_name,all_id,all_df,application_id){
+  
+  # Joint company ID to all_df
+  all_df$company_id <- gen_query(con,
+     gen_products_query_desc(db_name,all_df))$company_id
+  
+  all_id <- all_id[all_id$id!=application_id,]
+  all_id <- all_id[rev(order(all_id$signed_at)),]
+  if(nrow(all_id)>0){
+    all_df$prev_other_brand <- ifelse(all_id$company_id[1]!=all_df$company_id,
+      1,0)
+  } else {
+    all_df$prev_other_brand <- NA
+  }
+
+  return(all_df$prev_other_brand)
+}

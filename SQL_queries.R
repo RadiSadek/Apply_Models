@@ -519,7 +519,7 @@ gen_get_work_info_query <- function(db_name,string_list){
 # Get api scoring data
 gen_api_score_query <- function(db_name,application_id){
   return(paste("SELECT CAST(request_payload AS CHAR) AS request_payload, 
-  created_at FROM ",db_name,".api_scoring WHERE request_id IN
+  created_at FROM ",db_name,".api_scoring WHERE id IN
   (",application_id,")",sep=""))
 }
 

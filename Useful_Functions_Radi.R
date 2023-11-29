@@ -963,3 +963,19 @@ gen_apply_model <- function(input,coefficients){
   return(pd)
 }
 
+# Generate table for api scoring
+gen_table_api_scoring <- function(score){
+  
+  vect <- as.data.frame(seq(200,1000,100))
+  vect <- cbind(vect,NA)
+  names(vect) <- c("amount","flag")
+  vect$flag <- 
+    ifelse(score=="Bad",0,
+    ifelse(score=="Indeterminate",ifelse(vect$amount<500,1,0),
+    ifelse(score=="Good 1",ifelse(vect$amount<600,1,0),
+    ifelse(score=="Good 2",ifelse(vect$amount<800,1,0),
+    ifelse(score=="Good 3",ifelse(vect$amount<1000,1,0),
+    ifelse(score=="Good 4",ifelse(vect$amount<1000,1,0),0))))))
+  return(vect)
+}
+

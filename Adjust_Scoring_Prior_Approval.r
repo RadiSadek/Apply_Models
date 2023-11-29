@@ -224,7 +224,7 @@ gen_correction_po_ref <- function(con,db_name,all_df,all_id,
 
 # Function to check if early paid previous credit 
 gen_corection_early_repaid <- function(con,db_name,scoring_df,all_df,all_id,
-                                       flag_credit_next_salary){
+   flag_credit_next_salary,flag_cashpoint){
   
   # Identify last credit of same company_id
   all_df <- get_company_id_prev(db_name,all_df)
@@ -255,14 +255,31 @@ gen_corection_early_repaid <- function(con,db_name,scoring_df,all_df,all_id,
     gen_products_query_desc(db_name,all_id_here))$period
   
   # Apply conditions
-  if(!is.na(time_since) & time_since==1){
-    if((flag_credit_next_salary==1 & passed_installments==0) |
-       (flag_credit_next_salary!=1 & period==3 & 
-        passed_installments<2 & tot_installments<4) |
-       (flag_credit_next_salary!=1 & passed_installments<4 & 
-        tot_installments>=4)){
-      scoring_df$color <- ifelse(!(scoring_df$score %in% c("NULL")),1,
-                                 scoring_df$color)
+  if(flag_cashpoint==1){
+    if(!is.na(time_since) & time_since==1 & !is.na(all_id_here$signed_at) & 
+       all_id_here$signed_at>="2023-08-01 00:00:00"){
+      po <- gen_query(con,gen_po_terminated_query(db_name,all_df$client_id))
+      company_id <- gen_query(con,gen_get_company_id_query(db_name))
+      po <- merge(po,company_id,by.x = "product_id",by.y = "id",all.x = TRUE)
+      po <- subset(po,po$company_id==all_df$company_id)
+      po$final_time <-difftime(Sys.Date(),as.Date(po$created_at),
+          units=c("days"))
+      po <- subset(po,po$final_time<=2)
+      if(nrow(po)==0){
+        scoring_df$color <- ifelse(!(scoring_df$score %in% c("NULL")),1,
+                                   scoring_df$color)
+      }
+    }
+  } else {
+    if(!is.na(time_since) & time_since==1){
+      if((flag_credit_next_salary==1 & passed_installments==0) |
+         (flag_credit_next_salary!=1 & period==3 & 
+          passed_installments<2 & tot_installments<4) |
+         (flag_credit_next_salary!=1 & passed_installments<4 & 
+          tot_installments>=4)){
+        scoring_df$color <- ifelse(!(scoring_df$score %in% c("NULL")),1,
+                                   scoring_df$color)
+      }
     }
   }
 

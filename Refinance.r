@@ -298,9 +298,16 @@ all_df$flag_high_last_paid <- ifelse(
   gen_total_last_paid(max(all_id$id),db_name)/
   total_amount$final_credit_amount>0.5,0,1)
 
+
 # Compute amount differential 
 all_df$amount_diff <- ifelse(nrow_all_id<=1, NA, all_df$amount - 
                                prev_amount$amount)
+
+
+# Get if previous from other brand
+all_df$prev_other_brand <- gen_prev_other_brand(db_name,all_id,all_df,
+    application_id)
+
 
 # Compute income variables
 t_income <- gen_t_income(db_name,application_id,period)

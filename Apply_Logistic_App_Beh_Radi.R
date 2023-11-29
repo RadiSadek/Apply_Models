@@ -45,7 +45,7 @@ base_dir <- "C:/Projects/Apply_Scoring"
 # Read argument of ID
 args <- commandArgs(trailingOnly = TRUE)
 application_id <- args[1]
-application_id <- 1799858
+application_id <- 1852756
 product_id <- NA
 
 
@@ -316,6 +316,11 @@ all_df$amount_diff <- ifelse(nrow_all_id<=1, NA, all_df$amount -
                                prev_amount$amount)
 
 
+# Get if previous from other brand
+all_df$prev_other_brand <- gen_prev_other_brand(db_name,all_id,all_df,
+    application_id)
+
+
 # Compute income variables
 t_income <- gen_t_income(db_name,application_id,period)
 disposable_income_adj <- gen_disposable_income_adj(db_name,application_id,
@@ -484,9 +489,9 @@ scoring_decision <- gen_decline_reason(scoring_df,all_df,49,
 
 
 # Check if early paid previous credit : no offer for City Cash
-if(flag_beh_company==1 & flag_credirect==0 & flag_cashpoint==0){
+if(flag_beh_company==1 & flag_credirect==0){
    scoring_df <- gen_corection_early_repaid(con,db_name,scoring_df,
-    all_df,all_id,flag_credit_next_salary)
+    all_df,all_id,flag_credit_next_salary,flag_cashpoint)
 }
 scoring_decision <- gen_decline_reason(scoring_df,all_df,83,scoring_decision)
 

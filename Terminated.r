@@ -323,6 +323,11 @@ all_df$amount_diff <- ifelse(nrow_all_id<=1, NA, all_df$amount -
   prev_amount$amount)
 
 
+# Get if previous from other brand
+all_df$prev_other_brand <- gen_prev_other_brand(db_name,all_id,all_df,
+    application_id)
+
+
 # Compute income variables
 t_income <- gen_t_income(db_name,application_id,period)
 disposable_income_adj <- gen_disposable_income_adj(db_name,application_id,
