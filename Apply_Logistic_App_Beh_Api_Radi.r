@@ -164,17 +164,24 @@ setjson_table <- toJSON(gen_table_api_scoring(scoring_df$score))
 
 # Treat if error
 if(!exists("scoring_df")){
-  setjson_score <- "error"
-  setjson_table <- "error"
+  setjson_score <- toJSON("error")
+  setjson_table <- toJSON("error")
+  # Write in database
+  change_query <- paste("UPDATE ",db_name,
+    ".api_scoring SET status = 999, result_at = '",
+    substring(Sys.time(),1,19),"', result = '",
+    setjson_table,"', result_internal = '",setjson_score,"' WHERE id=",
+    application_id,sep="")
+  suppressMessages(suppressWarnings(dbSendQuery(con,change_query)))
+} else {
+  # Write in database
+  change_query <- paste("UPDATE ",db_name,
+    ".api_scoring SET status = 1, result_at = '",
+    substring(Sys.time(),1,19),"', result = '",
+    setjson_table,"', result_internal = '",setjson_score,"' WHERE id=",
+    application_id,sep="")
+  suppressMessages(suppressWarnings(dbSendQuery(con,change_query)))
 }
-
-# Write in database
-change_query <- paste("UPDATE ",db_name,
-".api_scoring SET result_at = '",substring(Sys.time(),1,19),"', result = '",
-setjson_table,"', result_internal = '",setjson_score,"' WHERE id=",
-application_id,sep="")
-suppressMessages(suppressWarnings(dbSendQuery(con,change_query)))
-
 
 
 #######

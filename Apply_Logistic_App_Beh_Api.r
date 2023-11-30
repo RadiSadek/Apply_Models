@@ -202,7 +202,7 @@ if(!exists("scoring_df")){
 } else {
   # Write in database
   change_query <- paste("UPDATE ",db_name,
-    ".api_scoring SET result_at = '",
+    ".api_scoring SET status = 1, result_at = '",
     substring(Sys.time(),1,19),"', result = '",
     setjson_table,"', result_internal = '",setjson_score,"' WHERE id=",
     application_id,sep="")
