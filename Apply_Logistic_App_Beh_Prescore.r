@@ -1,5 +1,4 @@
 
-
 ################################################################################
 #               Joint script for Application and Behavioral PREscoring         #
 #      Apply Logistic Regression on all products (CityCash and Credirect)      #
@@ -343,6 +342,11 @@ all_df$amount_diff <- ifelse(nrow_all_id<=1, NA, all_df$amount -
                                prev_amount$amount)
 
 
+# Get if previous from other brand
+all_df$prev_other_brand <- gen_prev_other_brand(db_name,all_id,all_df,
+    application_id)
+
+
 # Compute income variables
 t_income <- gen_t_income(db_name,application_id,period)
 disposable_income_adj <- gen_disposable_income_adj(db_name,application_id,
@@ -425,6 +429,10 @@ flag_judicial <- ifelse(
 flag_third_side <- gen_third_side_prev(db_name,all_id,application_id)
 
 
+# Compute flag if parallel 
+flag_parallel <- gen_flag_parallel(db_name,all_id,flag_cashpoint)
+
+
 
 ############################################################
 ### Apply model coefficients according to type of credit ###
@@ -487,9 +495,9 @@ scoring_df <- gen_correction_po_fct(con,db_name,all_df,all_id,
 
 
 # Check if early paid previous credit : no offer for City Cash
-if(flag_beh_company==1 & flag_credirect==0 & flag_cashpoint==0){
+if(flag_beh_company==1 & flag_credirect==0){
    scoring_df <- gen_corection_early_repaid(con,db_name,scoring_df,
-    all_df,all_id,flag_credit_next_salary)
+    all_df,all_id,flag_credit_next_salary,flag_cashpoint)
 }
 
 
