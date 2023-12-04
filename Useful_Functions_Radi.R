@@ -955,7 +955,7 @@ gen_apply_model <- function(input,coefficients){
   result <- merge(input,coefficients,by.x = "vars_value",by.y = "vars")
   if(nrow(result)>0){
     pd <- 1/(1+exp(-sum(result$coeff,coefficients$coeff
-            [coefficients$vars=="(Intercept)"])))
+                        [coefficients$vars=="(Intercept)"])))
   } else{
     pd <- 1/(1+exp(-sum(coefficients$coeff
                         [coefficients$vars=="(Intercept)"])))
@@ -967,15 +967,17 @@ gen_apply_model <- function(input,coefficients){
 gen_table_api_scoring <- function(score){
   
   vect <- as.data.frame(seq(200,1000,100))
-  vect <- cbind(vect,NA)
-  names(vect) <- c("amount","flag")
-  vect$flag <- 
-    ifelse(score=="Bad",0,
-    ifelse(score=="Indeterminate",ifelse(vect$amount<500,1,0),
-    ifelse(score=="Good 1",ifelse(vect$amount<600,1,0),
-    ifelse(score=="Good 2",ifelse(vect$amount<800,1,0),
-    ifelse(score=="Good 3",ifelse(vect$amount<1000,1,0),
-    ifelse(score=="Good 4",ifelse(vect$amount<1000,1,0),0))))))
+  vect <- cbind(c(1:9),vect,NA)
+  names(vect) <- c("id","amount","score")
+  for(i in 1:nrow(vect)){
+    vect$score[i] <- 
+      ifelse(score=="Bad",0,
+      ifelse(score=="Indeterminate",ifelse(vect$amount[i]<=500,1,0),
+      ifelse(score=="Good 1",ifelse(vect$amount[i]<=600,1,0),
+      ifelse(score=="Good 2",ifelse(vect$amount[i]<=800,1,0),
+      ifelse(score=="Good 3",ifelse(vect$amount[i]<=1000,1,0),
+      ifelse(score=="Good 4",ifelse(vect$amount[i]<=1000,1,0),0))))))
+  }
   return(vect)
 }
 

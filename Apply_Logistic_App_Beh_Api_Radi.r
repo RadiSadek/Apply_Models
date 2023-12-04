@@ -160,6 +160,10 @@ scoring_df$id <- application_id
 scoring_df$cutoff <- 0.35
 setjson_score <- toJSON(scoring_df[,c("score","pd","cutoff")])
 setjson_table <- toJSON(gen_table_api_scoring(scoring_df$score))
+#final_df <- as.data.frame(cbind(0.35,setjson_table))
+# names(final_df) <- c("cutOff","scoreTable")
+# setjson_table <- toJSON(final_df)
+# setjson_table <- gsub("\\\\","",setjson_table)
 }, error=function(e){}))
 
 # Treat if error
@@ -178,8 +182,9 @@ if(!exists("scoring_df")){
   change_query <- paste("UPDATE ",db_name,
     ".api_scoring SET status = 1, result_at = '",
     substring(Sys.time(),1,19),"', result = '",
-    setjson_table,"', result_internal = '",setjson_score,"' WHERE id=",
+    setjson_table,"', request_payload = '",setjson_table,"' WHERE id=",
     application_id,sep="")
+  change_query <- gsub("\\\\","",change_query,fixed=TRUE)
   suppressMessages(suppressWarnings(dbSendQuery(con,change_query)))
 }
 
