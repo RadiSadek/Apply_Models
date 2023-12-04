@@ -44,7 +44,7 @@ base_dir <- "C:/Projects/Apply_Scoring"
 # Read argument of ID
 args <- commandArgs(trailingOnly = TRUE)
 application_id <- args[1]
-#application_id <- 1779536
+application_id <- 1863389
 product_id <- NA
 
 
@@ -347,16 +347,9 @@ df <- gen_null_to_na(df)
 
 
 # Get if empty field threshold is passed
-empty_fields <- gen_empty_fields(flag_beh,flag_credirect,df)
-threshold_empty <- ifelse(flag_credirect==0 & flag_beh==0, 7,
-   ifelse(flag_credirect==1 & flag_beh==0, 4,
-   ifelse(flag_credirect==0 & flag_beh==1, 8, 5)))
-
-
-# Adjust count of empty fields accordingly
-empty_fields <- ifelse(flag_credirect==1, empty_fields, 
-   ifelse(is.na(df$total_income) | df$total_income==0, 
-   threshold_empty, empty_fields))
+empty_fields <- sum(is.na(df[,c("age","gender","status_finished_total",
+  "outs_overdue_ratio_total")]))
+threshold_empty <- 3
 
 
 # Readjust fields
