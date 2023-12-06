@@ -28,9 +28,11 @@ gen_correction_po_fct <- function(con,db_name,all_df,all_id,
   }
   
   # Subset only recent
-  po$final_time <- ifelse(!is.na(po$deleted_at) &
-   substring(po$deleted_at,12,20)!="04:00:00",
-   difftime(Sys.time(),po$deleted_at,units=c("days")),999)
+  po$final_time <- 
+    ifelse(is.na(po$deleted_at),0,
+    ifelse(!is.na(po$deleted_at) &
+    substring(po$deleted_at,12,20)!="04:00:00",
+    difftime(Sys.time(),po$deleted_at,units=c("days")),999))
   po_ref$final_time <- ifelse(is.na(po_ref$deleted_at),0,
       ifelse(substring(po_ref$deleted_at,12,20)!="04:00:00",
       difftime(Sys.time(),po_ref$deleted_at,units=c("days")),999))
@@ -102,9 +104,11 @@ gen_correction_po <- function(con,db_name,all_df,all_id,
          all_id_local$company_id==po$company_id & 
          all_id_local$difftime>=0 & 
          all_id_local$id!=application_id)
-      po$final_time <- ifelse(!is.na(po$deleted_at) &
-         substring(po$deleted_at,12,20)!="04:00:00",
-         difftime(Sys.time(),po$deleted_at,units=c("days")),999)
+      po$final_time <- 
+        ifelse(is.na(po$deleted_at),0,
+        ifelse(!is.na(po$deleted_at) &
+        substring(po$deleted_at,12,20)!="04:00:00",
+        difftime(Sys.time(),po$deleted_at,units=c("days")),999))
             
       # Correct scoring for terminated prior approval
       if(nrow(all_id_local)==0 & po$final_time<=4){
