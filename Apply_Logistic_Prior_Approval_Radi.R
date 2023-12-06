@@ -196,7 +196,7 @@ for(i in 1:nrow(select_credits)){
       product_id <- 8
     } else if(select_credits$product_id[i]==7 & select_credits$is_vip[i]==1){
       product_id <- 96
-    } else if(select_credits$product_id[i] %in% c(55:58,78:81)){
+    } else if(select_credits$product_id[i] %in% c(48,55:58,77,78:81,95)){
       product_id <- 82
     } else if(select_credits$product_id[i] %in% c(66)){
       product_id <- 85
@@ -222,12 +222,6 @@ for(i in 1:nrow(select_credits)){
     select_credits$max_delay[i] <- as.numeric(calc[[4]])
   }, error=function(e){}))
 }
-
-# Rechange for flexes
-select_credits$product_id <- 
-  ifelse(is.na(select_credits$product_id),select_credits$product_id,
-  ifelse(select_credits$product_id %in% c(55:58,78:81),82,
-         select_credits$product_id))
 
 
 
@@ -308,16 +302,14 @@ offers[is.na(offers)] <- "NULL"
 # Adjust product ID
 offers$product_id <- 
   ifelse(offers$product_id %in% c(43,44,49,50,55,57,58),78,
-  ifelse(offers$product_id %in% c(78,79,80,81),78,
-  ifelse(offers$product_id %in% c(9),82,
-  ifelse(offers$product_id %in% c(48),77,
+  ifelse(offers$product_id %in% c(9,48,55:58,77:81,95),82,
   ifelse(offers$product_id %in% c(66),85,
   ifelse(offers$product_id %in% c(67),89,
   ifelse(offers$product_id %in% c(68),90,
   ifelse(offers$product_id %in% c(71),83,
   ifelse(offers$product_id %in% c(72),84,
   ifelse(offers$product_id %in% c(75),87,
-         offers$product_id))))))))))
+         offers$product_id))))))))
 
 
 # Make result ready for SQL query
@@ -683,19 +675,22 @@ if(nrow(po_group)>0){
 ### Rearrange for new products ###
 ##################################
 
-# Correct for new products of CashPoint
 po_rearrange_query <- paste("UPDATE ",db_name,
 ".clients_prior_approval_applications SET product_id=
+IF(product_id=48,82,
+IF(product_id=77,82,
+IF(product_id=95,82,
 IF(product_id=66,85,
 IF(product_id=67,89,
 IF(product_id=68,90,
 IF(product_id=69,92,
 IF(product_id=70,91,
 IF(product_id=71,83,
-IF(product_id=72,84,87)))))))
-WHERE product_id IN (66,67,68,69,70,71,72,75)
+IF(product_id=72,84,87))))))))))
+WHERE product_id IN (48,77,95,66,67,68,69,70,71,72,75)
 AND deleted_at IS NULL", sep="")
 suppressMessages(suppressWarnings(dbSendQuery(con,po_rearrange_query)))
+
 
 
 ###########

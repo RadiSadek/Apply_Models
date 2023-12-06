@@ -257,7 +257,7 @@ for(i in 1:nrow(all_credit)){
       product_id <- 8
     } else if(all_credit$product_id[i]==7 & all_credit$is_vip[i]==1){
       product_id <- 96
-    } else if(all_credit$product_id[i] %in% c(55:58,78:81)){
+    } else if(all_credit$product_id[i] %in% c(48,55:58,77,78:81,95)){
       product_id <- 82
     } else if(all_credit$product_id[i] %in% c(66)){
       product_id <- 85
@@ -290,12 +290,6 @@ if(all_credit$company_id %in% c(5) & !is.na(all_credit$score_max_amount) &
    all_credit$score_max_amount %in% c("Indeterminate","Good 1")){
   quit()
 }
-
-# Rechange for flexes
-all_credit$product_id <- 
-  ifelse(is.na(all_credit$product_id),all_credit$product_id,
-         ifelse(all_credit$product_id %in% c(55:58,78:81),82,
-                all_credit$product_id))
 
 
 
@@ -385,16 +379,14 @@ offers[is.na(offers)] <- "NULL"
 # Adjust product ID
 offers$product_id <- 
   ifelse(offers$product_id %in% c(43,44,49,50,55,57,58),78,
-  ifelse(offers$product_id %in% c(78,79,80,81),78,
-  ifelse(offers$product_id %in% c(9),82,
-  ifelse(offers$product_id %in% c(48),77,
+  ifelse(offers$product_id %in% c(9,48,55:58,77:81,95),82,
   ifelse(offers$product_id %in% c(66),85,
   ifelse(offers$product_id %in% c(67),89,
   ifelse(offers$product_id %in% c(68),90,
   ifelse(offers$product_id %in% c(71),83,
   ifelse(offers$product_id %in% c(72),84,
   ifelse(offers$product_id %in% c(75),87,
-         offers$product_id))))))))))
+         offers$product_id))))))))
 
 
 # Make result ready for SQL query
