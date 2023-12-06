@@ -506,6 +506,7 @@ colnames(scoring_df)[which(names(scoring_df) == "score")] <- "prescore"
 scoring_df$id <- gen_query(con,paste("SELECT max(id) AS max_id FROM ",db_name,
   ".credits_applications_prescore",sep=""))$max_id + 1
 scoring_df$id <- ifelse(is.na(scoring_df$id),1,scoring_df$id)
+scoring_df$pd <- ifelse(is.na(scoring_df$pd),0.999,scoring_df$pd)
 
 
 # Update table credits applications prescore

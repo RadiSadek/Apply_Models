@@ -44,7 +44,7 @@ base_dir <- "C:/Projects/Apply_Scoring"
 # Read argument of ID
 args <- commandArgs(trailingOnly = TRUE)
 application_id <- args[1]
-application_id <- 1863389
+application_id <- 1866422
 product_id <- NA
 
 
@@ -481,8 +481,14 @@ scoring_df <- scoring_df[,c("application_id","amount","period","score","color",
                             "pd","created_at")]
 
 
-# Create column for table display
-scoring_df <- gen_final_table_display(scoring_df,flag_credirect)
+# Finalize display table
+scoring_df <- gen_final_table_display(scoring_df,flag_credirect)[,
+  c("application_id","score","pd","created_at")]
+colnames(scoring_df)[which(names(scoring_df) == "score")] <- "prescore"
+scoring_df$id <- gen_query(con,paste("SELECT max(id) AS max_id FROM ",db_name,
+   ".credits_applications_prescore",sep=""))$max_id + 1
+scoring_df$id <- ifelse(is.na(scoring_df$id),1,scoring_df$id)
+scoring_df$pd <- ifelse(is.na(scoring_df$pd),0.999,scoring_df$pd)
 
 
 
