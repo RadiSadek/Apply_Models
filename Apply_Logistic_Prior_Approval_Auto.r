@@ -717,6 +717,18 @@ AND deleted_at IS NULL", sep="")
 suppressMessages(suppressWarnings(dbSendQuery(con,po_rearrange_query)))
 
 
+####################################
+### Recorrect if not valid offer ###
+####################################
+
+po_rearrange_query <- paste("UPDATE ",db_name,
+".clients_prior_approval_applications
+SET deleted_at = '",paste(substring(Sys.time(),1,10),sep=""),
+" 04:00:00' WHERE credit_amount <0 AND deleted_at IS NULL",sep="")
+suppressMessages(suppressWarnings(dbSendQuery(con,po_rearrange_query)))
+
+
+
 
 ###########
 ### End ###
