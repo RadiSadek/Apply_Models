@@ -90,6 +90,12 @@ all_credits <- rbind(
     substring(all_credits$deactivated_at,1,10)==(as.Date(Sys.time())-4)))
 
 
+# Remove certain offices
+all_credits <- subset(all_credits,is.na(all_credits$office_id) |
+   !(all_credits$office_id %in% c(6,19,20,37,38,39,40,60,62,65,101,126,141,146,
+   147,148,158,173,174,176,177,217)))
+
+
 # Get last credit amount
 id_list <- paste(all_credits$id,collapse=",")
 if(nrow(all_credits)>0){

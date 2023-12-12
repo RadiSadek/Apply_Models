@@ -70,6 +70,12 @@ WHERE id= ",application_id,sep="")
 all_credit <- gen_query(con,get_actives_sql)
 
 
+# Remove certain offices
+all_credit <- subset(all_credit,is.na(all_credit$office_id) |
+   !(all_credit$office_id %in% c(6,19,20,37,38,39,40,60,62,65,101,126,141,146,
+   147,148,158,173,174,176,177,217)))
+
+
 # Get company ID
 company_id <- gen_query(con, 
     gen_get_company_id_query(db_name))
