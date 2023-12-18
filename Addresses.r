@@ -39,6 +39,14 @@ gen_coordinates <- function(db_name,application_id,all_df) {
   address <- address[order(address$hierarchy),]
   address <- address[1,]
   
+  if(is.na(address$city_id)){
+    address$city_pop <- NA 
+  } else {
+    address$city_pop <- gen_query(con,gen_city_pop_query(
+      db_name,address$city_id))$population
+    
+  }
+  
   # Create final dataframe
   return(address)
 
@@ -90,4 +98,10 @@ gen_flag_risky_address <- function(db_name,application_id,risky_address,
   
 }
 
-
+# Get population of current 
+gen_city_pop <- function(db_name,application_id,risky_address,
+   risky_address_credirect,all_df,flag_credirect){
+ 
+  
+   
+}

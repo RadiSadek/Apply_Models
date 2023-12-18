@@ -15,7 +15,10 @@ big_sql_query <- paste("SELECT
 ",db_name,".credits_applications_clients.on_address,
 ",db_name,".credits_applications_clients.marital_status,
 ",db_name,".credits_applications_clients.has_viber,
+",db_name,".credits_applications_clients.phone_plan,
 ",db_name,".credits_applications_data_other.purpose,
+",db_name,".credits_applications_data_other.leasing,
+",db_name,".credits_applications_data_other.other_bank_accounts,
 ",db_name,".credits_plan_contract.amount,
 ",db_name,".credits_plan_contract.installments,
 ",db_name,".credits_applications.signed_at,
@@ -186,7 +189,7 @@ gen_address_query <- function(var,arg){
 
 # Define query to get coordinates of address (per application)
 gen_address_coordinates_query <- function(db_name,application_id){
-  return(paste("SELECT lat, lon, type, location_precision
+  return(paste("SELECT lat, lon, type, location_precision, city_id
   FROM ",db_name,".addresses 
   WHERE addressable_type=
   'App\\\\Models\\\\Credits\\\\Applications\\\\Application'
@@ -195,7 +198,7 @@ gen_address_coordinates_query <- function(db_name,application_id){
 
 # Define query to get coordinates of address (per client)
 gen_address_client_coordinates_query <- function(db_name,all_df){
-  return(paste("SELECT lat, lon, type, location_precision
+  return(paste("SELECT lat, lon, type, location_precision, city_id
   FROM ",db_name,".addresses 
   WHERE addressable_type=
   'App\\\\Models\\\\Clients\\\\Client'
@@ -529,5 +532,8 @@ gen_client_id_query <- function(db_name,all_df){
   (",all_df$egn,")",sep=""))
 }
 
-
-
+# Get city pop of current address 
+gen_city_pop_query <- function(db_name,id){
+  return(paste("SELECT id, population FROM ",db_name,".cities WHERE id = 
+  (",id,")",sep=""))
+}

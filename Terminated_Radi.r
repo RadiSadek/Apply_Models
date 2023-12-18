@@ -146,7 +146,7 @@ if (nrow_all_id_max_delay>=1){
 } 
 
 
-# Get average expenses according to client's address 
+# Get average expenses according to client's address and city population 
 addresses <- gen_query(con, 
   gen_address_query(all_df$client_id,"App\\\\Models\\\\Clients\\\\Client"))
 if(nrow(addresses)==0){
@@ -154,6 +154,7 @@ if(nrow(addresses)==0){
   gen_address_query(all_df$client_id,
   "App\\\\Models\\\\Credits\\\\Applications\\\\Application"))
 }
+all_df$city_pop <- gen_coordinates(db_name,application_id,all_df)$city_pop
 
 
 # Get if office is self approval
