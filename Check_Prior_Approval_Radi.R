@@ -74,6 +74,9 @@ all_credit <- gen_query(con,get_actives_sql)
 all_credit <- subset(all_credit,is.na(all_credit$office_id) |
    !(all_credit$office_id %in% c(6,19,20,37,38,39,40,60,62,65,101,126,141,146,
    147,148,158,173,174,176,177,217)))
+if(nrow(all_credit)==0){
+  quit()
+}
 
 
 # Get company ID

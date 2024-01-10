@@ -211,7 +211,7 @@ gen_restrict_credirect_app <- function(scoring_df,all_df,
   # Apply filter for new Credirects but old City Cash
   if(flag_new_credirect_old_city==1){
     scoring_df$color <- ifelse(scoring_df$score %in% 
-     c("Indeterminate","Good 1"), 1, scoring_df$color)
+     c("Indeterminate","Good 1","Good 2"), 1, scoring_df$color)
   }
   
   # Apply filter if fraud flag is positive
