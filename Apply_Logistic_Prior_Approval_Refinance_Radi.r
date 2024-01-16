@@ -255,6 +255,14 @@ select$is_vip <- ifelse(is.na(select$is_vip),0,select$is_vip)
 select <- select[,c(names_b4,"is_vip")]
 
 
+# Check if client has active finstart - no city cash
+all_credits$get_brand_company <- paste0(all_credits$big_company_id,
+    all_credits$company_id)
+select <- select[!(select$client_id %in% 
+    subset(all_credits,all_credits$get_brand_company %in% c(44,45,54) & 
+    all_credits$status==4)$client_id),]
+
+
 # Remove Flex credits and other Ipoteki
 select <- subset(select,!(select$product_id %in%
   c(25,36,41,43,50,28,26,37,42,44,49,27,55,58,57,56,22,3,53,54,51,65,12,13,
