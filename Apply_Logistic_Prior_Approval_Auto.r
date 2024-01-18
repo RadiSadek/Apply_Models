@@ -682,6 +682,7 @@ po_group <- po_group[!(po_group$id %in% po_group_check$id),]
 if(nrow(po_group)>0){
   po_change_query <- paste("UPDATE ",db_name,
     ".clients_prior_approval_applications SET deleted_at = NULL,
+    active_to = NULL, active_from = NULL,
     `group` = NULL, updated_at = '",
     substring(Sys.time(),1,19),"' WHERE id IN",
     gen_string_po_terminated(po_group), sep="")
