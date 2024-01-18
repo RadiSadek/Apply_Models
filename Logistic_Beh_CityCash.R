@@ -122,7 +122,7 @@ gen_beh_citycash <- function(df,scoring_df,products,df_Log_beh_CityCash,period,
     amount_diff_loc <- amount_tab - prev_amount$amount
     df$amount_diff <- ifelse(is.na(amount_diff_loc),"0_150",
            ifelse(amount_diff_loc<0,"less_0",
-           ifelse(amount_diff_loc>=150,"0_150","200_more")))
+           ifelse(amount_diff_loc>150,"200_more","0_150")))
     
     # Apply logistic model to each amount and installment
     apply_logit <- gen_apply_model(df,coefficients)
