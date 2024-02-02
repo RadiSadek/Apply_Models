@@ -45,7 +45,7 @@ base_dir <- "C:/Projects/Apply_Scoring"
 # Read argument of ID
 args <- commandArgs(trailingOnly = TRUE)
 application_id <- args[1]
-#application_id <- 1491660
+#application_id <- 1890691
 product_id <- NA
 
 
@@ -116,6 +116,11 @@ all_df <- gen_work_data(db_name,all_credits,all_df)
 
 # Check if client has a risk profile
 risk <- gen_query(con,gen_risky_query(db_name,all_df))
+
+
+# Check if client was optisan 
+flag_otpisan <- ifelse(nrow(subset(all_credits,
+  all_credits$sub_status==133))>0,1,0)
 
 
 # Check number of varnat 
@@ -426,7 +431,7 @@ scoring_df <- gen_apply_score(
   df_Log_CityCash_App,df_Log_beh_Credirect,df_Log_Credirect_App_installments,
   df_Log_Credirect_App_payday,period,all_id,prev_amount,amount_tab,
   t_income,disposable_income_adj,flag_new_credirect_old_city,api_df,
-  flag_judicial,0,flag_third_side,flag_cashpoint,base_dir,0)
+  flag_judicial,0,flag_third_side,flag_cashpoint,base_dir,0,flag_otpisan)
 
 
 # Set initial scoring reason
@@ -566,6 +571,7 @@ final$flag_risky_address <- flag_risky_address$flag_risky_address
 final$flag_judicial <- flag_judicial
 final$flag_third_side <- flag_third_side
 final$flag_cession_credirect <- gen_cession_credirect(all_id)
+final$flag_otpisan <- flag_otpisan
 final$lat <- flag_risky_address$lat
 final$lon <- flag_risky_address$lon
 final$type <- flag_risky_address$hierarchy

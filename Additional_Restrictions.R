@@ -33,6 +33,12 @@ gen_restrict_citycash_app <- function(scoring_df,products,all_df,all_id){
       "installment_amount")],
     by.x = c("amount","period"),by.y = c("amount","period"),all.x = TRUE)
   }
+  
+  # Restrict otkazani ot RO
+  if(!is.na(all_df$office_id) & all_df$office_id==215){
+     scoring_df$color <- ifelse(scoring_df$score %in% 
+      c("Bad","Indeterminate","Good 1","Good 2","Good 3"),1, scoring_df$color)
+  }
 
   return(scoring_df)
 }
@@ -159,6 +165,12 @@ gen_restrict_citycash_beh <- function(scoring_df,prev_amount,products,all_id,
   if(gen_cession_credirect(all_id)==1){
     scoring_df$color <- ifelse(scoring_df$score %in% c("Bad","Indeterminate",
     "Good 1","Good 2"),1, scoring_df$color)
+  }
+  
+  # Restrict otkazani ot RO
+  if(!is.na(all_df$office_id) & all_df$office_id==215){
+    scoring_df$color <- ifelse(scoring_df$score %in% 
+     c("Bad","Indeterminate","Good 1","Good 2"),1, scoring_df$color)
   }
   
   if(flag_cashpoint==1){

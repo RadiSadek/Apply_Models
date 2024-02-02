@@ -74,6 +74,11 @@ all_df <- gen_work_data(db_name,all_credits,all_df)
 risk <- gen_query(con,gen_risky_query(db_name,all_df))
 
 
+# Check if client was optisan 
+flag_otpisan <- ifelse(nrow(subset(all_credits,
+  all_credits$sub_status==133))>0,1,0)
+
+
 # Check number of varnat 
 flag_varnat <- gen_nb_varnat(all_credits)
 
@@ -371,7 +376,7 @@ scoring_df <- gen_apply_score(
   df_Log_CityCash_App,df_Log_beh_Credirect,df_Log_Credirect_App_installments,
   df_Log_Credirect_App_payday,period,all_id,prev_amount,amount_tab,
   t_income,disposable_income_adj,flag_new_credirect_old_city,api_df,
-  flag_judicial,1,flag_third_side,flag_cashpoint,base_dir,0)
+  flag_judicial,1,flag_third_side,flag_cashpoint,base_dir,0,flag_otpisan)
 
 
 ######################################

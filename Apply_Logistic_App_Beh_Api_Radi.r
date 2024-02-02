@@ -143,7 +143,7 @@ if(gen_score==0){
     empty_fields,threshold_empty,0,0,0,1,1,0,all_df,scoring_df,df,products,
     df_Log_beh_CityCash,df_Log_CityCash_App,df_Log_beh_Credirect,
     df_Log_Credirect_App_installments,df_Log_Credirect_App_payday,NA,all_id,NA,
-    NA,NA,NA,0,api_df,0,0,0,0,base_dir,0)
+    NA,NA,NA,0,api_df,0,0,0,0,base_dir,0,0)
 }
 
 
