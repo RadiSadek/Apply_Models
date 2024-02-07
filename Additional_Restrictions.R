@@ -62,7 +62,7 @@ gen_restrict_cashpoint_app <- function(scoring_df,all_df,flag_beh,
   
   # Treat if has parallel and depending on DPD
   scoring_df$color <- ifelse(scoring_df$score %in% c("Bad","Indeterminate",
-    "Good 1","Good 2","Goood 3","Good 4") & flag_parallel[[1]]==1 & 
+    "Good 1","Good 2","Good 3","Good 4") & flag_parallel[[1]]==1 & 
     !is.na(flag_parallel[[2]]) & flag_parallel[[2]]>=180,1, 
     ifelse(scoring_df$score %in% c("Bad","Indeterminate",
     "Good 1","Good 2") & flag_parallel[[1]]==1 & !is.na(flag_parallel[[2]]) & 
@@ -154,7 +154,7 @@ gen_restrict_citycash_beh <- function(scoring_df,prev_amount,products,all_id,
   # Treat if has parallel and depending on DPD
   if(flag_cashpoint==1){
     scoring_df$color <- ifelse(scoring_df$score %in% c("Bad","Indeterminate",
-       "Good 1","Good 2","Goood 3","Good 4") & flag_parallel[[1]]==1 & 
+       "Good 1","Good 2","Good 3","Good 4") & flag_parallel[[1]]==1 & 
        !is.na(flag_parallel[[2]]) & flag_parallel[[2]]>=180,1, 
        ifelse(scoring_df$score %in% c("Bad","Indeterminate","Good 1","Good 2") 
        & flag_parallel[[1]]==1 & !is.na(flag_parallel[[2]]) & 
