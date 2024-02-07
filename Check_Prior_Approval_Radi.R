@@ -391,6 +391,16 @@ write.xlsx(final, paste(main_dir,"Scored_Credits_Terminated.xlsx", sep=""))
 
 # Write in database
 if(nrow(offers)>0){
-  #suppressMessages(suppressWarnings(dbSendQuery(con,update_prior_query)))
+  suppressWarnings(tryCatch({
+    #suppressMessages(suppressWarnings(dbSendQuery(con,update_prior_query)))
+  }, error=function(e){
+    offers$id <- offers$id + 1
+    string_sql <- gen_sql_string_po_terminated(offers,1)
+    update_prior_query <- paste("INSERT INTO ",db_name,
+     ".clients_prior_approval_applications VALUES ",
+     string_sql,";", sep="")
+    #suppressMessages(suppressWarnings(dbSendQuery(con,update_prior_query)))
+  }))
+
 }}}
 

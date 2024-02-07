@@ -524,7 +524,18 @@ append_query <- paste("INSERT INTO ",db_name,
  paste("(",paste(scoring_df$id,",",scoring_df$application_id,",",
  "'",scoring_df$prescore,"',",scoring_df$pd,",'",scoring_df$created_at,"'",
  sep=""),")",sep=""),sep="")
-suppressMessages(suppressWarnings(dbSendQuery(con,append_query)))
+suppressWarnings(tryCatch({
+  suppressMessages(suppressWarnings(dbSendQuery(con,append_query)))
+}, error=function(e){
+  scoring_df$id <- scoring_df$id + 1
+  append_query <- paste("INSERT INTO ",db_name,
+   ".credits_applications_prescore VALUES ",
+   paste("(",paste(scoring_df$id,",",scoring_df$application_id,",",
+   "'",scoring_df$prescore,"',",scoring_df$pd,",'",scoring_df$created_at,"'",
+   sep=""),")",sep=""),sep="")
+  suppressMessages(suppressWarnings(dbSendQuery(con,append_query)))
+}))
+
 
 
 
