@@ -254,6 +254,9 @@ gen_restrict_credirect_beh <- function(scoring_df,all_df,all_id,application_id,
   prev_vars <- gen_prev_deactiv_date(db_name,all_df,all_id,application_id)
   passed_install_at_pay <- prev_vars[1]
   prev_next_salary <- prev_vars[2]
+  passed_install_at_pay <- ifelse(is.na(passed_install_at_pay),0,
+    passed_install_at_pay)
+  prev_next_salary <- ifelse(is.na(prev_next_salary),0,prev_next_salary)
   
   # Define maximum step with previous
   if(passed_install_at_pay==0){
