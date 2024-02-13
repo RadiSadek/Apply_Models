@@ -331,7 +331,7 @@ select <- select[!duplicated(select$id),]
 
 
 # Subset based on current DPD
-if(nrow(select[!is.na(select$days_delay) & select$days_delay>300,])>0){
+if(nrow(select[!is.na(select$days_delay) & select$days_delay>90,])>0){
   quit()
 }
 

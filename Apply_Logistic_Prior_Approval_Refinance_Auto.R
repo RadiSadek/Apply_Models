@@ -346,7 +346,7 @@ select <- select[!duplicated(select$id),]
 
 
 # Subset based on current DPD
-select <- subset(select,select$days_delay<=300)
+select <- subset(select,select$days_delay<=90)
 
 
 # Subset based on not real offices

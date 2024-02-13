@@ -28,6 +28,10 @@ gen_app_credirect_payday <- function(df,scoring_df,products,
     ifelse(df$education %in% c(2,3),"2_3",df$education))
   df$education <- as.factor(df$education_cut)
   
+  df$household_total_cut <- ifelse(is.na(df$household_total), "0_2",
+    ifelse(df$household_total>=3,"more_3","0_2"))
+  df$household_total <- as.factor(df$household_total_cut)
+  
   df$marital_status_cut <- ifelse(is.na(df$marital_status), "other",
     ifelse(df$marital_status %in% c(1,3,4), "1_3_4","other"))
   df$marital_status <- as.factor(df$marital_status_cut)
@@ -36,6 +40,11 @@ gen_app_credirect_payday <- function(df,scoring_df,products,
     ifelse(df$purpose %in% c(4,5),"2_5",
     ifelse(df$purpose %in% c(6),"6","other")))
   df$purpose <- as.factor(df$purpose_cut)
+  
+  df$experience_employer_cut <- 
+    ifelse(is.na(df$experience_employer),"0_120",
+    ifelse(df$experience_employer<=120,"0_120","120+"))
+  df$experience_employer <- as.factor(df$experience_employer_cut)
   
   df$status_work_cut <- ifelse(is.na(df$status_work), "other",
     ifelse(df$status_work %in% c(4,5,9,10,12), "4_5_9_10_12","other"))
