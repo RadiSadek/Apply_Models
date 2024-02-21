@@ -302,7 +302,7 @@ for(i in 1:nrow(result_df)){
     } else {
       product_id <- NA
     }
-    calc <- gen_refinance_fct(con,application_id,product_id)
+    calc <- gen_refinance_fct(con,application_id,product_id,db_name)
     result_df$max_amount[i] <- calc[[1]]
     result_df$score_max_amount[i] <- calc[[2]]
     result_df$max_delay[i] <- as.numeric(calc[[3]])

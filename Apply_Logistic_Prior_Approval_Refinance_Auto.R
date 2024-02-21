@@ -317,7 +317,7 @@ for(i in 1:nrow(result_df)){
     } else {
       product_id <- NA
     }
-    calc <- gen_refinance_fct(con,application_id,product_id)
+    calc <- gen_refinance_fct(con,application_id,product_id,db_name)
     result_df$max_amount[i] <- calc[[1]]
     result_df$score_max_amount[i] <- calc[[2]]
     result_df$max_delay[i] <- as.numeric(calc[[3]])
@@ -497,9 +497,11 @@ po_old <- subset(po_old,po_old$time_past>0 & po_old$time_past<=360 &
 # Remove credits which have izpadejirali
 po_old$id <- po_old$application_id
 for (i in 1:nrow(po_old)){
-  po_old$last_padej[i] <- max(gen_query(con, 
-      gen_plan_main_actives_past_query(db_name,po_old[i,]))$pay_day)
+  po_old$last_padej[i] <- max(
+    gen_query(con,gen_plan_main_actives_past_query(db_name,
+     po_old$application_id[i]))$pay_day)
 }
+po_old$last_padej <- as.Date(po_old$last_padej)
 po_to_remove <- subset(po_old,
       po_old$last_padej<=as.Date(substring(Sys.time(),1,10)))
 po_old <- po_old[!(po_old$application_id %in% po_to_remove$application_id),]
@@ -515,7 +517,7 @@ po_old$third_side <- NA
 for(i in 1:nrow(po_old)){
   suppressWarnings(tryCatch({
     application_id <- po_old$application_id[i]
-    calc <- gen_refinance_fct(con,application_id,product_id)
+    calc <- gen_refinance_fct(con,application_id,product_id,db_name)
     po_old$max_amount[i] <- calc[[1]]
     po_old$score_max_amount[i] <- calc[[2]]
     po_old$max_delay[i] <- as.numeric(calc[[3]])

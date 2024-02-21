@@ -238,8 +238,10 @@ gen_ptc_credirect_repeat_installments <- function(all_df,all_id,application_id,
     all_df$NONBANK_CREDITORS <- "0-2"
   }
   
-  status_active_bank_prev <- gen_query_ckr(all_df,all_credits,1,1)$status_active
-  status_active_fin_prev <- gen_query_ckr(all_df,all_credits,2,1)$status_active
+  status_active_bank_prev <- gen_query_ckr(all_df,
+    all_credits,1,1,db_name)$status_active
+  status_active_fin_prev <- gen_query_ckr(all_df,
+    all_credits,2,1,db_name)$status_active
   all_df$status_active_total_prev <-
     ifelse(status_active_fin_prev>status_active_bank_prev, 
            status_active_fin_prev,status_active_bank_prev)

@@ -1,6 +1,6 @@
 
 gen_terminated_fct <- function(con,client_id,product_id,last_id,
-                               flag_limit_offer){
+                               flag_limit_offer,db_name){
 
   
 #########################################
@@ -127,8 +127,8 @@ total_amount_curr <- gen_query(con,
 
 
 # Read CKR 
-data_ckr_bank <- gen_query_ckr(all_df,all_credits,1,0)
-data_ckr_financial <- gen_query_ckr(all_df,all_credits,2,0)
+data_ckr_bank <- gen_query_ckr(all_df,all_credits,1,0,db_name)
+data_ckr_financial <- gen_query_ckr(all_df,all_credits,2,0,db_name)
 
 
 # Read all previous active or terminated credits of client

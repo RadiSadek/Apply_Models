@@ -1,5 +1,5 @@
 
-gen_refinance_fct <- function(con,application_id,product_id){
+gen_refinance_fct <- function(con,application_id,product_id,db_name){
 
 
 #########################################
@@ -115,8 +115,8 @@ total_amount_curr <- gen_query(con,
 
 
 # Read CKR 
-data_ckr_bank <- gen_query_ckr(all_df,all_credits,1,0)
-data_ckr_financial <- gen_query_ckr(all_df,all_credits,2,0)
+data_ckr_bank <- gen_query_ckr(all_df,all_credits,1,0,db_name)
+data_ckr_financial <- gen_query_ckr(all_df,all_credits,2,0,db_name)
 
 
 # Read all previous active or terminated credits of client

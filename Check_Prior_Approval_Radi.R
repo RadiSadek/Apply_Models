@@ -260,7 +260,7 @@ for(i in 1:nrow(all_credit)){
     client_id <- all_credit$client_id[i]
     last_id <- all_credit$id[i]
     calc <- gen_terminated_fct(con,client_id,product_id,last_id,
-                               flag_limit_offer)
+                               flag_limit_offer.db_name)
     all_credit$max_amount[i] <- calc[[1]]
     all_credit$max_installment_amount[i] <- calc[[2]]
     all_credit$score_max_amount[i] <- calc[[3]]
