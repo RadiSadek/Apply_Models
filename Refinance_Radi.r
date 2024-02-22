@@ -410,6 +410,10 @@ max_prev_amount <- max(all_id$amount[
   all_id$company_id==all_id$company_id[all_id$id==application_id]])
 
 
+# Get amount of last credit
+prev_amount <- all_id$amount[all_id$id==application_id]
+
+
 # Subset scoring dataframe according to criteria
 if(self_approval==1 & days_delay<90){
   correct_scoring_df <- subset(scoring_df,
@@ -426,6 +430,9 @@ if(self_approval==1 & days_delay<90){
 
 # Get highest amount
 get_max_amount <- suppressWarnings(max(correct_scoring_df$amount))
+get_max_amount <- ifelse(flag_credirect==0 & days_delay$max_delay>30 & 
+    get_max_amount>-Inf & prev_amount<get_max_amount,
+    prev_amount,get_max_amount)
 
 
 # Get score of highest amount
@@ -472,8 +479,7 @@ third_side <- ifelse(is.na(all_df$third_side_date),0,1)
 
 # Make final list and return 
 final_list <- list(get_max_amount,get_score,all_df$max_delay,all_df$product_id,
-                   get_max_installment,days_delay,all_df$office_id,third_side,
-                   self_approval,max_prev_amount)
+                   get_max_installment,days_delay,all_df$office_id,third_side)
 return(final_list)
 
 }

@@ -166,7 +166,7 @@ if (nrow_all_id_max_delay>=1){
 } 
 
 
-# Get average expenses according to client's address and city population 
+# Get average expenses according to client's address and city population
 addresses <- gen_query(con, 
   gen_address_query(all_df$client_id,"App\\\\Models\\\\Clients\\\\Client"))
 if(nrow(addresses)==0){
@@ -436,6 +436,10 @@ max_prev_amount <- max(all_id$amount[
   all_id$company_id==all_id$company_id[all_id$id==application_id]])
 
 
+# Get amount of last credit
+prev_amount <- all_id$amount[all_id$id==application_id]
+
+
 # Subset scoring dataframe according to criteria
 if(self_approval==1 & days_delay<90){
   correct_scoring_df <- subset(scoring_df,
@@ -452,6 +456,9 @@ if(self_approval==1 & days_delay<90){
 
 # Get highest amount
 get_max_amount <- suppressWarnings(max(correct_scoring_df$amount))
+get_max_amount <- ifelse(flag_credirect==0 & days_delay$max_delay>30 & 
+    get_max_amount>-Inf & prev_amount<get_max_amount,
+    prev_amount,get_max_amount)
 
 
 # Get score of highest amount
