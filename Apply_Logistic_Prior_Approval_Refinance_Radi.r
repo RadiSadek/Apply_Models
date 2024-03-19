@@ -651,23 +651,36 @@ if(nrow(po_reload)>0){
 ### Check for special cases and deleted immediately ###
 #######################################################
 
-# Read special cases (deceased and gdrk marketing clients) 
+# Read special cases (deceased) 
 get_special_sql <- paste("
 SELECT id
 FROM ",db_name,".clients
-WHERE gdpr_marketing_messages=1 OR dead_at IS NOT NULL",sep="")
+WHERE dead_at IS NOT NULL",sep="")
 special <- gen_query(con,get_special_sql)
+
+# Read special cases marketing
+get_marketing_sql <- paste("
+SELECT client_id, brand_id, gdpr_marketing_messages 
+FROM ",db_name,".client_brand WHERE gdpr_marketing_messages=1",sep="")
+marketing <- gen_query(con,get_marketing_sql)
 
 # Remove special cases if has offer
 po_special_sql_query <- paste(
-  "SELECT application_id, created_at, product_id, max_amount
-  FROM ",db_name,".prior_approval_refinances
-  WHERE deleted_at IS NULL",sep="")
+"SELECT a.application_id, a.created_at, a.product_id, a.max_amount, b.brand_id
+FROM ",db_name,".prior_approval_refinances a
+LEFT JOIN citycash.products b
+ON a.product_id = b.id
+WHERE a.deleted_at IS NULL",sep="")
 po_special <- gen_query(con,po_special_sql_query)
 po_special <- merge(po_special,all_credits[,c("id","client_id",
   "third_side_date")],by.x = "application_id",by.y = "id",all.x = TRUE)
+po_special <- merge(po_special,marketing,by.x = c("client_id","brand_id"),
+   by.y = c("client_id","brand_id"),all.x = TRUE)
+marketing <- as.data.frame(subset(po_special,
+  po_special$gdpr_marketing_messages==1)[,c("client_id")])
+names(marketing) <- c("id")
 po_special_raw <- po_special
-po_special <- po_special[po_special$client_id %in% special$id,]
+po_special <- po_special[po_special$client_id %in% rbind(special,marketing)$id,]
 po_special_3rd_side <- subset(po_special_raw,
    !is.na(po_special_raw$third_side_date))
 po_special_3rd_side <- po_special_3rd_side[,c("application_id","created_at",
@@ -746,7 +759,7 @@ if(nrow(po_special)>0){
 
 po_correct_ref_credirect <- paste("UPDATE ",db_name,
 ".prior_approval_refinances SET product_id=95, updated_at = '",
- substring(Sys.time(),1,19),"' WHERE product_id IN (9,48) 
+substring(Sys.time(),1,19),"' WHERE product_id IN (9,48) 
 AND deleted_at IS NULL", sep="")
 suppressMessages(suppressWarnings(dbSendQuery(con,po_correct_ref_credirect)))
 

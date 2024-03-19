@@ -130,7 +130,6 @@ if(nrow(provisions)>10000){
                             sep=",")
       }
     }
-    print(substring(string_sql,1,100))
     suppressMessages(suppressWarnings(dbSendQuery(con,paste("INSERT INTO ",
         db_name,".credits_provisions VALUES ",string_sql,";", 
         sep=""))))

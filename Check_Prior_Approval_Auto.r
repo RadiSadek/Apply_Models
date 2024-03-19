@@ -123,7 +123,10 @@ all_credit$credit_amount <- credit_amount$credit_amount
 
 # Get flagged GDPR marketing campaigns
 flag_gdpr <- gen_query(con,
-  gen_flag_gdpr(db_name,all_credit$client_id))$gdpr_marketing_messages
+  gen_flag_gdpr(db_name,
+    all_credit$client_id,all_credit$company_id))$gdpr_marketing_messages
+flag_gdpr <- ifelse(identical(flag_gdpr,integer(0)),0,
+  ifelse(is.na(flag_gdpr),0,flag_gdpr))
 
 
 # Get max DPD on current credit
@@ -143,7 +146,7 @@ if(!(all_credit$sub_status %in% c(123,128))){
 
 
 # Subset based on flagged GDPR
-if(flag_gdpr==1 & !is.na(flag_gdpr)){
+if(!is.na(flag_gdpr) & flag_gdpr==1){
   quit()
 }
 

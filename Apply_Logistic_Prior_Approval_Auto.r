@@ -593,12 +593,18 @@ if(nrow(po_updated_c_180_360)>0){
 ### Check for special cases and delete immediately ###
 ######################################################
 
-# Read special cases (deceased and gdrk marketing clients) 
+# Read special cases (deceased) 
 get_special_sql <- paste("
 SELECT id
 FROM ",db_name,".clients
-WHERE gdpr_marketing_messages=1 OR dead_at IS NOT NULL",sep="")
+WHERE dead_at IS NOT NULL",sep="")
 special <- gen_query(con,get_special_sql)
+
+# Read special cases marketing
+get_marketing_sql <- paste("
+SELECT client_id, brand_id, gdpr_marketing_messages 
+FROM ",db_name,".client_brand WHERE gdpr_marketing_messages=1",sep="")
+marketing <- gen_query(con,get_marketing_sql)
 
 # Get those who have currently an active in corresponding company
 po_active <- subset(po_raw,is.na(po_raw$deleted_at))
@@ -629,13 +635,17 @@ clients_dups <- clients_dups[!duplicated(clients_dups$client_id),]
 
 # Remove special cases if has offer
 po_get_special_query <- paste(
-  "SELECT id, client_id
-  FROM ",db_name,".clients_prior_approval_applications
-  WHERE deleted_at IS NULL",sep="")
+"SELECT a.id, a.client_id, b.brand_id
+FROM ",db_name,".clients_prior_approval_applications a
+LEFT JOIN products b ON a.product_id = b.id WHERE a.deleted_at IS NULL",sep="")
 po_special <- gen_query(con,po_get_special_query)
+po_special <- merge(po_special,marketing,by.x = c("client_id","brand_id"),
+  by.y = c("client_id","brand_id"),all.x = TRUE)
+marketing <- subset(po_special,po_special$gdpr_marketing_messages==1)
 po_special <- rbind(
-  po_special[po_special$client_id %in% special$id,],
-  po_special[po_special$client_id %in% po_active$client_id,],
+  po_special[po_special$client_id %in% special$id,c("id","client_id")],
+  po_special[po_special$client_id %in% po_active$client_id,c("id","client_id")],
+  marketing[,c("id","client_id")],
   clients_dups[,c("id","client_id")])
 
 if(nrow(po_special)>0){
@@ -733,8 +743,6 @@ po_rearrange_query <- paste("UPDATE ",db_name,
 SET deleted_at = '",paste(substring(Sys.time(),1,10),sep=""),
 " 04:00:00' WHERE credit_amount <0 AND deleted_at IS NULL",sep="")
 suppressMessages(suppressWarnings(dbSendQuery(con,po_rearrange_query)))
-
-
 
 
 ###########

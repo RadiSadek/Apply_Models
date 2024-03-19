@@ -335,11 +335,11 @@ gen_flag_is_dead <- function(db_name,input){
 
 
 # Read PO refinance data per client_id
-gen_flag_gdpr <- function(db_name,input){
+gen_flag_gdpr <- function(db_name,input,input_brand){
   return(paste(
     "SELECT gdpr_marketing_messages
-     FROM ",db_name,".clients
-     WHERE id=",input,sep=""))
+     FROM ",db_name,".client_brand
+     WHERE client_id=",input," AND brand_id=",input_brand,sep=""))
 }
 
 # Get discount amount per application_id
