@@ -18,6 +18,7 @@ suppressMessages(suppressWarnings(library(here)))
 suppressMessages(suppressWarnings(library(dotenv)))
 suppressMessages(suppressWarnings(require("reshape")))
 suppressMessages(suppressWarnings(require(jsonlite)))
+suppressMessages(suppressWarnings(require(gbm)))
 
 
 # Defines the directory where custom .env file is located
@@ -92,7 +93,7 @@ source(file.path(base_dir,"Behavioral_Variables.r"))
 source(file.path(base_dir,"Normal_Variables.r"))
 source(file.path(base_dir,"CKR_variables.r"))
 source(file.path(base_dir,"Generate_Adjust_Score.r"))
-
+source(file.path(base_dir,"Gbm_Beh_Credirect.r"))
 
 
 ########################
@@ -529,33 +530,12 @@ scoring_df <- scoring_df[,c("application_id","amount","period","score","color",
 scoring_df <- gen_final_table_display(scoring_df,flag_credirect)
 
 
-# Save result of dataframe into jsonfile
-all_flags <- cbind(flag_credirect,flag_beh,flag_rep,flag_beh_company, 
-    flag_credit_next_salary,flag_cashpoint,flag_is_dead,flag_app_quickly,  
-    flag_new_credirect_old_city,flag_varnat,fraud_flag,flag_exclusion,
-    flag_cession,flag_risky_address[1])
-json_out <- gen_setjson(df,all_flags,api_df)
-scoring_log <- gen_log(application_id,scoring_decision,json_out)
-
-
 # Update table credits applications
 update_table_extras_query <- paste("UPDATE ",db_name,
   ".credits_applications SET scoring_warning = ",fraud_flag,
   " WHERE id=",application_id, sep="")
 suppressMessages(suppressWarnings(dbSendQuery(con, 
   update_table_extras_query)))
-
-
-# Update table credits applications decisions
-write_sql_query <- paste("
-  DELETE FROM ",db_name,".credits_applications_scoring_log 
-  WHERE application_id=",application_id, sep="")
-suppressMessages(dbSendQuery(con,write_sql_query))
-suppressMessages(dbWriteTable(con, name = "credits_applications_scoring_log", 
-  value = scoring_log,
-  field.types = c(application_id="numeric", decision="integer", 
-  input_params="character(3000)", created_at="numeric"),
-  row.names = F, append = T))
 
 
 # Update table credits applications scoring
@@ -568,6 +548,47 @@ suppressMessages(dbWriteTable(con, name = "credits_applications_scoring",
   field.types = c(application_id="numeric", amount="integer", 
   period="integer", score="character(20)",color="integer", 
   display_score="character(20)",pd="numeric",created_at="datetime"),
+  row.names = F, append = T))
+
+# Run GB model for Credirect repeat
+if(flag_beh==1 & flag_credirect==1){
+  gen_beh_gbm_credirect_result <- suppressMessages(
+    gen_beh_gbm_credirect(df,scoring_df,products,
+        df_Log_beh_Credirect,period,all_df,prev_amount,amount_tab,t_income,
+        disposable_income_adj,criteria_po,flag_new_credirect_old_city,api_df,
+        base_dir))
+  gbm_credirect_beh_pd <- gen_beh_gbm_credirect_result[[1]]
+  gbm_credirect_beh_score <- gen_beh_gbm_credirect_result[[2]]
+  
+  if(flag_otpisan==1 | flag_exclusion==1 | flag_varnat==1 | flag_is_dead==1){
+    gbm_credirect_beh_score <- "Bad"
+  }
+  
+} else {
+  gbm_credirect_beh_pd <- NA
+  gbm_credirect_beh_score <- NA
+}
+
+
+# Save result of dataframe into jsonfile
+all_flags <- cbind(flag_credirect,flag_beh,flag_rep,flag_beh_company, 
+    flag_credit_next_salary,flag_cashpoint,flag_is_dead,flag_app_quickly,  
+    flag_new_credirect_old_city,flag_varnat,fraud_flag,flag_exclusion,
+    flag_cession,flag_risky_address[1],gbm_credirect_beh_pd,
+    gbm_credirect_beh_score)
+json_out <- gen_setjson(df,all_flags,api_df)
+scoring_log <- gen_log(application_id,scoring_decision,json_out)
+
+
+# Update table credits applications decisions
+write_sql_query <- paste("
+  DELETE FROM ",db_name,".credits_applications_scoring_log 
+  WHERE application_id=",application_id, sep="")
+suppressMessages(dbSendQuery(con,write_sql_query))
+suppressMessages(dbWriteTable(con, name = "credits_applications_scoring_log", 
+  value = scoring_log,
+  field.types = c(application_id="numeric", decision="integer", 
+  input_params="character(3000)", created_at="numeric"),
   row.names = F, append = T))
 
 

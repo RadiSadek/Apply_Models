@@ -22,7 +22,7 @@ suppressMessages(suppressWarnings(library(dotenv)))
 suppressMessages(suppressWarnings(require("reshape")))
 suppressMessages(suppressWarnings(library(openxlsx)))
 suppressMessages(suppressWarnings(require(jsonlite)))
-
+suppressMessages(suppressWarnings(require(gbm)))
 
 # Database
 db_name <- "citycash"
@@ -45,7 +45,7 @@ base_dir <- "C:/Projects/Apply_Scoring"
 # Read argument of ID
 args <- commandArgs(trailingOnly = TRUE)
 application_id <- args[1]
-#application_id <- 1890691
+#application_id <- 1991521
 product_id <- NA
 
 
@@ -73,7 +73,7 @@ source(paste(base_dir,"/Apply_Models/Behavioral_Variables.r", sep=""))
 source(paste(base_dir,"/Apply_Models/Normal_Variables.r", sep=""))
 source(paste(base_dir,"/Apply_Models/CKR_variables.r", sep=""))
 source(paste(base_dir,"/Apply_Models/Generate_Adjust_Score.r", sep=""))
-
+source(paste(base_dir,"/Apply_Models/Gbm_Beh_Credirect.r", sep=""))
 
 # Load Risky Coordinates
 risky_address <- read.csv("risky_coordinates\\risky_coordinates.csv",sep=";")
@@ -511,11 +511,32 @@ scoring_df <- scoring_df[,c("application_id","amount","period","score","color",
 scoring_df <- gen_final_table_display(scoring_df,flag_credirect)
 
 
+# Run GBM model for Credirect repeat
+if(flag_beh==1 & flag_credirect==1){
+  gen_beh_gbm_credirect_result <- suppressMessages(
+      gen_beh_gbm_credirect(df,scoring_df,products,
+      df_Log_beh_Credirect,period,all_df,prev_amount,amount_tab,t_income,
+      disposable_income_adj,criteria_po,flag_new_credirect_old_city,api_df,
+      base_dir))
+  gbm_credirect_beh_pd <- gen_beh_gbm_credirect_result[[1]]
+  gbm_credirect_beh_score <- gen_beh_gbm_credirect_result[[2]]
+  
+  if(flag_otpisan==1 | flag_exclusion==1 | flag_varnat==1 | flag_is_dead==1){
+    gbm_credirect_beh_score <- "Bad"
+  }
+  
+} else {
+  gbm_credirect_beh_pd <- NA
+  gbm_credirect_beh_score <- NA
+}
+
+
 # Save result of dataframe into jsonfile
 all_flags <- cbind(flag_credirect,flag_beh,flag_rep,flag_beh_company, 
     flag_credit_next_salary,flag_cashpoint,flag_is_dead,flag_app_quickly,  
     flag_new_credirect_old_city,flag_varnat,fraud_flag,flag_exclusion,
-    flag_cession,flag_risky_address[1])
+    flag_cession,flag_risky_address[1],gbm_credirect_beh_pd,
+    gbm_credirect_beh_score)
 json_out <- gen_setjson(df,all_flags,api_df)
 scoring_log <- gen_log(application_id,scoring_decision,json_out)
 
@@ -595,6 +616,8 @@ final$days_play <- days_play
 final$amount_cession <- df$amount_cession_total
 final$office_id <- all_df$office_id
 final$bad_office <- flag_bad_office(all_df$office_id)
+final$gbm_pd <- gbm_credirect_beh_pd
+final$gbm_score <- gbm_credirect_beh_score
 
 
 # Read and write

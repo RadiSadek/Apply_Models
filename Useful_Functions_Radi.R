@@ -21,6 +21,8 @@ gen_group_scores <- function(var,office,flag_beh,flag_credirect,
     cutoffs <- cu_app_cred_flex}
   else if (flag_credirect==1 & flag_beh==0 & flag_credit_next_salary==0){
     cutoffs <- cu_app_cred_user}
+  else if(flag_credirect==1 & flag_beh==1 & flag_credit_next_salary==2){
+    cutoffs <- cu_beh_cred_gbm}
   else if (flag_credirect==0 & flag_beh==1){
     cutoffs <- cu_beh_city}
   else {cutoffs <- cu_beh_cred}
