@@ -34,7 +34,7 @@ gen_beh_citycash <- function(df,scoring_df,products,df_Log_beh_CityCash,period,
   df$marital_status <- as.factor(df$marital_status_cut)
   
   df$status_work_cut <- ifelse(is.na(df$status_work), "other",
-     ifelse(df$status_work %in% c(5,10,12), "5_9_10_12","other"))
+     ifelse(df$status_work %in% c(5,9,10,12), "5_9_10_12","other"))
   df$status_work <- as.factor(df$status_work_cut)
   
   df$on_address_cut <- ifelse(is.na(df$on_address),"24_360",
