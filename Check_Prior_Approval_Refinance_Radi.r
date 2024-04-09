@@ -42,7 +42,7 @@ main_dir <- "C:\\Projects\\Apply_Scoring\\"
 # Read argument of ID
 args <- commandArgs(trailingOnly = TRUE)
 #application_id <- args[1]
-application_id <- 1582578
+application_id <- 1562053
 
 
 # Load other r files
@@ -83,7 +83,7 @@ select$time_since <- round(difftime(as.Date(substring(Sys.time(),1,10)),
 # Get flagged GDPR marketing campaigns
 flag_gdpr <- gen_query(con,
   gen_flag_gdpr(db_name,
-    all_credit$client_id,all_credit$company_id))$gdpr_marketing_messages
+    select$client_id,select$company_id))$gdpr_marketing_messages
 flag_gdpr <- ifelse(identical(flag_gdpr,integer(0)),0,
   ifelse(is.na(flag_gdpr),0,flag_gdpr))
 

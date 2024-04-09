@@ -13,13 +13,11 @@ get_company_id_prev <- function(db_name,all_credits){
 }
 # Function to get if previous credit is credirect or not 
 gen_prev_online <- function(db_name,all_credits,all_df,app_id){
-  all_credits_prev_online <- all_credits[order(all_credits$date),]
-  all_credits_prev_online <- subset(all_credits_prev_online,
-       all_credits_prev_online$status %in% c(4,5))
-  all_credits_prev_online <- subset(all_credits_prev_online, 
-       all_credits_prev_online$id<app_id)
-  all_df$prev_online <- ifelse(all_credits_prev_online[
-    rev(order(all_credits_prev_online$date)),][1,10]==2, 1, 0)
+  all_credits <- subset(all_credits,
+       all_credits$status %in% c(4,5))
+  all_credits <- subset(all_credits,all_credits$id<app_id)
+  all_df$prev_online <- ifelse(all_credits$company_id[
+    all_credits$id==max(all_credits$id)]==2, 1, 0)
   return(all_df)
 }
                             
