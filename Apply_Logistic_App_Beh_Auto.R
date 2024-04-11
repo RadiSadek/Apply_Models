@@ -94,6 +94,7 @@ source(file.path(base_dir,"Normal_Variables.r"))
 source(file.path(base_dir,"CKR_variables.r"))
 source(file.path(base_dir,"Generate_Adjust_Score.r"))
 source(file.path(base_dir,"Gbm_Beh_Credirect.r"))
+source(file.path(base_dir,"Logistic_Beh_Cashpoint.r"))
 
 
 ########################
@@ -550,32 +551,19 @@ suppressMessages(dbWriteTable(con, name = "credits_applications_scoring",
   display_score="character(20)",pd="numeric",created_at="datetime"),
   row.names = F, append = T))
 
-# Run GB model for Credirect repeat
-if(flag_beh==1 & flag_credirect==1){
-  gen_beh_gbm_credirect_result <- suppressMessages(
-    gen_beh_gbm_credirect(df,scoring_df,products,
-        df_Log_beh_Credirect,period,all_df,prev_amount,amount_tab,t_income,
-        disposable_income_adj,criteria_po,flag_new_credirect_old_city,api_df,
-        base_dir))
-  gbm_credirect_beh_pd <- gen_beh_gbm_credirect_result[[1]]
-  gbm_credirect_beh_score <- gen_beh_gbm_credirect_result[[2]]
-  
-  if(flag_otpisan==1 | flag_exclusion==1 | flag_varnat==1 | flag_is_dead==1){
-    gbm_credirect_beh_score <- "Bad"
-  }
-  
-} else {
-  gbm_credirect_beh_pd <- NA
-  gbm_credirect_beh_score <- NA
-}
+
+# Run parallel scores
+parallel_score <- gen_parallel_score(prev_amount,all_id,t_income,criteria_po,
+    disposable_income_adj,flag_new_credirect_old_city,base_dir,amount_tab,
+    products,scoring_df,df_Log_beh_CityCash,df_Log_beh_Credirect,api_df,period,
+    all_df,flag_beh,flag_credirect,flag_cashpoint)
 
 
 # Save result of dataframe into jsonfile
 all_flags <- cbind(flag_credirect,flag_beh,flag_rep,flag_beh_company, 
     flag_credit_next_salary,flag_cashpoint,flag_is_dead,flag_app_quickly,  
     flag_new_credirect_old_city,flag_varnat,fraud_flag,flag_exclusion,
-    flag_cession,flag_risky_address[1],gbm_credirect_beh_pd,
-    gbm_credirect_beh_score)
+    flag_cession,flag_risky_address[1],parallel_score)
 json_out <- gen_setjson(df,all_flags,api_df)
 scoring_log <- gen_log(application_id,scoring_decision,json_out)
 
