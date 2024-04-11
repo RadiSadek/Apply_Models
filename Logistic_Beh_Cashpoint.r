@@ -89,7 +89,7 @@ gen_beh_cashpoint <- function(df,scoring_df,products,df_Log_beh_CityCash,period,
     period_tab <- as.numeric(scoring_df$period[i])
     amount_tab <- as.numeric(scoring_df$amount[i])
     
-    if(df$total_income<100 | is.na(df$total_income)){
+    if(is.na(df$total_income) | df$total_income<100){
       ratio_tab <- 0.1}
     else {
       ratio_tab <- products[products$period == period_tab & 
@@ -97,7 +97,12 @@ gen_beh_cashpoint <- function(df,scoring_df,products,df_Log_beh_CityCash,period,
             products$product_id == all_df$product_id, ]$installment_amount/
             t_income}
     
-    if (ratio_tab>=3) {ratio_tab <- 3}
+    if(!is.na(ratio_tab) & ratio_tab>=3) {
+      ratio_tab <- 3
+    }
+    if(is.na(ratio_tab)){
+      ratio_rab <- 0.5
+    }
     ratio_tab <- as.numeric(ratio_tab)
     df$ratio_installment_income <- ifelse(is.na(ratio_tab), 999,ratio_tab)
     df$ratio_installment_income_cut <- 
