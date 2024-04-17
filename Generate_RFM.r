@@ -98,7 +98,7 @@ df$profit <- ifelse(is.na(df$amount_paid),0,df$amount_paid) - df$amount
 
 
 # Read score
-score <- gen_query(con,gen_all_scores(db_name,1568339))
+score <- gen_query(con,gen_all_scores(db_name,2033221))
 df <- merge(df,score,by.x = c("id","amount","installments"), 
    by.y = c("application_id","amount","period"),all.x = TRUE)
 df <- merge(df,scores,by.x = "id",by.y = "id",all.x = TRUE)
