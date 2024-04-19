@@ -45,7 +45,7 @@ base_dir <- "C:/Projects/Apply_Scoring"
 # Read argument of ID
 args <- commandArgs(trailingOnly = TRUE)
 application_id <- args[1]
-#application_id <- 2030686
+application_id <- 2033522
 product_id <- NA
 
 
@@ -603,8 +603,10 @@ final$days_play <- days_play
 final$amount_cession <- df$amount_cession_total
 final$office_id <- all_df$office_id
 final$bad_office <- flag_bad_office(all_df$office_id)
-final$gbm_pd <- gbm_credirect_beh_pd
-final$gbm_score <- gbm_credirect_beh_score
+final$gbm_pd <- parallel_score$gbm_credirect_beh_pd
+final$gbm_score <- parallel_score$gbm_credirect_beh_score
+final$logistic_beg_pd <- parallel_score$logistic_cashpoint_beh_pd
+final$logistic_beg_score <- parallel_score$logistic_cashpoint_beh_score
 
 
 # Read and write

@@ -51,8 +51,8 @@ gen_restrict_cashpoint_app <- function(scoring_df,all_df,flag_beh,
     ifelse(scoring_df$score %in% c("NULL"),scoring_df$color,
     ifelse(scoring_df$score %in% c("Good 4") & scoring_df$amount>1000,1,
     ifelse(scoring_df$score %in% c("Good 3") & scoring_df$amount>800,1,
-    ifelse(scoring_df$score %in% c("Good 2") & scoring_df$amount>600,1,
-    ifelse(scoring_df$score %in% c("Good 1") & scoring_df$amount>400,1,
+    ifelse(scoring_df$score %in% c("Good 2") & scoring_df$amount>700,1,
+    ifelse(scoring_df$score %in% c("Good 1") & scoring_df$amount>600,1,
     ifelse(scoring_df$score %in% c("Indeterminate") & scoring_df$amount>400,1,
            scoring_df$color))))))
               
@@ -139,16 +139,6 @@ gen_restrict_citycash_beh <- function(scoring_df,prev_amount,products,all_id,
   scoring_df$color <- ifelse(scoring_df$score %in% c("Good 4","Good 1",
      "Good 2","Good 3","Indeterminate") & scoring_df$amount<=if_new_amount & 
      scoring_df$installment_amount<=if_new_installment,3,scoring_df$color)
-  
-  # Treat if has parallel and depending on DPD
-  if(flag_cashpoint==1){
-    scoring_df$color <- ifelse(scoring_df$score %in% c("Bad","Indeterminate",
-       "Good 1","Good 2","Good 3","Good 4") & flag_parallel[[1]]==1 & 
-       !is.na(flag_parallel[[2]]) & flag_parallel[[2]]>=180,1, 
-       ifelse(scoring_df$score %in% c("Bad","Indeterminate","Good 1","Good 2") 
-       & flag_parallel[[1]]==1 & !is.na(flag_parallel[[2]]) & 
-         flag_parallel[[2]]>=90,1,scoring_df$color))
-  }
 
   # Correct if has cession in Credirect
   if(gen_cession_credirect(all_id)==1){
@@ -160,19 +150,6 @@ gen_restrict_citycash_beh <- function(scoring_df,prev_amount,products,all_id,
   if(!is.na(all_df$office_id) & all_df$office_id==215){
     scoring_df$color <- ifelse(scoring_df$score %in% 
      c("Bad","Indeterminate","Good 1","Good 2"),1, scoring_df$color)
-  }
-  
-  if(flag_cashpoint==1){
-    
-    # No Indeterminates
-    scoring_df$color <- ifelse(scoring_df$score %in% c("Bad","Indeterminate"),
-                               1, scoring_df$color)  
-    
-    # No Gratis and not Good 4
-    if(all_df$product_id %in% c(68,90)){
-      scoring_df$color <- ifelse(scoring_df$score %in% c("Indeterminate",
-      "Good 1","Good 2","Good 3"),1,scoring_df$color) 
-    }
   }
 
   return(scoring_df)
@@ -221,6 +198,55 @@ gen_restrict_credirect_app <- function(scoring_df,all_df,
     scoring_df$color <- ifelse(scoring_df$score %in% 
      c("Indeterminate","Good 1"), 1, scoring_df$color)
   }
+  
+  return(scoring_df)
+}
+
+# Function to apply restrictions for Cashpoint 
+gen_restrict_cashpoint_beh <- function(scoring_df,all_df,all_id,application_id,
+     prev_amount,flag_parallel,db_name){
+  days_delay <- gen_query(con,
+      gen_plan_main_select_query(db_name,max(all_id$id[all_id$company_id==5 & 
+       all_id$status  %in% c(4,5)])))$max_delay
+  days_delay <- ifelse(is.na(days_delay),0,days_delay)
+  
+  scoring_df$prev_amount <- prev_amount$amount
+  scoring_df$diff_amount <- scoring_df$amount - prev_amount$amount
+  
+  if(days_delay<=30){
+    scoring_df$color <- ifelse(scoring_df$diff_amount>400,1,scoring_df$color)
+  } else if(days_delay<=59){
+    scoring_df$color <- ifelse(scoring_df$diff_amount>200,1,scoring_df$color)
+  } else if(days_delay<=90){
+    scoring_df$color <- ifelse(scoring_df$diff_amount>0,1,scoring_df$color)
+  } else if(days_delay<=180){
+    scoring_df$color <- ifelse(scoring_df$amount>(0.6*scoring_df$prev_amount),1,
+                               scoring_df$color)
+  } else{
+    scoring_df$color <- ifelse(scoring_df$amount>400,1,scoring_df$color)
+  }
+  
+  if(is.na(all_df$days_diff_last_credit) | all_df$days_diff_last_credit<=2){
+    scoring_df$color <- ifelse(scoring_df$diff_amount>0,1,scoring_df$color)
+  }
+  
+  # No Indeterminates
+  scoring_df$color <- ifelse(scoring_df$score %in% c("Bad","Indeterminate"),
+     1, scoring_df$color)  
+  
+  # Gratis only for Good 4
+  if(all_df$product_id %in% c(68,90)){
+    scoring_df$color <- ifelse(scoring_df$score %in% c("Indeterminate",
+        "Good 1","Good 2","Good 3"),1,scoring_df$color) 
+  }
+  
+  # Teeat those with parallel credits
+  scoring_df$color <- ifelse(scoring_df$score %in% c("Bad","Indeterminate",
+      "Good 1","Good 2","Good 3","Good 4") & flag_parallel[[1]]==1 & 
+      !is.na(flag_parallel[[2]]) & flag_parallel[[2]]>=180,1, 
+    ifelse(scoring_df$score %in% c("Bad","Indeterminate","Good 1","Good 2") 
+          & flag_parallel[[1]]==1 & !is.na(flag_parallel[[2]]) & 
+          flag_parallel[[2]]>=90,1,scoring_df$color))
   
   return(scoring_df)
 }

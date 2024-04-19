@@ -1023,7 +1023,7 @@ gen_parallel_score <- function(prev_amount,all_id,t_income,criteria_po,
     gbm_credirect_beh_pd <- NA
     gbm_credirect_beh_score <- NA
   }
-  if(!exists("gbm_credirect_beh_pd")){
+  if(!exists("logistic_cashpoint_beh_pd")){
     logistic_cashpoint_beh_pd <- NA
     logistic_cashpoint_beh_score <- NA
   }
