@@ -105,7 +105,7 @@ if(nrow(gen_query(con,gen_client_id_query(db_name,all_df)))>0){
         max(all_id$signed_at)]]
     product_id <- NA
     score_calc <- gen_terminated_fct(con,
-        all_df$client_id,product_id,last_id,0)[[3]]
+        all_df$client_id,product_id,last_id,0,db_name,0)[[3]]
     score_calc <- ifelse(is.na(score_calc),"Bad",score_calc)
     scoring_df <- all_df
     scoring_df$score <- score_calc

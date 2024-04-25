@@ -146,15 +146,13 @@ FROM ",db_name,".products
 WHERE id= ",all_credit$product_id,sep="")
 all_credit$period <- gen_query(con,get_period_sql)$period
 flag_credit_next_salary <- ifelse(all_credit$product_id %in% 
-    c(25:28,36,37,41:44,49,50,55:58,67,68,78:81,89:90), 1, 0)
+    c(25:28,36,37,41:44,49,50,55:58,78:81),1,0)
 if((flag_credit_next_salary==1 & all_credit$passed_installments==0) |
    (flag_credit_next_salary!=1 & all_credit$period==3 & 
     all_credit$passed_installments<2 & all_credit$tot_installments<4 & 
     all_credit$company_id!=5) |
    (flag_credit_next_salary!=1 & all_credit$passed_installments<4 & 
-    all_credit$tot_installments>=4 & all_credit$company_id!=5) |
-   (flag_credit_next_salary!=1 & all_credit$passed_installments==0 & 
-    all_credit$company_id==5)) {
+    all_credit$tot_installments>=4 & all_credit$company_id!=5)) {
   quit()
 }
 
@@ -216,6 +214,12 @@ all_credit$is_vip <- ifelse(is.na(all_credit$is_vip),0,all_credit$is_vip)
 all_credit <- all_credit[,c(names_b4,"is_vip")]
 
 
+# Make flag to know if offer amount should be limited
+all_credit$limit_offer <-
+  ifelse(all_credit$company_id==5 & 
+         all_credit$tot_installments>all_credit$passed_installments,1,0)
+
+
 
 #####################
 ### Compute score ###
@@ -262,19 +266,14 @@ for(i in 1:nrow(all_credit)){
     }
     client_id <- all_credit$client_id[i]
     last_id <- all_credit$id[i]
+    limit_offer <- all_credit$limit_offer[i]
     calc <- gen_terminated_fct(con,client_id,product_id,last_id,
-                               flag_limit_offer.db_name)
+                               flag_limit_offer,db_name,limit_offer)
     all_credit$max_amount[i] <- calc[[1]]
     all_credit$max_installment_amount[i] <- calc[[2]]
     all_credit$score_max_amount[i] <- calc[[3]]
     all_credit$max_delay[i] <- as.numeric(calc[[4]])
   }, error=function(e){}))
-}
-
-# Remove offers of certain offers for Cashpoint 
-if(all_credit$company_id %in% c(5) & !is.na(all_credit$score_max_amount) & 
-   all_credit$score_max_amount %in% c("Indeterminate","Good 1")){
-  quit()
 }
 
 

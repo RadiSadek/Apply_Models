@@ -1,6 +1,6 @@
 
 gen_terminated_fct <- function(con,client_id,product_id,last_id,
-                               flag_limit_offer,db_name){
+                               flag_limit_offer,db_name,crit_cp){
 
   
 # Set working directory for input (R data for logistic regression) and output #
@@ -410,7 +410,7 @@ scoring_df <- gen_apply_policy(scoring_df,flag_credirect,flag_cession,
 
 
 # Apply criteria according to when the last credit was terminated
-if(flag_limit_offer==1){
+if(flag_limit_offer==1 | crit_cp==1){
   scoring_df$score <- ifelse(scoring_df$amount>curr_amount,"Bad",
                              scoring_df$score)
   scoring_df$color <- ifelse(scoring_df$amount>curr_amount,1,
