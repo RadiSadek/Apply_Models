@@ -141,10 +141,10 @@ gen_restrict_citycash_beh <- function(scoring_df,prev_amount,products,all_id,
      scoring_df$installment_amount<=if_new_installment,3,scoring_df$color)
 
   # Correct if has cession in Credirect
-  if(gen_cession_credirect(all_id)==1){
-    scoring_df$color <- ifelse(scoring_df$score %in% c("Bad","Indeterminate",
-    "Good 1","Good 2"),1, scoring_df$color)
-  }
+  # if(gen_cession_credirect(all_id)==1){
+  #   scoring_df$color <- ifelse(scoring_df$score %in% c("Bad","Indeterminate",
+  #   "Good 1","Good 2"),1, scoring_df$color)
+  # }
   
   # Restrict otkazani ot RO
   if(!is.na(all_df$office_id) & all_df$office_id==215){
