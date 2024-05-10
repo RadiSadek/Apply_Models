@@ -382,6 +382,16 @@ flag_third_side <- gen_third_side_prev(db_name,all_id,application_id)
 flag_parallel <- gen_flag_parallel(db_name,all_id,application_id)
 
 
+# Correct for cashpoint
+if(flag_cashpoint==1){
+  all_id_loc <- all_id
+  all_id_loc <- subset(all_id_loc,all_id_loc$company_id==5)
+  all_id_loc <- rbind(all_id_loc,
+                      all_id_loc[all_id_loc$id==max(all_id_loc$id),])
+  prev_amount <- gen_last_prev_amount(all_id_loc)
+}
+
+
 
 ############################################################
 ### Apply model coefficients according to type of credit ###

@@ -225,11 +225,7 @@ gen_restrict_cashpoint_beh <- function(scoring_df,all_df,all_id,application_id,
   } else{
     scoring_df$color <- ifelse(scoring_df$amount>400,1,scoring_df$color)
   }
-  
-  if(is.na(all_df$days_diff_last_credit) | all_df$days_diff_last_credit<=2){
-    scoring_df$color <- ifelse(scoring_df$diff_amount>0,1,scoring_df$color)
-  }
-  
+    
   # No Indeterminates
   scoring_df$color <- ifelse(scoring_df$score %in% c("Bad","Indeterminate"),
      1, scoring_df$color)  

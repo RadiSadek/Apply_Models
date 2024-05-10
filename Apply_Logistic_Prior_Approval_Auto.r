@@ -426,6 +426,78 @@ if(nrow(po_cp)>0){
 
 
 
+###########################################
+### Updating Cashpoint offers (one-off) ###
+###########################################
+
+# Apply selection
+po_cp2 <- po_raw
+po_cp2 <- subset(po_cp2,is.na(po_cp2$deleted_at) & 
+                   po_cp2$created_at>=(as.Date(Sys.time())-180) & 
+                   po_cp2$created_at<=(as.Date(Sys.time())-1)  & 
+                   po_cp2$company_id==5)
+
+
+# Get last ID
+all_credits_cp <- all_credits_raw
+all_credits_cp <- subset(all_credits_cp,all_credits_cp$status %in% c(5) & 
+                           all_credits_cp$company_id==5)
+all_credits_cp <- all_credits_cp[rev(order(all_credits_cp$deactivated_at)),]
+all_credits_cp <- all_credits_cp[order(all_credits_cp$client_id),]
+all_credits_cp <- all_credits_cp[!duplicated(all_credits_cp$client_id),]
+colnames(all_credits_cp)[which(names(all_credits_cp) == "id")] <- "last_id"
+po_cp2 <- merge(po_cp2,all_credits_cp[,c("client_id","last_id")],
+                by.x = "client_id",by.y = "client_id",all.x = TRUE)
+
+# Check if offer is top be updated
+if(nrow(po_cp2)>0){
+  
+  po_cp2$credit_amount_updated <- NA
+  po_cp2$installment_amount_updated <- NA
+  
+  for(i in 1:nrow(po_cp2)){
+    suppressWarnings(tryCatch({i
+      client_id <- po_cp2$client_id[i]
+      last_id <- po_cp2$last_id[i]
+      calc <- gen_terminated_fct(con,client_id,product_id,last_id,0,db_name,0)
+      po_cp2$credit_amount_updated[i] <- calc[[1]]
+      po_cp2$installment_amount_updated[i] <- calc[[2]]
+      po_cp2$max_delay[i] <- as.numeric(calc[[4]])
+    }, error=function(e){}))
+  }
+  print(po_cp2)
+  
+  # Filter offers
+  po_cp2_ok <- subset(po_cp2,po_cp2$credit_amount_updated>-Inf & 
+                             po_cp2$credit_amount_updated<Inf)
+  po_cp2_not_ok <- subset(po_cp2,po_cp2$credit_amount_updated==-Inf | 
+                                 po_cp2$credit_amount_updated==Inf)
+
+  if(nrow(po_cp2_ok)>0){
+    po_change_query <- paste("UPDATE ",db_name,
+       ".clients_prior_approval_applications SET updated_at = '",
+       substring(Sys.time(),1,19),"' WHERE id IN",
+       gen_string_po_terminated(po_cp2_ok), sep="")
+    suppressMessages(suppressWarnings(dbSendQuery(con,po_change_query)))
+    suppressMessages(suppressWarnings(dbSendQuery(con,
+      gen_string_delete_po_terminated(po_cp2_ok,
+        po_cp2_ok$credit_amount_updated,"credit_amount",db_name))))
+    suppressMessages(suppressWarnings(dbSendQuery(con,
+      gen_string_delete_po_terminated(po_cp2_ok,
+        po_cp2_ok$installment_amount_updated,"installment_amount",db_name))))
+  }
+  
+  if(nrow(po_cp2_not_ok)>0){ 
+    po_change_query <- paste("UPDATE ",db_name,
+       ".clients_prior_approval_applications SET updated_at = '",
+       substring(Sys.time(),1,19),"', deleted_at = '",
+       substring(Sys.time(),1,19),"' WHERE id IN",
+       gen_string_po_terminated(po_cp2_not_ok), sep="")
+    suppressMessages(suppressWarnings(dbSendQuery(con,po_change_query)))
+  }
+}
+
+
 #################################################
 ### Check those who didn't amount to a credit ###
 #################################################
