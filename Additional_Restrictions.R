@@ -77,6 +77,29 @@ gen_restrict_cashpoint_app <- function(scoring_df,all_df,flag_beh,
   return(scoring_df)
 }
 
+# Function to apply restrictions for Money1 applications 
+gen_restrict_money1_app <- function(scoring_df,all_df,all_id,flag_beh){
+  
+  # Accept only Good 4
+  if(flag_beh==0){
+    scoring_df$color <- 
+      ifelse(is.na(scoring_df$pd),scoring_df$color,
+             ifelse(scoring_df$pd>0.3,1,scoring_df$color))
+  } else {
+    scoring_df$color <- 
+      ifelse(is.na(scoring_df$pd),scoring_df$color,
+             ifelse(scoring_df$pd>0.1,1,scoring_df$color))
+  }
+  
+  # Accept only with bezsro4en trudov dogovor
+  if(is.na(all_df$status_work) | all_df$status_work!=2){
+    scoring_df$color <- 
+      ifelse(is.na(scoring_df$pd),scoring_df$color,1)
+  }
+  
+  return(scoring_df)
+}
+
 # Function to apply restrictions for City Cash repeats
 gen_restrict_citycash_beh <- function(scoring_df,prev_amount,products,all_id,
          all_df,db_name,application_id,crit,flag_cashpoint,flag_parallel){
@@ -225,7 +248,7 @@ gen_restrict_cashpoint_beh <- function(scoring_df,all_df,all_id,application_id,
   } else{
     scoring_df$color <- ifelse(scoring_df$amount>400,1,scoring_df$color)
   }
-    
+  
   # No Indeterminates
   scoring_df$color <- ifelse(scoring_df$score %in% c("Bad","Indeterminate"),
      1, scoring_df$color)  
@@ -383,6 +406,100 @@ gen_restrict_credirect_beh <- function(scoring_df,all_df,all_id,application_id,
      ifelse(scoring_df$score %in% c("Good 2","Good 3","Good 4") & 
             scoring_df$amount>6000,1,scoring_df$color)))
 
+  return(scoring_df)
+}
+
+# Funciton to apply restrictions for Money1 behavioral
+gen_restrict_money1_beh <- function(scoring_df,prev_amount,products,
+       all_id,all_df,db_name,application_id){
+  
+  # Get company ID to filter past credits only for Credirect and credit amounts
+  all_df_local <- get_company_id_prev(db_name,all_df)
+  all_id_local <- all_id[all_id$status %in% c(5) & 
+      all_id$company_id==all_df_local$company_id,]
+  all_id_local_active <- all_id[all_id$status %in% c(4) & 
+      all_id$company_id==all_df_local$company_id,]
+  all_id_local <- subset(all_id_local, all_id_local$sub_status %in% 
+                           c(123,126,128))
+  
+  # Get amounts of previous credits
+  if(nrow(all_id_local)>0){
+    for(i in 1:nrow(all_id_local)){
+      all_id_local$amount[i] <- gen_query(con,
+        gen_last_cred_amount_query(all_id_local$id[i],db_name))$amount}
+  }
+  if(nrow(all_id_local_active)>0){
+    for(i in 1:nrow(all_id_local_active)){
+      all_id_local_active$amount[i] <- gen_query(con,
+        gen_last_cred_amount_query(all_id_local_active$id[i],db_name))$amount}
+  }
+  
+  # Get nb passed installments at deactivation & if prev is until next salary
+  prev_vars <- gen_prev_deactiv_date(db_name,all_df,all_id,application_id)
+  passed_install_at_pay <- prev_vars[1]
+  passed_install_at_pay <- ifelse(is.na(passed_install_at_pay),0,
+        passed_install_at_pay)
+  
+  # Define maximum step with previous
+  if(passed_install_at_pay==0){
+    max_step <- c(100,200,300,400,500)
+  } else if(passed_install_at_pay==1){
+    max_step <- c(400,600,800,900,1000)
+  } else if(passed_install_at_pay==2){
+    max_step <- c(500,800,1100,1200,1400)
+  } else if(passed_install_at_pay==3){
+    max_step <- c(600,900,1200,1400,1700)
+  } else {
+    max_step <- c(700,1000,1300,1500,2000)
+  }
+  
+  # Apply policy rules for Credirect Installment
+  scoring_df$allowed_amount_app <- 3000
+    
+    # If has at least 1 terminated 
+  if(nrow(all_id_local)>0){
+      
+      scoring_df$allowed_amount_rep <- 
+        ifelse(scoring_df$score %in% c("Bad","NULL"),
+               max(all_id_local$amount) + 0,
+        ifelse(scoring_df$score %in% c("Indeterminate"),
+               max(all_id_local$amount) + max_step[1], 
+        ifelse(scoring_df$score %in% c("Good 1"),
+               max(all_id_local$amount) + max_step[2],
+        ifelse(scoring_df$score %in% c("Good 2"),
+               max(all_id_local$amount) + max_step[3],
+        ifelse(scoring_df$score %in% c("Good 3"),
+               max(all_id_local$amount) + max_step[4], 
+               max(all_id_local$amount) + max_step[5])))))
+      
+      for (i in 1:nrow(scoring_df)){
+        scoring_df$allowed_amount[i] <- max(scoring_df$allowed_amount_rep[i],
+             scoring_df$allowed_amount_app[i])
+      }
+      scoring_df$color <- ifelse(scoring_df$amount>scoring_df$allowed_amount,
+                                 1,scoring_df$color)
+    } 
+    
+  # If only has at least 1 active (no terminated)
+  else if(nrow(all_id_local_active)>0){
+      for (i in 1:nrow(scoring_df)){
+        scoring_df$allowed_amount[i] <- max(scoring_df$allowed_amount_app[i],
+                                            max(all_id_local_active$amount))}
+      
+  # Precaution condition
+    } else {
+      scoring_df$allowed_amount <- scoring_df$allowed_amount_app
+  }
+    
+    scoring_df$color <- ifelse(scoring_df$amount>scoring_df$allowed_amount,
+                               1,scoring_df$color)
+    
+  # Accept only with bezsro4en trudov dogovor
+  if(is.na(all_df$status_work) | all_df$status_work!=2){
+      scoring_df$color <- 
+        ifelse(is.na(scoring_df$pd),scoring_df$color,1)
+  }
+  
   return(scoring_df)
 }
 
