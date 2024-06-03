@@ -1031,3 +1031,103 @@ gen_parallel_score <- function(prev_amount,all_id,t_income,criteria_po,
      logistic_cashpoint_beh_pd,logistic_cashpoint_beh_score)))
   
 }
+
+# Generate PA offer in main scoring
+gen_pa_term_citycash <- function(db_name,empty_fields,threshold_empty,
+  flag_exclusion,flag_varnat,flag_is_dead,flag_credit_next_salary,
+  flag_credirect,flag_beh,all_df,scoring_df,df,products,df_Log_beh_CityCash,
+  df_Log_CityCash_App,df_Log_beh_Credirect,df_Log_Credirect_App_installments,
+  df_Log_Credirect_App_payday,period,all_id,prev_amount,amount_tab,
+  t_income,disposable_income_adj,flag_new_credirect_old_city,api_df,
+  flag_judicial,flag_third_side,flag_cashpoint,base_dir,flag_otpisan,
+  flag_money1,flag_cession,flag_bad_ckr_citycash,application_id,
+  flag_beh_company,fraud_flag,flag_risky_address,flag_parallel){
+  
+  # Rescore for City Cash
+  flag_money1 <- 0
+  flag_credirect <- 0
+
+  # Generate score
+  scoring_df <- gen_apply_score(
+    empty_fields,threshold_empty,flag_exclusion,
+    flag_varnat,flag_is_dead,flag_credit_next_salary,flag_credirect,
+    flag_beh,all_df,scoring_df,df,products,df_Log_beh_CityCash,
+    df_Log_CityCash_App,df_Log_beh_Credirect,df_Log_Credirect_App_installments,
+    df_Log_Credirect_App_payday,period,all_id,prev_amount,amount_tab,
+    t_income,disposable_income_adj,flag_new_credirect_old_city,api_df,
+    flag_judicial,0,flag_third_side,flag_cashpoint,base_dir,0,flag_otpisan,
+    flag_money1)
+
+  # Apply policy rules 
+  scoring_df <- gen_apply_policy(scoring_df,flag_credirect,flag_cession,
+   flag_bad_ckr_citycash,all_df,all_id,flag_beh,prev_amount,products,
+   application_id,flag_new_credirect_old_city,flag_credit_next_salary,
+   flag_beh_company,flag_cashpoint,0,fraud_flag,flag_risky_address,
+   flag_parallel,flag_money1)
+
+  # Subset scoring dataframe according to criteria
+  correct_scoring_df <- subset(scoring_df,scoring_df$color!=1 &
+   scoring_df$score %in% c("Indeterminate","Good 1","Good 2","Good 3","Good 4"))
+  
+  # Get highest amount
+  get_max_amount <- suppressWarnings(max(correct_scoring_df$amount))
+  
+  # Get maximum installment
+  if(is.infinite(get_max_amount)){
+    get_max_installment <- -Inf	
+  } else {	
+    get_max_installment <- max(scoring_df$installment_amount[
+      scoring_df$color!=1 & scoring_df$amount==get_max_amount])	
+  }
+
+  return(list(get_max_amount,get_max_installment))
+
+}
+
+# Generate string to write in PA table for Money1-CityCash
+gen_pa_term_citycash_string <- function(db_name,all_df,check_offer,flag_add){
+  
+  id_max_query <- paste(
+    "SELECT MAX(id) as max_id
+  FROM ",db_name,".clients_prior_approval_applications",sep="")
+  id_max <- gen_query(con,id_max_query)$max_id + 1 + flag_add
+  
+  # Buld string 
+  pa_str <- all_df[,c("client_id","product_id")]
+  pa_str$product_id <- 1
+  pa_str$id <- id_max
+  pa_str$group <- NA
+  pa_str$office_id <- 240
+  pa_str$installment_amount <- check_offer[[2]]
+  pa_str$credit_amount <- check_offer[[1]]
+  pa_str$credit_amount_updated <- NA
+  pa_str$application_id <- NA
+  pa_str$installment_amount_updated <- NA
+  pa_str$hide_until_date <- NA
+  pa_str$consultant_id <- NA
+  pa_str$active_from <- NA
+  pa_str$active_to <- NA
+  pa_str$created_at <- Sys.time()
+  pa_str$updated_at <- NA
+  pa_str$deleted_at <- NA
+  
+  pa_str[is.na(pa_str)] <- "NULL"
+  
+  return(gen_sql_string_po_terminated(pa_str,1))
+  
+}
+
+# Delete if has prior PA city cash offers
+gen_pa_term_citycash_string_delete <- function(db_name,all_df){
+  
+  prods <- gen_query(con,gen_get_company_id_query(db_name))
+  delete_query <- paste(
+  "SELECT id, client_id FROM ",db_name,".clients_prior_approval_applications 
+  WHERE deleted_at IS NULL AND client_id = ",all_df$client,
+  " AND product_id IN (",paste(prods$id[prods$company_id==1],collapse=","),")",
+  sep="")
+  to_delete <- gen_query(con,delete_query)
+  return(to_delete$id)
+
+}
+

@@ -557,6 +557,51 @@ suppressMessages(dbWriteTable(con, name = "credits_applications_scoring",
   row.names = F, append = T))
 
 
+# Make offer if reject in Money1
+if(flag_money1==1 & !(any(unique(scoring_df$display_score) %in% c("Yes"))) & 
+                    !(any(unique(scoring_df$display_score) %in% c("NULL")))){
+  
+  check_offer <- gen_pa_term_citycash(db_name,empty_fields,threshold_empty,
+     flag_exclusion,flag_varnat,flag_is_dead,flag_credit_next_salary,
+     flag_credirect,flag_beh,all_df,scoring_df,df,products,df_Log_beh_CityCash,
+     df_Log_CityCash_App,df_Log_beh_Credirect,df_Log_Credirect_App_installments,
+     df_Log_Credirect_App_payday,period,all_id,prev_amount,amount_tab,
+     t_income,disposable_income_adj,flag_new_credirect_old_city,api_df,
+     flag_judicial,flag_third_side,flag_cashpoint,base_dir,flag_otpisan,
+     flag_money1,flag_cession,flag_bad_ckr_citycash,application_id,
+     flag_beh_company,fraud_flag,flag_risky_address,flag_parallel)
+  
+  if(!is.infinite(check_offer[[1]])){
+    
+    # Remove if already has offer 
+    already_offer <- gen_pa_term_citycash_string_delete(db_name,all_df)
+    
+    if(length(already_offer)>0){
+      delete_query <- paste("UPDATE ",db_name,
+       ".clients_prior_approval_applications SET updated_at = '",
+       substring(Sys.time(),1,19),"', deleted_at = '",
+       paste(substring(Sys.time(),1,10),"04:00:00",sep=),"'
+       WHERE id IN (",paste(already_offer,collapse=","),")",
+       sep="")
+      suppressMessages(suppressWarnings(dbSendQuery(con,delete_query)))
+    }
+    
+    # Generate potentially an offer
+    offer_string <- gen_pa_term_citycash_string(db_name,all_df,check_offer,0)
+    suppressWarnings(tryCatch({
+      update_prior_query <- paste("INSERT INTO ",db_name,
+        ".clients_prior_approval_applications VALUES ",offer_string,";", sep="")
+      suppressMessages(suppressWarnings(dbSendQuery(con,update_prior_query)))
+    }, error=function(e){
+      offer_string <- gen_pa_term_citycash_string(db_name,all_df,check_offer,1)
+      update_prior_query <- paste("INSERT INTO ",db_name,
+        ".clients_prior_approval_applications VALUES ",offer_string,";", sep="")
+      suppressMessages(suppressWarnings(dbSendQuery(con,update_prior_query)))
+    }))
+  }
+}
+
+
 # Run parallel scores
 parallel_score <- gen_parallel_score(prev_amount,all_id,t_income,criteria_po,
     disposable_income_adj,flag_new_credirect_old_city,base_dir,amount_tab,
