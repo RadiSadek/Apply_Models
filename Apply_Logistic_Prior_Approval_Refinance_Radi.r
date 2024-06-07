@@ -688,7 +688,7 @@ po_special_3rd_side <- po_special_3rd_side[,c("application_id","created_at",
 
 # Remove Credirect if amount is less than due 
 po_special_credirect <- subset(po_special_raw,
-  po_special_raw$product_id %in% c(48,77,95))
+  po_special_raw$product_id %in% c(48,77,95,82))
 
 all_apps <- po_special_credirect$application_id[1]
 if(nrow(po_special_credirect)>1){
