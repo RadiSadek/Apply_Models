@@ -986,7 +986,7 @@ gen_table_api_scoring <- function(score){
 gen_parallel_score <- function(prev_amount,all_id,t_income,criteria_po,
      disposable_income_adj,flag_new_credirect_old_city,base_dir,amount_tab,
      products,scoring_df,df_Log_beh_CityCash,df_Log_beh_Credirect,api_df,period,
-     all_df,flag_beh,flag_credirect,flag_cashpoint){
+     all_df,flag_beh,flag_credirect,flag_cashpoint,flag_money1){
   
   # Run GB model for Credirect repeat
   if(flag_beh==1 & flag_credirect==1){
@@ -1018,6 +1018,11 @@ gen_parallel_score <- function(prev_amount,all_id,t_income,criteria_po,
     
   }
   
+  if(flag_beh==0 & flag_cashpoint==0 & flag_money1==0 & flag_credirect==0){
+    fraud_app_citycash <-  suppressMessages(
+      gen_app_citycash_fraud(df,scoring_df,base_dir))
+  }
+  
   # Check for empty parallel score fields
   if(!exists("gbm_credirect_beh_pd")){
     gbm_credirect_beh_pd <- NA
@@ -1027,8 +1032,12 @@ gen_parallel_score <- function(prev_amount,all_id,t_income,criteria_po,
     logistic_cashpoint_beh_pd <- NA
     logistic_cashpoint_beh_score <- NA
   }
+  if(!exists("fraud_app_citycash")){
+    fraud_app_citycash <- NA
+  }
   return(as.data.frame(cbind(gbm_credirect_beh_pd,gbm_credirect_beh_score,
-     logistic_cashpoint_beh_pd,logistic_cashpoint_beh_score)))
+     logistic_cashpoint_beh_pd,logistic_cashpoint_beh_score,
+     fraud_app_citycash)))
   
 }
 

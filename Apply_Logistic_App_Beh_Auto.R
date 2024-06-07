@@ -82,6 +82,7 @@ source(file.path(base_dir,"Logistic_App_CityCash.r"))
 source(file.path(base_dir,"Logistic_App_Credirect_installments.r"))
 source(file.path(base_dir,"Logistic_App_Credirect_payday.r"))
 source(file.path(base_dir,"Logistic_App_Credirect_Fraud.r"))
+source(file.path(base_dir,"Logistic_App_CityCash_Fraud.r"))
 source(file.path(base_dir,"Logistic_Beh_CityCash.r"))
 source(file.path(base_dir,"Logistic_Beh_Credirect.r"))
 source(file.path(base_dir,"Useful_Functions.r"))
@@ -606,7 +607,7 @@ if(flag_money1==1 & !(any(unique(scoring_df$display_score) %in% c("Yes"))) &
 parallel_score <- gen_parallel_score(prev_amount,all_id,t_income,criteria_po,
     disposable_income_adj,flag_new_credirect_old_city,base_dir,amount_tab,
     products,scoring_df,df_Log_beh_CityCash,df_Log_beh_Credirect,api_df,period,
-    all_df,flag_beh,flag_credirect,flag_cashpoint)
+    all_df,flag_beh,flag_credirect,flag_cashpoint,flag_money1)
 
 
 # Save result of dataframe into jsonfile

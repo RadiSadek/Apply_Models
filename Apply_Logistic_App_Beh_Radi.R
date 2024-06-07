@@ -45,7 +45,7 @@ base_dir <- "C:/Projects/Apply_Scoring"
 # Read argument of ID
 args <- commandArgs(trailingOnly = TRUE)
 application_id <- args[1]
-application_id <- 2051381
+#application_id <- 1901800
 product_id <- NA
 
 
@@ -62,6 +62,7 @@ source(paste(base_dir,"/Apply_Models/Logistic_App_Credirect_installments.r",
        sep=""))
 source(paste(base_dir,"/Apply_Models/Logistic_App_Credirect_payday.r", sep=""))
 source(paste(base_dir,"/Apply_Models/Logistic_App_Credirect_Fraud.r", sep=""))
+source(paste(base_dir,"/Apply_Models/Logistic_App_CityCash_Fraud.r", sep=""))
 source(paste(base_dir,"/Apply_Models/Logistic_Beh_CityCash.r", sep=""))
 source(paste(base_dir,"/Apply_Models/Logistic_Beh_Credirect.r", sep=""))
 source(paste(base_dir,"/Apply_Models/Useful_Functions_Radi.r", sep=""))
@@ -566,7 +567,7 @@ if(flag_money1==1 & !(any(unique(scoring_df$display_score) %in% c("Yes"))) &
 parallel_score <- gen_parallel_score(prev_amount,all_id,t_income,criteria_po,
     disposable_income_adj,flag_new_credirect_old_city,base_dir,amount_tab,
     products,scoring_df,df_Log_beh_CityCash,df_Log_beh_Credirect,api_df,period,
-    all_df,flag_beh,flag_credirect,flag_cashpoint)
+    all_df,flag_beh,flag_credirect,flag_cashpoint,flag_money1)
 
 
 # Save result of dataframe into jsonfile
@@ -657,7 +658,7 @@ final$gbm_pd <- parallel_score$gbm_credirect_beh_pd
 final$gbm_score <- parallel_score$gbm_credirect_beh_score
 final$logistic_beg_pd <- parallel_score$logistic_cashpoint_beh_pd
 final$logistic_beg_score <- parallel_score$logistic_cashpoint_beh_score
-
+final$fraud_flag_citycash <- parallel_score$fraud_app_citycash
 
 # Read and write
 final_exists <- read.xlsx(paste(base_dir,
