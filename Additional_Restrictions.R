@@ -77,8 +77,8 @@ gen_restrict_cashpoint_app <- function(scoring_df,all_df,flag_beh,
   return(scoring_df)
 }
 
-# Function to apply restrictions for Money1 applications 
-gen_restrict_money1_app <- function(scoring_df,all_df,all_id,flag_beh){
+# Function to apply restrictions for FinMag applications 
+gen_restrict_finmag_app <- function(scoring_df,all_df,all_id,flag_beh){
   
   # Accept only Good 4
   if(flag_beh==0){
@@ -409,8 +409,8 @@ gen_restrict_credirect_beh <- function(scoring_df,all_df,all_id,application_id,
   return(scoring_df)
 }
 
-# Funciton to apply restrictions for Money1 behavioral
-gen_restrict_money1_beh <- function(scoring_df,prev_amount,products,
+# Funciton to apply restrictions for FinMag behavioral
+gen_restrict_finmag_beh <- function(scoring_df,prev_amount,products,
        all_id,all_df,db_name,application_id){
   
   # Get company ID to filter past credits only for Credirect and credit amounts

@@ -227,8 +227,8 @@ flag_credirect <- ifelse(products_desc$company_id==2, 1, 0)
 flag_cashpoint <- ifelse(products_desc$company_id==5, 1, 0)
 
 
-# Compute flag if product is Money1
-flag_money1 <- ifelse(products_desc$company_id==7, 1, 0)
+# Compute flag if product is Finmag
+flag_finmag <- ifelse(products_desc$company_id==7, 1, 0)
 
 
 # Compute flag if client has previous otpisan or tsediran
@@ -430,7 +430,7 @@ scoring_df <- gen_apply_score(
   df_Log_Credirect_App_payday,period,all_id,prev_amount,amount_tab,
   t_income,disposable_income_adj,flag_new_credirect_old_city,api_df,
   flag_judicial,0,flag_third_side,flag_cashpoint,base_dir,1,flag_otpisan,
-  flag_money1)
+  flag_finmag)
 
 
 # Build column PD
@@ -456,7 +456,7 @@ scoring_df <- gen_apply_policy(scoring_df,flag_credirect,flag_cession,
    flag_bad_ckr_citycash,all_df,all_id,flag_beh,prev_amount,products,
    application_id,flag_new_credirect_old_city,flag_credit_next_salary,
    flag_beh_company,flag_cashpoint,0,fraud_flag,flag_risky_address,
-   flag_parallel,flag_money1)
+   flag_parallel,flag_finmag)
 
 
 # Apply repeat restrictions to refinances and with potential refinance

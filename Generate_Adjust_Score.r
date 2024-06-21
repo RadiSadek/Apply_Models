@@ -11,7 +11,7 @@ gen_apply_score <- function(empty_fields,threshold_empty,flag_exclusion,
   df_Log_Credirect_App_payday,period,all_id,prev_amount,amount_tab,
   t_income,disposable_income_adj,flag_new_credirect_old_city,api_df,
   flag_judicial,criteria_po,flag_third_side,flag_cashpoint,base_dir,
-  flag_prescore,flag_otpisan,flag_money1){
+  flag_prescore,flag_otpisan,flag_finmag){
   
   # Apply model coefficients according to type of credit 
   if (empty_fields>=threshold_empty){
@@ -40,31 +40,31 @@ gen_apply_score <- function(empty_fields,threshold_empty,flag_exclusion,
     scoring_df$color <- 1
     
   } else  if(flag_beh==0 & flag_cashpoint==0 & flag_credirect==0 & 
-             flag_money1==0 & flag_prescore==1){
+             flag_finmag==0 & flag_prescore==1){
     
     scoring_df <- gen_app_citycash_prescore(df,all_df,base_dir,scoring_df)
     
   } else  if(flag_beh==1 & flag_cashpoint==0 & flag_credirect==0 & 
-             flag_money1==0 & flag_prescore==1){
+             flag_finmag==0 & flag_prescore==1){
     
     scoring_df <- gen_beh_citycash(df,scoring_df,products,df_Log_beh_CityCash,
         period,all_id,all_df,prev_amount,amount_tab,
         t_income,disposable_income_adj,criteria_po,base_dir)
     
-  } else if (flag_beh==1 & flag_credirect==0 & flag_money1==0){
+  } else if (flag_beh==1 & flag_credirect==0 & flag_finmag==0){
     
     scoring_df <- gen_beh_citycash(df,scoring_df,products,df_Log_beh_CityCash,
       period,all_id,all_df,prev_amount,amount_tab,
       t_income,disposable_income_adj,criteria_po,base_dir)
     
-  } else if (flag_beh==1 & (flag_credirect==1 | flag_money1==1)){
+  } else if (flag_beh==1 & (flag_credirect==1 | flag_finmag==1)){
     
     scoring_df <- gen_beh_credirect(df,scoring_df,products,df_Log_beh_Credirect,
       period,all_df,prev_amount,amount_tab,t_income,
       disposable_income_adj,criteria_po,flag_new_credirect_old_city,api_df,
       base_dir)
     
-  } else if (flag_beh==0 & flag_credirect==0 & flag_money1==0){
+  } else if (flag_beh==0 & flag_credirect==0 & flag_finmag==0){
     
     scoring_df <- gen_app_citycash(df,scoring_df,products,df_Log_CityCash_App,
       period,all_df,prev_amount,amount_tab,
@@ -95,7 +95,7 @@ gen_apply_policy <- function(scoring_df,flag_credirect,flag_cession,
      flag_bad_ckr_citycash,all_df,all_id,flag_beh,prev_amount,products,
      application_id,flag_new_credirect_old_city,flag_credit_next_salary,
      flag_beh_company,flag_cashpoint,crit,fraud_flag,flag_risky_address,
-     flag_parallel,flag_money1){
+     flag_parallel,flag_finmag){
   
   if(flag_cession==1 & flag_credirect==1){
     scoring_df <- gen_adjust_score(scoring_df, c("Bad","Indeterminate"))
@@ -106,11 +106,11 @@ gen_apply_policy <- function(scoring_df,flag_credirect,flag_cession,
     scoring_df <- gen_adjust_score(scoring_df, c("Bad","Indeterminate"))
   }
   if(flag_beh_company==0 & flag_credirect==0 & flag_cashpoint==0 & 
-     flag_money1==0 & all_df$product_id!=22){
+     flag_finmag==0 & all_df$product_id!=22){
     scoring_df <- gen_restrict_citycash_app(scoring_df,products,all_df,all_id)
   }
   if(flag_beh_company==0 & flag_credirect==0 & flag_cashpoint==0 & 
-     flag_money1==0 & all_df$product_id==22){
+     flag_finmag==0 & all_df$product_id==22){
     scoring_df <- gen_restrict_big_fin_app(scoring_df)
   }
   if(flag_beh_company==0 & flag_cashpoint==1){
@@ -122,12 +122,12 @@ gen_apply_policy <- function(scoring_df,flag_credirect,flag_cession,
        application_id,prev_amount,flag_parallel,db_name)
   }
   if(flag_beh_company==1 & flag_credirect==0 & flag_cashpoint==0 & 
-     flag_money1==0 & all_df$product_id!=22){
+     flag_finmag==0 & all_df$product_id!=22){
     scoring_df <- gen_restrict_citycash_beh(scoring_df,prev_amount,products,
      all_id,all_df,db_name,application_id,crit,flag_cashpoint,flag_parallel)
   }
   if(flag_beh_company==1 & flag_credirect==0 & flag_cashpoint==0 & 
-     flag_money1==0 & all_df$product_id==22){
+     flag_finmag==0 & all_df$product_id==22){
     scoring_df <- gen_restrict_big_fin_rep(scoring_df,prev_amount)
   }
 
@@ -147,11 +147,11 @@ gen_apply_policy <- function(scoring_df,flag_credirect,flag_cession,
     scoring_df <- gen_restrict_credirect_beh(scoring_df,all_df,all_id,
         application_id,flag_credit_next_salary)
   }
-  if(flag_beh_company==0 & flag_money1==1){
-    scoring_df <- gen_restrict_money1_app(scoring_df,all_df,all_id,flag_beh)
+  if(flag_beh_company==0 & flag_finmag==1){
+    scoring_df <- gen_restrict_finmag_app(scoring_df,all_df,all_id,flag_beh)
   }
-  if(flag_beh_company==1 & flag_money1==1){
-    scoring_df <- gen_restrict_money1_beh(scoring_df,prev_amount,products,
+  if(flag_beh_company==1 & flag_finmag==1){
+    scoring_df <- gen_restrict_finmag_beh(scoring_df,prev_amount,products,
      all_id,all_df,db_name,application_id)
   }
   

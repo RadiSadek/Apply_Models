@@ -986,7 +986,7 @@ gen_table_api_scoring <- function(score){
 gen_parallel_score <- function(prev_amount,all_id,t_income,criteria_po,
      disposable_income_adj,flag_new_credirect_old_city,base_dir,amount_tab,
      products,scoring_df,df_Log_beh_CityCash,df_Log_beh_Credirect,api_df,period,
-     all_df,flag_beh,flag_credirect,flag_cashpoint,flag_money1){
+     all_df,flag_beh,flag_credirect,flag_cashpoint,flag_finmag){
   
   # Run GB model for Credirect repeat
   if(flag_beh==1 & flag_credirect==1){
@@ -1018,7 +1018,7 @@ gen_parallel_score <- function(prev_amount,all_id,t_income,criteria_po,
     
   }
   
-  if(flag_beh==0 & flag_cashpoint==0 & flag_money1==0 & flag_credirect==0){
+  if(flag_beh==0 & flag_cashpoint==0 & flag_finmag==0 & flag_credirect==0){
     fraud_app_citycash <-  suppressMessages(
       gen_app_citycash_fraud(df,scoring_df,base_dir))
   }
@@ -1049,11 +1049,11 @@ gen_pa_term_citycash <- function(db_name,empty_fields,threshold_empty,
   df_Log_Credirect_App_payday,period,all_id,prev_amount,amount_tab,
   t_income,disposable_income_adj,flag_new_credirect_old_city,api_df,
   flag_judicial,flag_third_side,flag_cashpoint,base_dir,flag_otpisan,
-  flag_money1,flag_cession,flag_bad_ckr_citycash,application_id,
+  flag_finmag,flag_cession,flag_bad_ckr_citycash,application_id,
   flag_beh_company,fraud_flag,flag_risky_address,flag_parallel){
   
   # Rescore for City Cash
-  flag_money1 <- 0
+  flag_finmag <- 0
   flag_credirect <- 0
 
   # Generate score
@@ -1065,14 +1065,14 @@ gen_pa_term_citycash <- function(db_name,empty_fields,threshold_empty,
     df_Log_Credirect_App_payday,period,all_id,prev_amount,amount_tab,
     t_income,disposable_income_adj,flag_new_credirect_old_city,api_df,
     flag_judicial,0,flag_third_side,flag_cashpoint,base_dir,0,flag_otpisan,
-    flag_money1)
+    flag_finmag)
 
   # Apply policy rules 
   scoring_df <- gen_apply_policy(scoring_df,flag_credirect,flag_cession,
    flag_bad_ckr_citycash,all_df,all_id,flag_beh,prev_amount,products,
    application_id,flag_new_credirect_old_city,flag_credit_next_salary,
    flag_beh_company,flag_cashpoint,0,fraud_flag,flag_risky_address,
-   flag_parallel,flag_money1)
+   flag_parallel,flag_finmag)
 
   # Subset scoring dataframe according to criteria
   correct_scoring_df <- subset(scoring_df,scoring_df$color!=1 &
@@ -1093,7 +1093,7 @@ gen_pa_term_citycash <- function(db_name,empty_fields,threshold_empty,
  
 }
 
-# Generate string to write in PA table for Money1-CityCash
+# Generate string to write in PA table for Finmag-CityCash
 gen_pa_term_citycash_string <- function(db_name,all_df,check_offer,flag_add){
   
   id_max_query <- paste(

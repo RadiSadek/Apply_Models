@@ -231,8 +231,8 @@ flag_credirect <- ifelse(products_desc$company_id==2, 1, 0)
 flag_cashpoint <- ifelse(products_desc$company_id==5, 1, 0)
 
 
-# Compute flag if product is Money1
-flag_money1 <- ifelse(products_desc$company_id==7, 1, 0)
+# Compute flag if product is Finmag
+flag_finmag <- ifelse(products_desc$company_id==7, 1, 0)
 
 
 # Compute flag if client has previous otpisan or tsediran
@@ -365,7 +365,7 @@ threshold_empty <- ifelse(flag_credirect==0 & flag_beh==0, 7,
 
 
 # Adjust count of empty fields accordingly
-empty_fields <- ifelse(flag_credirect==1 | flag_money1==1, empty_fields, 
+empty_fields <- ifelse(flag_credirect==1 | flag_finmag==1, empty_fields, 
    ifelse(is.na(df$total_income) | df$total_income==0, 
    threshold_empty, empty_fields))
 
@@ -439,7 +439,7 @@ scoring_df <- gen_apply_score(
   df_Log_Credirect_App_payday,period,all_id,prev_amount,amount_tab,
   t_income,disposable_income_adj,flag_new_credirect_old_city,api_df,
   flag_judicial,0,flag_third_side,flag_cashpoint,base_dir,0,flag_otpisan,
-  flag_money1)
+  flag_finmag)
 
 
 # Set initial scoring reason
@@ -475,7 +475,7 @@ scoring_df <- gen_apply_policy(scoring_df,flag_credirect,flag_cession,
    flag_bad_ckr_citycash,all_df,all_id,flag_beh,prev_amount,products,
    application_id,flag_new_credirect_old_city,flag_credit_next_salary,
    flag_beh_company,flag_cashpoint,0,fraud_flag,flag_risky_address,
-   flag_parallel,flag_money1)
+   flag_parallel,flag_finmag)
 scoring_decision <- gen_decline_reason(scoring_df,all_df,15,scoring_decision)
 
 
@@ -519,8 +519,8 @@ scoring_df <- scoring_df[,c("application_id","amount","period","score","color",
 scoring_df <- gen_final_table_display(scoring_df,flag_credirect)
 
 
-# Make offer if reject in Money1
-if(flag_money1==1 & !(any(unique(scoring_df$display_score) %in% c("Yes"))) & 
+# Make offer if reject in FinMag
+if(flag_finmag==1 & !(any(unique(scoring_df$display_score) %in% c("Yes"))) & 
                     !(any(unique(scoring_df$display_score) %in% c("NULL")))){
   
   check_offer <- gen_pa_term_citycash(db_name,empty_fields,threshold_empty,
@@ -530,7 +530,7 @@ if(flag_money1==1 & !(any(unique(scoring_df$display_score) %in% c("Yes"))) &
      df_Log_Credirect_App_payday,period,all_id,prev_amount,amount_tab,
      t_income,disposable_income_adj,flag_new_credirect_old_city,api_df,
      flag_judicial,flag_third_side,flag_cashpoint,base_dir,flag_otpisan,
-     flag_money1,flag_cession,flag_bad_ckr_citycash,application_id,
+     flag_finmag,flag_cession,flag_bad_ckr_citycash,application_id,
      flag_beh_company,fraud_flag,flag_risky_address,flag_parallel)
   
   if(!is.infinite(check_offer[[1]])){
@@ -567,7 +567,7 @@ if(flag_money1==1 & !(any(unique(scoring_df$display_score) %in% c("Yes"))) &
 parallel_score <- gen_parallel_score(prev_amount,all_id,t_income,criteria_po,
     disposable_income_adj,flag_new_credirect_old_city,base_dir,amount_tab,
     products,scoring_df,df_Log_beh_CityCash,df_Log_beh_Credirect,api_df,period,
-    all_df,flag_beh,flag_credirect,flag_cashpoint,flag_money1)
+    all_df,flag_beh,flag_credirect,flag_cashpoint,flag_finmag)
 
 
 # Save result of dataframe into jsonfile
