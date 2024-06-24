@@ -350,7 +350,7 @@ threshold_empty <- ifelse(flag_credirect==0 & flag_beh==0, 7,
 
 
 # Adjust count of empty fields accordingly
-empty_fields <- ifelse(flag_credirect==1 | flag_==1, empty_fields, 
+empty_fields <- ifelse(flag_credirect==1 | flag_finmag==1, empty_fields, 
    ifelse(is.na(df$total_income) | df$total_income==0, 
    threshold_empty, empty_fields))
 
