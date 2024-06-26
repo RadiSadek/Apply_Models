@@ -1140,3 +1140,30 @@ gen_pa_term_citycash_string_delete <- function(db_name,all_df){
 
 }
 
+# Generate string to write in table call_center_offers_suggestions
+gen_call_center_offers_citycash_string <- function(db_name,all_df,flag_add){
+  
+  id_max_query <- paste(
+  "SELECT MAX(id) as max_id
+  FROM ",db_name,".call_center_offers_suggestions",sep="")
+  id_max <- gen_query(con,id_max_query)$max_id + 1 + flag_add
+  
+  # Buld string 
+  pa_str <- all_df[,c("client_id","application_id")]
+  pa_str$id <- id_max
+  pa_str$ref_application_id <- NA
+  pa_str$status <- 1
+  pa_str$processed_by <- NA
+  pa_str$created_at <- Sys.time()
+  pa_str$updated_at <- NA
+  pa_str[is.na(pa_str)] <- "NULL"
+  
+  final_str <- paste("(",pa_str$id[1],",",
+        pa_str$client_id[1],",",pa_str$application_id[1],",",
+        pa_str$ref_application_id[1],",",pa_str$status[1],",",
+        pa_str$processed_by[1],",'",pa_str$created_at[1],"',",
+        pa_str$updated_at[1],")",sep="")
+  
+  return(final_str)
+  
+}

@@ -45,7 +45,7 @@ base_dir <- "C:/Projects/Apply_Scoring"
 # Read argument of ID
 args <- commandArgs(trailingOnly = TRUE)
 application_id <- args[1]
-#application_id <- 1901800
+application_id <- 2126263
 product_id <- NA
 
 
@@ -543,21 +543,33 @@ if(flag_finmag==1 & !(any(unique(scoring_df$display_score) %in% c("Yes"))) &
        ".clients_prior_approval_applications SET updated_at = '",
        substring(Sys.time(),1,19),"', deleted_at = '",
        paste(substring(Sys.time(),1,10),"04:00:00",sep=),"'
-       WHERE id IN",already_offer, sep="")
-      suppressMessages(suppressWarnings(dbSendQuery(con,delete_query)))
+       WHERE id IN (",paste(already_offer,collapse=","),")",
+       sep="")
+      #suppressMessages(suppressWarnings(dbSendQuery(con,delete_query)))
     }
     
     # Generate potentially an offer
     offer_string <- gen_pa_term_citycash_string(db_name,all_df,check_offer,0)
+    offer_string_cc <- gen_call_center_offers_citycash_string(db_name,all_df,0)
     suppressWarnings(tryCatch({
       update_prior_query <- paste("INSERT INTO ",db_name,
         ".clients_prior_approval_applications VALUES ",offer_string,";", sep="")
+      update_prior_cc_query <- paste("INSERT INTO ",db_name,
+       ".call_center_offers_suggestions VALUES ",offer_string_cc,";", sep="")
       #suppressMessages(suppressWarnings(dbSendQuery(con,update_prior_query)))
+      #suppressMessages(suppressWarnings(dbSendQuery(con,update_prior_cc_query)
+      #))
     }, error=function(e){
       offer_string <- gen_pa_term_citycash_string(db_name,all_df,check_offer,1)
+      offer_string_cc <- gen_call_center_offers_citycash_string(db_name,
+         all_df,1)
       update_prior_query <- paste("INSERT INTO ",db_name,
         ".clients_prior_approval_applications VALUES ",offer_string,";", sep="")
+      update_prior_cc_query <- paste("INSERT INTO ",db_name,
+        ".call_center_offers_suggestions VALUES ",offer_string_cc,";", sep="")
       #suppressMessages(suppressWarnings(dbSendQuery(con,update_prior_query)))
+      #suppressMessages(suppressWarnings(dbSendQuery(con,update_prior_cc_query)
+      #))
     }))
   }
 }

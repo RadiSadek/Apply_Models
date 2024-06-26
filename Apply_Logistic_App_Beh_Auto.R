@@ -558,7 +558,7 @@ suppressMessages(dbWriteTable(con, name = "credits_applications_scoring",
   row.names = F, append = T))
 
 
-# Make offer if reject in Finmag
+# Make offer if reject in FinMag
 if(flag_finmag==1 & !(any(unique(scoring_df$display_score) %in% c("Yes"))) & 
                     !(any(unique(scoring_df$display_score) %in% c("NULL")))){
   
@@ -589,15 +589,24 @@ if(flag_finmag==1 & !(any(unique(scoring_df$display_score) %in% c("Yes"))) &
     
     # Generate potentially an offer
     offer_string <- gen_pa_term_citycash_string(db_name,all_df,check_offer,0)
+    offer_string_cc <- gen_call_center_offers_citycash_string(db_name,all_df,0)
     suppressWarnings(tryCatch({
       update_prior_query <- paste("INSERT INTO ",db_name,
         ".clients_prior_approval_applications VALUES ",offer_string,";", sep="")
+      update_prior_cc_query <- paste("INSERT INTO ",db_name,
+       ".call_center_offers_suggestions VALUES ",offer_string_cc,";", sep="")
       suppressMessages(suppressWarnings(dbSendQuery(con,update_prior_query)))
+      suppressMessages(suppressWarnings(dbSendQuery(con,update_prior_cc_query)))
     }, error=function(e){
       offer_string <- gen_pa_term_citycash_string(db_name,all_df,check_offer,1)
+      offer_string_cc <- gen_call_center_offers_citycash_string(db_name,
+         all_df,1)
       update_prior_query <- paste("INSERT INTO ",db_name,
         ".clients_prior_approval_applications VALUES ",offer_string,";", sep="")
+      update_prior_cc_query <- paste("INSERT INTO ",db_name,
+        ".call_center_offers_suggestions VALUES ",offer_string_cc,";", sep="")
       suppressMessages(suppressWarnings(dbSendQuery(con,update_prior_query)))
+      suppressMessages(suppressWarnings(dbSendQuery(con,update_prior_cc_query)))
     }))
   }
 }
