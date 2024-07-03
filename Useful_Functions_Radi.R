@@ -1103,6 +1103,7 @@ gen_pa_term_citycash_string <- function(db_name,all_df,check_offer,flag_add){
   
   # Buld string 
   pa_str <- all_df[,c("client_id","product_id")]
+  pa_str$product_id <- 98
   pa_str$id <- id_max
   pa_str$group <- NA
   pa_str$office_id <- 240
