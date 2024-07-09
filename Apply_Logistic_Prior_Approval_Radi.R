@@ -190,6 +190,7 @@ select_credits$score_max_amount <- NA
 select_credits$max_delay <- NA
 for(i in 1:nrow(select_credits)){
   suppressWarnings(tryCatch({
+    gc()
     if(select_credits$product_id[i]==8 & select_credits$is_vip[i]==0){
       product_id <- 5
     } else if(select_credits$product_id[i]==76 & select_credits$is_vip[i]==0){
@@ -660,6 +661,33 @@ po_rearrange_query <- paste("UPDATE ",db_name,
 SET deleted_at = '",paste(substring(Sys.time(),1,10),sep=""),
 " 04:00:00' WHERE credit_amount <0 AND deleted_at IS NULL",sep="")
 suppressMessages(suppressWarnings(dbSendQuery(con,po_rearrange_query)))
+
+
+#######################################
+### Remove those with double offers ###
+#######################################
+
+# Identify duplicates
+po_dups <- subset(po_raw,is.na(po_raw$deleted_at) & is.na(po_raw$group) & 
+   po_raw$company_id==5)
+po_dups$client_prod <- paste(po_dups$client_id,po_dups$product_id,sep="_")
+dups <- po_dups[duplicated(po_dups[,c('client_prod')]),]
+
+# Remove duplicates
+if(nrow(dups)>0){
+  
+  all_dups <- po_dups[po_dups$client_prod %in% dups$client_prod,]
+  all_dups <- all_dups[order(all_dups$created_at),]
+  all_dups <- all_dups[order(all_dups$client_prod),]
+  all_dups <- all_dups[!duplicated(all_dups$client_prod),]
+  
+  po_change_query <- paste("UPDATE ",db_name,
+  ".clients_prior_approval_applications SET deleted_at = '",
+  substring(Sys.time(),1,19),"', updated_at = '",
+  substring(Sys.time(),1,19),"' WHERE id IN ",
+  gen_string_po_terminated(all_dups), sep="")
+  suppressMessages(suppressWarnings(dbSendQuery(con,po_change_query)))
+}
 
 
 ###########
