@@ -361,7 +361,7 @@ gen_nb_varnat <- function(all_credits){
     all_credits_local$time_passed <- difftime(Sys.time(),
        all_credits_local$deactivated_at,units=c("days"))
     all_credits_local <- subset(all_credits_local,
-       all_credits_local$time_passed<180)
+       all_credits_local$time_passed<360)
     nrow_varnat <- nrow(all_credits_local)
   } else {
     nrow_varnat <- 0
