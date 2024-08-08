@@ -286,6 +286,7 @@ result_df$office_id <- NA
 result_df$third_side <- NA
 for(i in 1:nrow(result_df)){
   suppressWarnings(tryCatch({
+    gc()
     application_id <- result_df$id[i]
     if(select$product_id[i]==8 & select$is_vip[i]==0){
       product_id <- 5
@@ -385,7 +386,10 @@ select$next_amount_diff <- select$max_amount - select$left_to_pay
 
 
 # Subset based on if next amount is higher than hitherto due amount
-select <- subset(select,select$next_amount_diff>=0)
+select <- 
+  rbind(subset(select,select$next_amount_diff>=0 & select$company_id!=2),
+        subset(select,select$next_amount_diff>=50 & select$company_id==2))
+        
 
 
 
@@ -762,6 +766,46 @@ po_correct_ref_credirect <- paste("UPDATE ",db_name,
 substring(Sys.time(),1,19),"' WHERE product_id IN (9,48) 
 AND deleted_at IS NULL", sep="")
 suppressMessages(suppressWarnings(dbSendQuery(con,po_correct_ref_credirect)))
+
+
+
+##########################################################################
+### Remove those who were flagged as blacklisted after offer creation  ###
+##########################################################################
+
+# Get all clients which are to be removed
+po_risk <- gen_query(con,paste(
+"SELECT a.application_id, a.created_at, b.client_id
+FROM ",db_name,".prior_approval_refinances a LEFT JOIN 
+",db_name,".credits_applications b ON a.application_id=b.id 
+WHERE a.deleted_at IS NULL",sep=""))
+risky1 <- gen_query(con,paste(
+  "SELECT id, judge_us_at, dead_at FROM ",db_name,".clients 
+WHERE judge_us_at IS NOT NULL OR dead_at IS NOT NULL",sep=""))
+risky2 <- gen_query(con,paste(
+  "SELECT a.egn, b.id FROM ",db_name,".clients_risk a 
+LEFT JOIN clients b ON a.egn = b.egn",sep=""))
+risky2 <- subset(risky2,!is.na(risky2$id))
+risky3 <- gen_query(con,paste(
+  "SELECT client_id, judicial_date FROM ",db_name,".credits_applications  
+WHERE judicial_date IS NOT NULL",sep=""))
+
+po_risk <- rbind(po_risk[po_risk$clientid %in% risky1$id,],
+  po_risk[po_risk$clientid %in% risky2$id,],
+  po_risk[po_risk$clientid %in% risky1$client_id,])
+
+# Remove offers
+if(nrow(po_risk)>0){
+  
+  po_risk <- po_risk[!duplicated(po_risk$id),]
+  
+  po_change_query <- paste("UPDATE ",db_name,
+     ".prior_approval_refinances SET deleted_at = '",
+     substring(Sys.time(),1,19),"', updated_at = '",
+     substring(Sys.time(),1,19),"' WHERE application_id IN ",
+     gen_string_po_refinance(po_risk), sep="")
+  suppressMessages(suppressWarnings(dbSendQuery(con,po_change_query)))
+}
 
 
 

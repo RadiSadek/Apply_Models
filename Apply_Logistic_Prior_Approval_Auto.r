@@ -688,7 +688,6 @@ SET deleted_at = '",paste(substring(Sys.time(),1,10),sep=""),
 suppressMessages(suppressWarnings(dbSendQuery(con,po_rearrange_query)))
 
 
-
 #######################################
 ### Remove those with double offers ###
 #######################################
@@ -712,6 +711,138 @@ if(nrow(dups)>0){
   substring(Sys.time(),1,19),"', updated_at = '",
   substring(Sys.time(),1,19),"' WHERE id IN ",
   gen_string_po_terminated(all_dups), sep="")
+  suppressMessages(suppressWarnings(dbSendQuery(con,po_change_query)))
+}
+
+
+##########################################################################
+### Remove those who were flagged as blacklisted after offer creation  ###
+##########################################################################
+
+# Get all clients which are to be removed
+po_risk <- subset(po_raw,is.na(po_raw$deleted_at))
+risky1 <- gen_query(con,paste(
+"SELECT id, judge_us_at, dead_at FROM ",db_name,".clients 
+WHERE judge_us_at IS NOT NULL OR dead_at IS NOT NULL",sep=""))
+risky2 <- gen_query(con,paste(
+"SELECT a.egn, b.id FROM ",db_name,".clients_risk a 
+LEFT JOIN clients b ON a.egn = b.egn",sep=""))
+risky2 <- subset(risky2,!is.na(risky2$id))
+risky3 <- gen_query(con,paste(
+"SELECT client_id, judicial_date FROM ",db_name,".credits_applications  
+WHERE judicial_date IS NOT NULL",sep=""))
+
+po_risk <- rbind(po_risk[po_risk$clientid %in% risky1$id,],
+  po_risk[po_risk$clientid %in% risky2$id,],
+  po_risk[po_risk$clientid %in% risky1$client_id,])
+
+# Remove offers
+if(nrow(po_risk)>0){
+  
+  po_risk <- po_risk[!duplicated(po_risk$id),]
+  
+  po_change_query <- paste("UPDATE ",db_name,
+   ".clients_prior_approval_applications SET deleted_at = '",
+   substring(Sys.time(),1,19),"', updated_at = '",
+   substring(Sys.time(),1,19),"' WHERE id IN ",
+   gen_string_po_terminated(po_risk), sep="")
+  suppressMessages(suppressWarnings(dbSendQuery(con,po_change_query)))
+}
+
+
+##############################################
+### Remove those who lost their VIP status ###
+##############################################
+
+# Get all clients which are to be removed
+po_vip <- subset(po_raw,is.na(po_raw$deleted_at))
+vip_prod <- gen_query(con,paste(
+"SELECT id, for_vip FROM ",db_name,".products WHERE for_vip=1",sep=""))
+po_vip <- merge(po_vip,vip_prod,by.x = "product_id",by.y = "id",all.x = TRUE)
+po_vip <- subset(po_vip,!is.na(po_vip$for_vip))
+vip_status <- gen_query(con,paste(
+"SELECT client_id, is_vip, brand_id FROM ",db_name,
+".client_brand WHERE is_vip=1",sep=""))
+po_vip <- merge(po_vip,vip_status,by.x = c("client_id","company_id"),
+  by.y = c("client_id","brand_id"),all.x = TRUE)
+
+# Deal with those who lost their VIP status
+po_vip <- subset(po_vip,is.na(po_vip$is_vip))
+
+# Get last ID
+all_credits_vip <- all_credits_raw
+all_credits_vip <- subset(all_credits_vip,all_credits_vip$status %in% c(5))
+all_credits_vip <- all_credits_vip[rev(order(all_credits_vip$deactivated_at)),]
+all_credits_vip <- all_credits_vip[order(all_credits_vip$client_id),]
+all_credits_vip <- all_credits_vip[!duplicated(all_credits_vip[,
+   c("client_id","company_id")]),]
+colnames(all_credits_vip)[which(names(all_credits_vip) == "id")] <- "last_id"
+po_vip <- merge(po_vip,all_credits_vip[,c("client_id","last_id","company_id")],
+  by.x = c("client_id","company_id"),
+  by.y = c("client_id","company_id"),all.x = TRUE)
+
+# Set fields
+po_vip$max_amount <- NA
+po_vip$max_installment_amount <- NA
+po_vip$score_max_amount <- NA
+po_vip$max_delay <- NA
+
+# Create offers
+for(i in 1:nrow(po_vip)){
+  suppressWarnings(tryCatch({
+    gc()
+    if(po_vip$product_id[i]==8){
+      product_id <- 5
+    } else if(po_vip$product_id[i]==76){
+      product_id <- 1
+    } else if(po_vip$product_id[i]==96){
+      product_id <- 7
+    } else {
+      product_id <- NA
+    }
+    client_id <- po_vip$client_id[i]
+    last_id <- po_vip$last_id[i]
+    calc <- gen_terminated_fct(con,client_id,product_id,last_id,0,db_name,0)
+    po_vip$product_id[i] <- product_id
+    po_vip$max_amount[i] <- calc[[1]]
+    po_vip$max_installment_amount[i] <- calc[[2]]
+    po_vip$score_max_amount[i] <- calc[[3]]
+    po_vip$max_delay[i] <- as.numeric(calc[[4]])
+  }, error=function(e){}))
+}
+
+# Subset
+po_vip <- subset(po_vip,!is.na(po_vip$product_id))
+po_vip_ok <- subset(po_vip,po_vip$max_amount>-Inf & po_vip$max_amount<Inf)
+po_vip_not_ok <- po_vip[!(po_vip$id %in% po_vip_ok$id),]
+
+# Update offers
+if(nrow(po_vip_ok)>0){
+  po_change_query <- paste("UPDATE ",db_name,
+   ".clients_prior_approval_applications SET updated_at = '",
+   substring(Sys.time(),1,19),"' WHERE id IN",
+   gen_string_po_terminated(po_vip_ok), sep="")
+  suppressMessages(suppressWarnings(dbSendQuery(con,po_change_query)))
+  suppressMessages(suppressWarnings(dbSendQuery(con,
+     gen_string_delete_po_terminated(po_vip_ok,po_vip_ok$credit_amount,
+     "credit_amount",db_name))))
+  suppressMessages(suppressWarnings(dbSendQuery(con,
+     gen_string_delete_po_terminated(po_vip_ok,po_vip_ok$installment_amount,
+     "installment_amount",db_name))))
+  productid_string <- gen_string_delete_po_terminated(po_vip_ok,
+    po_vip_ok$product_id,"product_id",db_name)
+  productid_string <- gsub("WH  EN","WHEN",productid_string)
+  productid_string <- gsub("WH EN","WHEN",productid_string)
+  suppressMessages(suppressWarnings(dbSendQuery(con,productid_string)))
+}
+
+# Remove offers
+if(nrow(po_vip_not_ok)>0){
+  po_change_query <- paste("UPDATE ",db_name,
+     ".clients_prior_approval_applications SET deleted_at = '",
+     substring(Sys.time(),1,19),"', updated_at = '",
+     substring(Sys.time(),1,19),"' WHERE id IN ",
+     gen_string_po_terminated(po_vip_not_ok), sep="")
   suppressMessages(suppressWarnings(dbSendQuery(con,po_change_query)))
 }
 
