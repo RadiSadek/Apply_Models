@@ -562,7 +562,8 @@ suppressMessages(dbWriteTable(con, name = "credits_applications_scoring",
 if(flag_finmag==1 & !(any(unique(scoring_df$display_score) %in% c("Yes"))) & 
                     !(any(unique(scoring_df$display_score) %in% c("NULL")))){
   
-  check_offer <- gen_pa_term_citycash(db_name,empty_fields,threshold_empty,
+  check_offer <- suppressWarnings(
+    gen_pa_term_citycash(db_name,empty_fields,threshold_empty,
      flag_exclusion,flag_varnat,flag_is_dead,flag_credit_next_salary,
      flag_credirect,flag_beh,all_df,scoring_df,df,products,df_Log_beh_CityCash,
      df_Log_CityCash_App,df_Log_beh_Credirect,df_Log_Credirect_App_installments,
@@ -570,7 +571,7 @@ if(flag_finmag==1 & !(any(unique(scoring_df$display_score) %in% c("Yes"))) &
      t_income,disposable_income_adj,flag_new_credirect_old_city,api_df,
      flag_judicial,flag_third_side,flag_cashpoint,base_dir,flag_otpisan,
      flag_finmag,flag_cession,flag_bad_ckr_citycash,application_id,
-     flag_beh_company,fraud_flag,flag_risky_address,flag_parallel)
+     flag_beh_company,fraud_flag,flag_risky_address,flag_parallel))
   
   if(!is.infinite(check_offer[[1]])){
     

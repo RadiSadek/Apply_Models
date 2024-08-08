@@ -1055,6 +1055,12 @@ gen_pa_term_citycash <- function(db_name,empty_fields,threshold_empty,
   # Rescore for City Cash
   flag_finmag <- 0
   flag_credirect <- 0
+  all_df$product_id <- df$product_id <- 98
+  all_df$total_income <- df$total_income <- 1000
+  products <- gen_query(con,gen_products_query(db_name,all_df))
+  
+  # Generate products table
+  scoring_df <- gen_final_df(products,application_id)
 
   # Generate score
   scoring_df <- gen_apply_score(
