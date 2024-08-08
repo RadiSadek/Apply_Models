@@ -692,8 +692,7 @@ suppressMessages(suppressWarnings(dbSendQuery(con,po_rearrange_query)))
 #######################################
 
 # Identify duplicates
-po_dups <- subset(po_raw,is.na(po_raw$deleted_at) & is.na(po_raw$group) & 
-   po_raw$company_id==5)
+po_dups <- subset(po_raw,is.na(po_raw$deleted_at) & is.na(po_raw$group))
 po_dups$client_prod <- paste(po_dups$client_id,po_dups$product_id,sep="_")
 dups <- po_dups[duplicated(po_dups[,c('client_prod')]),]
 
