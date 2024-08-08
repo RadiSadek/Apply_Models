@@ -387,7 +387,6 @@ colnames(all_credits_cp)[which(names(all_credits_cp) == "id")] <- "last_id"
 po_cp <- merge(po_cp,all_credits_cp[,c("client_id","last_id")],
     by.x = "client_id",by.y = "client_id",all.x = TRUE)
 
-
 # Check if offer is top be updated
 if(nrow(po_cp)>0){
   
@@ -409,24 +408,24 @@ if(nrow(po_cp)>0){
   po_cp <- subset(po_cp,!is.na(po_cp$credit_amount_updated) & 
       po_cp$credit_amount_updated>po_cp$credit_amount)
   
-  products_query <- paste(
-    "SELECT product_id, amount, period, installment_amount 
-  FROM ",db_name,".products_periods_and_amounts WHERE product_id IN (",
-    paste(unique(po_cp$product_id),collapse=","),")",sep="")
-  products_update <- gen_query(con,products_query)
-  max_per_product <- aggregate(products_update$installment_amount,
-      by=list(products_update$product_id,products_update$amount),FUN=max)
-  for(i in 1:nrow(po_cp)){
-    if(po_cp$credit_amount_updated[i]>(po_cp$credit_amount[i]+400)){
-      
-      po_cp$credit_amount_updated[i] <- po_cp$credit_amount[i] + 400
-      po_cp$installment_amount_updated[i] <- 
-        max_per_product$x[max_per_product$Group.1==po_cp$product_id[i] & 
-          max_per_product$Group.2==po_cp$credit_amount_updated[i]]
-    }
-  }
-  
   if(nrow(po_cp)>0){
+    products_query <- paste(
+      "SELECT product_id, amount, period, installment_amount 
+      FROM ",db_name,".products_periods_and_amounts WHERE product_id IN (",
+      paste(unique(po_cp$product_id),collapse=","),")",sep="")
+    products_update <- gen_query(con,products_query)
+    max_per_product <- aggregate(products_update$installment_amount,
+       by=list(products_update$product_id,products_update$amount),FUN=max)
+    for(i in 1:nrow(po_cp)){
+      if(po_cp$credit_amount_updated[i]>(po_cp$credit_amount[i]+400)){
+        
+        po_cp$credit_amount_updated[i] <- po_cp$credit_amount[i] + 400
+        po_cp$installment_amount_updated[i] <- 
+          max_per_product$x[max_per_product$Group.1==po_cp$product_id[i] & 
+          max_per_product$Group.2==po_cp$credit_amount_updated[i]]
+      }
+    }
+
     po_change_query <- paste("UPDATE ",db_name,
         ".clients_prior_approval_applications SET updated_at = '",
         substring(Sys.time(),1,19),"' WHERE id IN",
