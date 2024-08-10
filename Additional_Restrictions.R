@@ -80,6 +80,12 @@ gen_restrict_cashpoint_app <- function(scoring_df,all_df,flag_beh,
 # Function to apply restrictions for FinMag applications 
 gen_restrict_finmag_app <- function(scoring_df,all_df,all_id,flag_beh){
   
+  # Set lower limit
+  scoring_df$color <- 
+    ifelse(scoring_df$score %in% c("NULL"),scoring_df$color,
+    ifelse(scoring_df$score %in% c("Good 4") & scoring_df$amount>5000,1,
+           scoring_df$color))
+  
   # Accept only Good 4
   if(flag_beh==0){
     scoring_df$color <- 
