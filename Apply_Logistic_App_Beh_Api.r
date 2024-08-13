@@ -156,13 +156,40 @@ if(gen_score==0){
     "status_work","marital_status","outs_overdue_ratio_total")]))
   threshold_empty <- 6
   scoring_df <- all_df
+  
+  # Set all variables needed for model 
+  all_df$age <- ifelse(is.null(all_df$age),NA,as.numeric(all_df$age))
+  all_df$gender <- ifelse(is.null(all_df$gender),NA,all_df$gender)
+  all_df$ownership <- ifelse(is.null(all_df$ownership),NA,all_df$ownership)
+  all_df$education <- ifelse(is.null(all_df$education),NA,all_df$education)
+  all_df$household_total <- ifelse(is.null(all_df$household_total),NA,
+    as.numeric(all_df$household_total))
+  all_df$purpose <- ifelse(is.null(all_df$purpose),NA,all_df$purpose)
+  all_df$marital_status <- ifelse(is.null(all_df$marital_status),NA,
+    all_df$marital_status)
+  all_df$experience_employer <- ifelse(is.null(all_df$experience_employer),NA,
+    as.numeric(all_df$experience_employer))
+  all_df$status_work <- ifelse(is.null(all_df$status_work),NA,
+    all_df$status_work)
+  all_df$status_finished_total <- ifelse(is.null(all_df$status_finished_total),
+    NA,all_df$status_finished_total)
+  all_df$outs_overdue_ratio_total <- ifelse(is.null(
+    all_df$outs_overdue_ratio_total),NA,
+    as.numeric(all_df$outs_overdue_ratio_total))
+  all_df$has_viber <- ifelse(is.null(all_df$has_viber),NA,all_df$has_viber)
+  all_df$city_pop <- ifelse(is.null(all_df$city_pop),NA,
+    as.numeric(all_df$city_pop))
+  all_df$phone_plan <- ifelse(is.null(all_df$phone_plan),NA,all_df$phone_plan)
+  all_df$leasing <- ifelse(is.null(all_df$leasing),NA,all_df$leasing)
+  
+  # Make additional settings
   df <- all_df
   products <- as.data.frame(cbind(NA,NA,NA))
   names(products) <- c("product_id","period","amount")
   all_id <- all_df
-  api_df <- as.data.frame(cbind(NA,NA,NA,NA,NA))
+  api_df <- as.data.frame(cbind(NA,NA,NA,NA,NA,NA))
   names(api_df) <- c("email","payment_method","amount","referral_source",
-     "user_agent")
+     "user_agent","device_type")
   scoring_df$amount <- 1000
   scoring_df$installments <- 1
   scoring_df <- gen_apply_score(
