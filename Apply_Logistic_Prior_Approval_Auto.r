@@ -779,6 +779,7 @@ po_vip <- merge(po_vip,all_credits_vip[,c("client_id","last_id","company_id")],
   by.x = c("client_id","company_id"),
   by.y = c("client_id","company_id"),all.x = TRUE)
 
+if(nrow(po_vip)>0){
 # Set fields
 po_vip$max_amount <- NA
 po_vip$max_installment_amount <- NA
@@ -842,6 +843,7 @@ if(nrow(po_vip_not_ok)>0){
      substring(Sys.time(),1,19),"' WHERE id IN ",
      gen_string_po_terminated(po_vip_not_ok), sep="")
   suppressMessages(suppressWarnings(dbSendQuery(con,po_change_query)))
+}
 }
 
 
