@@ -204,8 +204,7 @@ if(!exists("scoring_df")){
   change_query <- paste("UPDATE ",db_name,
     ".api_scoring SET status = 1, result_at = '",
     substring(Sys.time(),1,19),"', result = '",
-    setjson_table,"', request_payload = '",setjson_table,"' WHERE id=",
-    application_id,sep="")
+    setjson_table,"' WHERE id=",application_id,sep="")
   change_query <- gsub("\\\\","",change_query,fixed=TRUE)
   suppressMessages(suppressWarnings(dbSendQuery(con,change_query)))
 }
