@@ -21,8 +21,6 @@ gen_group_scores <- function(var,office,flag_beh,flag_credirect,
     cutoffs <- cu_app_cred_flex}
   else if (flag_credirect==1 & flag_beh==0 & flag_credit_next_salary==0){
     cutoffs <- cu_app_cred_user}
-  else if(flag_credirect==1 & flag_beh==1 & flag_credit_next_salary==2){
-    cutoffs <- cu_beh_cred_gbm}
   else if (flag_credirect==0 & flag_beh==1){
     cutoffs <- cu_beh_city}
   else {cutoffs <- cu_beh_cred}
@@ -988,21 +986,6 @@ gen_parallel_score <- function(prev_amount,all_id,t_income,criteria_po,
      products,scoring_df,df_Log_beh_CityCash,df_Log_beh_Credirect,api_df,period,
      all_df,flag_beh,flag_credirect,flag_cashpoint,flag_finmag){
   
-  # Run GB model for Credirect repeat
-  if(flag_beh==1 & flag_credirect==1){
-    gen_beh_gbm_credirect_result <- suppressMessages(
-      gen_beh_gbm_credirect(df,scoring_df,products,
-          df_Log_beh_Credirect,period,all_df,prev_amount,amount_tab,t_income,
-          disposable_income_adj,criteria_po,flag_new_credirect_old_city,api_df,
-          base_dir))
-    gbm_credirect_beh_pd <- gen_beh_gbm_credirect_result[[1]]
-    gbm_credirect_beh_score <- gen_beh_gbm_credirect_result[[2]]
-    
-    if(flag_otpisan==1 | flag_exclusion==1 | flag_varnat==1 | 
-       flag_is_dead==1 | flag_judicial==1){
-      gbm_credirect_beh_score <- "Bad"
-    }
-  }
   if(flag_beh==1 & flag_cashpoint==1){
     gen_beh_cashpoint_result <- suppressMessages(
       gen_beh_cashpoint(df,scoring_df,products,df_Log_beh_CityCash,period,

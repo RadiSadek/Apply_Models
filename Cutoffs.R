@@ -27,8 +27,7 @@ cu_app_cred_flex <- c(0.36,0.125,0.1,0.07,0.045)
 cu_app_cred_user <- c(0.68,0.58,0.5,0.425,0.35)
 
 # Repeat all Credirect
-cu_beh_cred <- c(0.8,0.4,0.275,0.175,0.1)
-cu_beh_cred_gbm <- c(0.75,0.4,0.25,0.15,0.075)
+cu_beh_cred <- c(0.77,0.4,0.25,0.15,0.075)
 
 # Application Credirect Frauds
 cu_app_cred_frauds <- 0.2

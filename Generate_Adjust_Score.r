@@ -59,10 +59,10 @@ gen_apply_score <- function(empty_fields,threshold_empty,flag_exclusion,
     
   } else if (flag_beh==1 & (flag_credirect==1 | flag_finmag==1)){
     
-    scoring_df <- gen_beh_credirect(df,scoring_df,products,df_Log_beh_Credirect,
-      period,all_df,prev_amount,amount_tab,t_income,
-      disposable_income_adj,criteria_po,flag_new_credirect_old_city,api_df,
-      base_dir)
+      scoring_df <- gen_beh_gbm_credirect(df,scoring_df,products,
+       df_Log_beh_Credirect,period,all_df,prev_amount,amount_tab,
+       t_income,disposable_income_adj,criteria_po,flag_new_credirect_old_city,
+       api_df,base_dir)
     
   } else if (flag_beh==0 & flag_credirect==0 & flag_finmag==0){
     

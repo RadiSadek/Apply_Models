@@ -4,9 +4,9 @@
 #########################################################################
 
 gen_beh_gbm_credirect <- function(df,scoring_df,products,df_Log_beh_Credirect,
-                             period,all_df,prev_amount,amount_tab,
-                             t_income,disposable_income_adj,crit_po,
-                             flag_new_credirect_old_city,api_df,base_dir){
+    period,all_df,prev_amount,amount_tab,
+    t_income,disposable_income_adj,crit_po,
+    flag_new_credirect_old_city,api_df,base_dir){
   
   # Load rdata
   load(file.path(base_dir,"rdata","credirect_repeat_gbm.rdata"))
@@ -74,10 +74,34 @@ gen_beh_gbm_credirect <- function(df,scoring_df,products,df_Log_beh_Credirect,
   df[,c(asfac)] <- lapply(df[,c(asfac)], factor)
   
   # Apply model
-  pd <- predict(new_model,df,type = "response")
-  score <- gen_group_scores(pd,all_df$office_id,1,1,2)
-  
-  return(list(pd,score))
+  for(i in 1:nrow(scoring_df)){
+    
+    period_tab <- as.numeric(scoring_df$period[i])
+    amount_tab <- as.numeric(scoring_df$amount[i])
+    
+    apply_gbm <- suppressMessages(predict(new_model,df,type = "response"))
+    scoring_df$score[i] <- apply_gbm
+    scoring_df$score[i] <- gen_group_scores(scoring_df$score[i],
+        all_df$office_id,1,1,2)
+    scoring_df$pd[i] <- round(apply_gbm,3)
+    
+    # Compute flag of disposable income
+    product_tab <- subset(products, products$product_id==all_df$product_id & 
+       products$period==as.numeric(period_tab) &
+       products$amount==as.numeric(amount_tab))
+    scoring_df$color[i] <- ifelse(scoring_df$score[i]=="Bad", 1, 
+       ifelse(scoring_df$score[i]=="Indeterminate", 2,
+       ifelse(scoring_df$score[i]=="Good 1", 3,
+       ifelse(scoring_df$score[i]=="Good 2", 4,
+       ifelse(scoring_df$score[i]=="Good 3", 5,
+       ifelse(scoring_df$score[i]=="Good 4",6,NA))))))
+    
+    if(crit_po!=0){
+      scoring_df$installment_amount[i] <- product_tab$installment_amount
+    }
+  }
+  return(scoring_df)
+  print("here")
 }
 
 
