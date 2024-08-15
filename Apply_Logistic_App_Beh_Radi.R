@@ -45,7 +45,7 @@ base_dir <- "C:/Projects/Apply_Scoring"
 # Read argument of ID
 args <- commandArgs(trailingOnly = TRUE)
 application_id <- args[1]
-application_id <- 2192764
+application_id <- 2190373
 product_id <- NA
 
 
@@ -534,6 +534,24 @@ if(flag_finmag==1 & !(any(unique(scoring_df$display_score) %in% c("Yes"))) &
      flag_finmag,flag_cession,flag_bad_ckr_citycash,application_id,
      flag_beh_company,fraud_flag,flag_risky_address,flag_parallel))
   
+  # check if has rejected previously
+  has_rejects <- all_credits
+  has_rejects <- merge(has_rejects,
+    gen_query(con,gen_get_company_id_query(db_name)),by.x = "product_id",
+    by.y = "id",all.x = TRUE)
+  has_rejects_city1 <- subset(has_rejects,has_rejects$sub_status %in% 
+    c(120,119,136,124,122,129) & has_rejects$company_id==1)
+  has_rejects_city2 <- subset(has_rejects,has_rejects$status %in% c(4,5) & 
+    has_rejects$signed_at>=(Sys.Date()-360) & has_rejects$company_id==1)
+  has_rejects_other <- subset(has_rejects,has_rejects$sub_status %in% 
+    c(136) & has_rejects$company_id %in% c(2,5) & 
+             has_rejects$created_at>=(Sys.Date()-360))
+  
+  if((nrow(has_rejects_city1)>0 & nrow(has_rejects_city2)==0) |
+     (nrow(has_rejects_other)>0)){
+    check_offer[[1]] <- -Inf
+  }
+    
   if(!is.infinite(check_offer[[1]])){
     
     # Remove if already has offer 
@@ -628,9 +646,11 @@ final$PD <- scoring_df$pd[scoring_df$amount== unique(scoring_df$amount)
   [which.min(abs(all_df$installments - unique(scoring_df$period)))]]
 final$highest_amount <- suppressWarnings(max(scoring_df$amount[
   scoring_df$color!=1 & scoring_df$score !="NULL"]))
+final$egn <- all_df$egn
 final$flag_beh <- flag_beh
 final$flag_beh_company <- flag_beh_company
 final$flag_credirect <- flag_credirect
+final$flag_finmag <- flag_finmag
 final$flag_next_salary <- flag_credit_next_salary
 final$flag_exclusion <- flag_exclusion
 final$flag_bad_ckr_citycash <- flag_bad_ckr_citycash
@@ -673,6 +693,23 @@ final$gbm_score <- parallel_score$gbm_credirect_beh_score
 final$logistic_beg_pd <- parallel_score$logistic_cashpoint_beh_pd
 final$logistic_beg_score <- parallel_score$logistic_cashpoint_beh_score
 final$fraud_flag_citycash <- parallel_score$fraud_app_citycash
+final$age <- all_df$age
+final$gender <- all_df$gender
+final$ownership <- all_df$ownership
+final$education <- all_df$education
+final$marital_status <- all_df$marital_status
+final$experience_employer <- all_df$experience_employer
+final$purpose <- all_df$purpose
+final$has_viber <- all_df$has_viber
+final$outs_overdue_ratio_total <- all_df$outs_overdue_ratio_total
+final$api_period <- api_df$period
+final$api_amount <- api_df$amount
+final$api_payment_method <- api_df$payment_method 
+final$api_referral_source <- api_df$referral_source
+final$city_pop <- all_df$city_pop
+final$phone_plan <- all_df$phone_plan
+final$leasing <- all_df$leasing 
+final$other_bank_accounts <- all_df$other_bank_accounts
 
 # Read and write
 final_exists <- read.xlsx(paste(base_dir,

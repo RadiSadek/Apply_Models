@@ -573,8 +573,27 @@ if(flag_finmag==1 & !(any(unique(scoring_df$display_score) %in% c("Yes"))) &
      flag_finmag,flag_cession,flag_bad_ckr_citycash,application_id,
      flag_beh_company,fraud_flag,flag_risky_address,flag_parallel))
   
+  # check if has rejected previously
+  has_rejects <- all_credits
+  has_rejects <- merge(has_rejects,
+    gen_query(con,gen_get_company_id_query(db_name)),by.x = "product_id",
+    by.y = "id",all.x = TRUE)
+  has_rejects_city1 <- subset(has_rejects,has_rejects$sub_status %in% 
+    c(120,119,136,124,122,129) & has_rejects$company_id==1)
+  has_rejects_city2 <- subset(has_rejects,has_rejects$status %in% c(4,5) & 
+    has_rejects$signed_at>=(Sys.Date()-360) & has_rejects$company_id==1)
+  has_rejects_other <- subset(has_rejects,has_rejects$sub_status %in% 
+    c(136) & has_rejects$company_id %in% c(2,5) & 
+             has_rejects$created_at>=(Sys.Date()-360))
+  
+  if((nrow(has_rejects_city1)>0 & nrow(has_rejects_city2)==0) |
+     (nrow(has_rejects_other)>0)){
+    check_offer[[1]] <- -Inf
+  }
+  
   if(!is.infinite(check_offer[[1]])){
     
+    # Remove if already has offer 
     already_offer <- as.data.frame(
       gen_pa_term_citycash_string_delete(db_name,all_df))
     
