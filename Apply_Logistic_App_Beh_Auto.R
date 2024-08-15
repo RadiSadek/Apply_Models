@@ -583,11 +583,14 @@ if(flag_finmag==1 & !(any(unique(scoring_df$display_score) %in% c("Yes"))) &
   has_rejects_city2 <- subset(has_rejects,has_rejects$status %in% c(4,5) & 
     has_rejects$signed_at>=(Sys.Date()-720) & has_rejects$company_id==1)
   has_rejects_other <- subset(has_rejects,has_rejects$sub_status %in% 
-    c(136) & has_rejects$company_id %in% c(2,5) & 
-             has_rejects$created_at>=(Sys.Date()-720))
+    c(136,120) & has_rejects$company_id %in% c(2,5) & 
+    has_rejects$created_at>=(Sys.Date()-720))
+  has_rejects_other2 <- subset(has_rejects,has_rejects$status %in% c(4,5) & 
+    has_rejects$signed_at>=(Sys.Date()-720) & 
+    has_rejects$company_id %in% c(2,5))
   
   if((nrow(has_rejects_city1)>0 & nrow(has_rejects_city2)==0) |
-     (nrow(has_rejects_other)>0)){
+     (nrow(has_rejects_other)>0) & nrow(has_rejects_other2)==0){
     check_offer[[1]] <- -Inf
   }
   
