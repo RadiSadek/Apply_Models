@@ -54,7 +54,7 @@ gen_app_credirect_installments <- function(df,scoring_df,products,
   
   df$has_viber_cut <- 
     ifelse(is.na(df$has_viber),"has_viber",
-    ifelse(df$has_viber=="False","no_viber","has_viber"))
+    ifelse(df$has_viber==0,"no_viber","has_viber"))
   df$has_viber <- as.factor(df$has_viber_cut)
   
   api_df$period <- as.numeric(api_df$period)
