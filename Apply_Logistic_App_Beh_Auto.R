@@ -581,10 +581,10 @@ if(flag_finmag==1 & !(any(unique(scoring_df$display_score) %in% c("Yes"))) &
   has_rejects_city1 <- subset(has_rejects,has_rejects$sub_status %in% 
     c(120,119,136,124,122,129) & has_rejects$company_id==1)
   has_rejects_city2 <- subset(has_rejects,has_rejects$status %in% c(4,5) & 
-    has_rejects$signed_at>=(Sys.Date()-360) & has_rejects$company_id==1)
+    has_rejects$signed_at>=(Sys.Date()-720) & has_rejects$company_id==1)
   has_rejects_other <- subset(has_rejects,has_rejects$sub_status %in% 
     c(136) & has_rejects$company_id %in% c(2,5) & 
-             has_rejects$created_at>=(Sys.Date()-360))
+             has_rejects$created_at>=(Sys.Date()-720))
   
   if((nrow(has_rejects_city1)>0 & nrow(has_rejects_city2)==0) |
      (nrow(has_rejects_other)>0)){
