@@ -45,7 +45,7 @@ base_dir <- "C:/Projects/Apply_Scoring"
 # Read argument of ID
 args <- commandArgs(trailingOnly = TRUE)
 application_id <- args[1]
-application_id <- 2186357
+application_id <- 2192764
 product_id <- NA
 
 
@@ -537,14 +537,15 @@ if(flag_finmag==1 & !(any(unique(scoring_df$display_score) %in% c("Yes"))) &
   if(!is.infinite(check_offer[[1]])){
     
     # Remove if already has offer 
-    already_offer <- gen_pa_term_citycash_string_delete(db_name,all_df)
+    already_offer <- as.data.frame(
+      gen_pa_term_citycash_string_delete(db_name,all_df))
     
-    if(length(already_offer)>0){
+    if(nrow(already_offer)>0){
       delete_query <- paste("UPDATE ",db_name,
        ".clients_prior_approval_applications SET updated_at = '",
        substring(Sys.time(),1,19),"', deleted_at = '",
        paste(substring(Sys.time(),1,10),"04:00:00",sep=),"'
-       WHERE id IN (",paste(already_offer,collapse=","),")",
+       WHERE id IN (",paste(already_offer$id,collapse=","),")",
        sep="")
       #suppressMessages(suppressWarnings(dbSendQuery(con,delete_query)))
     }

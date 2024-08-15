@@ -888,9 +888,9 @@ gen_cession_credirect <- function(all_id){
 # Define function to get apply cutoffs for prescores
 gen_group_scores_prescore <- function(var,flag_beh,flag_credirect){
   if(flag_beh==0){
-      cutoffs <- cu_app_city_prescore 
+    cutoffs <- cu_app_city_prescore 
   } else {
-      cutoffs <- cu_app_city_prescore 
+    cutoffs <- cu_app_city_prescore 
   }
   if (var>cutoffs[1]){output="Bad"} 
   else if (var>cutoffs[2]) {output="Indeterminate"} 
@@ -1082,7 +1082,7 @@ gen_pa_term_citycash <- function(db_name,empty_fields,threshold_empty,
 
 }
 
-# Generate string to write in PA table for finmag-CityCash
+# Generate string to write in PA table for Finmag-CityCash
 gen_pa_term_citycash_string <- function(db_name,all_df,check_offer,flag_add){
   
   id_max_query <- paste(
@@ -1120,13 +1120,12 @@ gen_pa_term_citycash_string_delete <- function(db_name,all_df){
   
   prods <- gen_query(con,gen_get_company_id_query(db_name))
   delete_query <- paste(
-  "SELECT id, client_id FROM ",db_name,".clients_prior_approval_applications 
+    "SELECT id, client_id FROM ",db_name,".clients_prior_approval_applications 
   WHERE deleted_at IS NULL AND client_id = ",all_df$client,
-  " AND product_id IN (",paste(prods$id[prods$company_id==1],collapse=","),")",
-  sep="")
+    " AND product_id IN (98)",sep="")
   to_delete <- gen_query(con,delete_query)
-  return(to_delete$id)
-
+  return(to_delete)
+  
 }
 
 # Generate string to write in table call_center_offers_suggestions

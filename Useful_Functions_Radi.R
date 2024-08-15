@@ -1079,7 +1079,7 @@ gen_pa_term_citycash <- function(db_name,empty_fields,threshold_empty,
   }
 
   return(list(get_max_amount,get_max_installment))
- 
+
 }
 
 # Generate string to write in PA table for Finmag-CityCash
@@ -1120,12 +1120,11 @@ gen_pa_term_citycash_string_delete <- function(db_name,all_df){
   
   prods <- gen_query(con,gen_get_company_id_query(db_name))
   delete_query <- paste(
-  "SELECT id, client_id FROM ",db_name,".clients_prior_approval_applications 
+    "SELECT id, client_id FROM ",db_name,".clients_prior_approval_applications 
   WHERE deleted_at IS NULL AND client_id = ",all_df$client,
-  " AND product_id IN (",paste(prods$id[prods$company_id==1],collapse=","),")",
-  sep="")
+    " AND product_id IN (98)",sep="")
   to_delete <- gen_query(con,delete_query)
-  return(to_delete$id)
+  return(to_delete)
   
 }
 
@@ -1153,6 +1152,6 @@ gen_call_center_offers_citycash_string <- function(db_name,all_df,flag_add){
         pa_str$processed_by[1],",'",pa_str$created_at[1],"',",
         pa_str$updated_at[1],")",sep="")
   
-  return(pa_str)
+  return(final_str)
   
 }
