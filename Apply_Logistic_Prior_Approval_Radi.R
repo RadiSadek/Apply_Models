@@ -676,7 +676,7 @@ dups <- po_dups[duplicated(po_dups[,c('client_prod')]),]
 if(nrow(dups)>0){
   
   all_dups <- po_dups[po_dups$client_prod %in% dups$client_prod,]
-  all_dups <- all_dups[order(all_dups$created_at),]
+  all_dups <- all_dups[rev(order(all_dups$created_at)),]
   all_dups <- all_dups[order(all_dups$client_prod),]
   all_dups <- all_dups[duplicated(all_dups$client_prod),]
   
