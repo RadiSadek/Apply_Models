@@ -17,6 +17,7 @@ suppressMessages(suppressWarnings(library(RMySQL)))
 suppressMessages(suppressWarnings(library(here)))
 suppressMessages(suppressWarnings(library(dotenv)))
 suppressMessages(suppressWarnings(require("reshape")))
+suppressMessages(suppressWarnings(require(gbm)))
 
 
 # Defines the directory where custom .env file is located
@@ -104,15 +105,15 @@ all_credits <- subset(all_credits, is.na(all_credits$sub_status) |
 
 
 # Subset based on time difference since deactivation
-all_credits <- rbind(
-  subset(all_credits,all_credits$company_id==2 & 
-    substring(all_credits$deactivated_at,1,10)==(as.Date(Sys.time())-2)),
-  subset(all_credits,all_credits$company_id==5 & 
-    substring(all_credits$deactivated_at,1,10)==(as.Date(Sys.time())-3)),
-  subset(all_credits,all_credits$company_id==1 & all_credits$sub_status==128 & 
-    substring(all_credits$deactivated_at,1,10)==(as.Date(Sys.time())-3)),
-  subset(all_credits,all_credits$company_id==1 & all_credits$sub_status==123 & 
-    substring(all_credits$deactivated_at,1,10)==(as.Date(Sys.time())-4)))
+ all_credits <- rbind(
+   subset(all_credits,all_credits$company_id==2 & 
+     substring(all_credits$deactivated_at,1,10)==(as.Date(Sys.time())-2)),
+   subset(all_credits,all_credits$company_id==5 & 
+     substring(all_credits$deactivated_at,1,10)==(as.Date(Sys.time())-3)),
+   subset(all_credits,all_credits$company_id==1 & all_credits$sub_status==128 & 
+     substring(all_credits$deactivated_at,1,10)==(as.Date(Sys.time())-3)),
+   subset(all_credits,all_credits$company_id==1 & all_credits$sub_status==123 & 
+     substring(all_credits$deactivated_at,1,10)==(as.Date(Sys.time())-4)))
 
 
 # Remove certain offices

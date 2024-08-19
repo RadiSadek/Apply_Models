@@ -17,6 +17,7 @@ suppressMessages(suppressWarnings(library(here)))
 suppressMessages(suppressWarnings(library(dotenv)))
 suppressMessages(suppressWarnings(require("reshape")))
 suppressMessages(suppressWarnings(require(jsonlite)))
+suppressMessages(suppressWarnings(require(gbm)))
 
 
 # Defines the directory where custom .env file is located
@@ -92,6 +93,8 @@ source(file.path(base_dir,"Behavioral_Variables.r"))
 source(file.path(base_dir,"Normal_Variables.r"))
 source(file.path(base_dir,"CKR_variables.r"))
 source(file.path(base_dir,"Generate_Adjust_Score.r"))
+source(file.path(base_dir,"Gbm_Beh_Credirect.r"))
+source(file.path(base_dir,"Logistic_Beh_Cashpoint.r"))
 
 
 

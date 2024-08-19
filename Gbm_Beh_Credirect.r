@@ -101,7 +101,6 @@ gen_beh_gbm_credirect <- function(df,scoring_df,products,df_Log_beh_Credirect,
     }
   }
   return(scoring_df)
-  print("here")
 }
 
 

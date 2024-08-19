@@ -67,6 +67,8 @@ source(paste(main_dir,"Apply_Models\\Behavioral_Variables.r", sep=""))
 source(paste(main_dir,"Apply_Models\\Normal_Variables.r", sep=""))
 source(paste(main_dir,"Apply_Models\\CKR_variables.r", sep=""))
 source(paste(main_dir,"Apply_Models\\Generate_Adjust_Score.r", sep=""))
+source(paste(base_dir,"Apply_Models\\Gbm_Beh_Credirect.r", sep=""))
+source(paste(base_dir,"Apply_Models\\Logistic_Beh_Cashpoint.r", sep=""))
 
 
 # Load predefined libraries

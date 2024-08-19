@@ -17,10 +17,10 @@ suppressMessages(suppressWarnings(library(RMariaDB)))
 suppressMessages(suppressWarnings(library(DBI)))
 suppressMessages(suppressWarnings(library(Rcpp)))
 suppressMessages(suppressWarnings(library(here)))
-suppressMessages(suppressWarnings(library(here)))
 suppressMessages(suppressWarnings(library(dotenv)))
 suppressMessages(suppressWarnings(require("reshape")))
 suppressMessages(suppressWarnings(library(openxlsx)))
+suppressMessages(suppressWarnings(require(gbm)))
 
 
 # Database

@@ -17,6 +17,7 @@ suppressMessages(suppressWarnings(library(RMySQL)))
 suppressMessages(suppressWarnings(library(here)))
 suppressMessages(suppressWarnings(library(dotenv)))
 suppressMessages(suppressWarnings(require("reshape")))
+suppressMessages(suppressWarnings(require(gbm)))
 
 
 # Defines the directory where custom .env file is located
