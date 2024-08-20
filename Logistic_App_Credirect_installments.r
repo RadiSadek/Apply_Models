@@ -101,30 +101,23 @@ gen_app_credirect_installments <- function(df,scoring_df,products,
     ifelse(df$other_bank_accounts==1,"no_bank","other"))
   df$other_bank_accounts <- as.factor(df$other_bank_accounts_cut)
   
-  # Apply logisic regression
+  # Compute PD
+  apply_logit <- gen_apply_model(df,coefficients)
+  scoring_df$score <- apply_logit
   for(i in 1:nrow(scoring_df)){
-    
-    period_tab <- as.numeric(scoring_df$period[i])
-    amount_tab <- as.numeric(scoring_df$amount[i])
-  
-    apply_logit <- gen_apply_model(df,coefficients)
-    scoring_df$score[i] <- apply_logit
     scoring_df$score[i] <- gen_group_scores(scoring_df$score[i],
-          all_df$office_id,0,1,0)
-    scoring_df$pd[i] <- round(apply_logit,3)
-    
-    # Compute flag of disposable income
-    product_tab <- subset(products, products$product_id==all_df$product_id & 
-         products$period==as.numeric(period_tab) &
-         products$amount==as.numeric(amount_tab))
-    scoring_df$color[i] <- ifelse(scoring_df$score[i]=="Bad", 1, 
-          ifelse(scoring_df$score[i]=="Indeterminate", 2,
-          ifelse(scoring_df$score[i]=="Good 1", 3,
-          ifelse(scoring_df$score[i]=="Good 2", 4,
-          ifelse(scoring_df$score[i]=="Good 3", 5,
-          ifelse(scoring_df$score[i]=="Good 4",6,NA))))))
-    
+      all_df$office_id,0,1,0)
   }
+  scoring_df$pd <- round(apply_logit,3)
+  
+  # Compute color of score
+  scoring_df$color <- ifelse(scoring_df$score=="Bad", 1, 
+     ifelse(scoring_df$score=="Indeterminate", 2,
+     ifelse(scoring_df$score=="Good 1", 3,
+     ifelse(scoring_df$score=="Good 2", 4,
+     ifelse(scoring_df$score=="Good 3", 5,
+     ifelse(scoring_df$score=="Good 4",6,NA))))))
+    
   return(scoring_df)
 }
 

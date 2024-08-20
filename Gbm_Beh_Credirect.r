@@ -73,16 +73,18 @@ gen_beh_gbm_credirect <- function(df,scoring_df,products,df_Log_beh_Credirect,
     "API_referral_source","prev_other_brand","API_payment_method")
   df[,c(asfac)] <- lapply(df[,c(asfac)], factor)
   
+  # Compute PD
+  apply_gbm <- suppressMessages(predict(new_model,df,type = "response"))
+  scoring_df$score <- apply_gbm
+  
   # Apply model
   for(i in 1:nrow(scoring_df)){
     
+    scoring_df$score[i] <- gen_group_scores(scoring_df$score[i],
+      all_df$office_id,1,1,2)
+    
     period_tab <- as.numeric(scoring_df$period[i])
     amount_tab <- as.numeric(scoring_df$amount[i])
-    
-    apply_gbm <- suppressMessages(predict(new_model,df,type = "response"))
-    scoring_df$score[i] <- apply_gbm
-    scoring_df$score[i] <- gen_group_scores(scoring_df$score[i],
-        all_df$office_id,1,1,2)
     scoring_df$pd[i] <- round(apply_gbm,3)
     
     # Compute flag of disposable income
