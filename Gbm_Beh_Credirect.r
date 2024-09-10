@@ -14,6 +14,8 @@ gen_beh_gbm_credirect <- function(df,scoring_df,products,df_Log_beh_Credirect,
   #  Cut and bin those necessary
   df$max_delay <- df$max_delay[[1]]
   api_df$payment_method <- as.numeric(api_df$payment_method)
+  api_df$payment_method <- ifelse(is.na(api_df$payment_method),
+    as.numeric(df$payment_method2),api_df$payment_method)
   df$API_payment_method <- api_df$payment_method
 
   device_type <- ifelse(grepl("Android",api_df$user_agent),"Android",

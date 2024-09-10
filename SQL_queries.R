@@ -21,6 +21,7 @@ big_sql_query <- paste("SELECT
 ",db_name,".credits_applications_data_other.leasing,
 ",db_name,".credits_applications_data_other.hear_about_us,
 ",db_name,".credits_applications_data_other.other_bank_accounts,
+",db_name,".credits_applications_data_other.payment_method AS payment_method2,
 ",db_name,".credits_plan_contract.amount,
 ",db_name,".credits_plan_contract.installments,
 ",db_name,".credits_applications.signed_at,
