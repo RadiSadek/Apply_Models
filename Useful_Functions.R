@@ -459,7 +459,7 @@ gen_group_scores_ptc <- function(all_df,cutoffs){
 }
 
 # Compute flag exclusion
-gen_flag_exclusion <- function(all_credits,flag_credirect,risk){
+gen_flag_exclusion <- function(all_credits,flag_credirect,risk,all_df){
   
   all_credits <- merge(all_credits,
      gen_query(con,gen_get_company_id_query(db_name)),by.x = "product_id",
@@ -471,6 +471,12 @@ gen_flag_exclusion <- function(all_credits,flag_credirect,risk){
   flag_exclusion <- ifelse(length(which(names(
     table(all_credits$sub_status)) %in% c(124,133)))>0, 1,
     ifelse(nrow(risk)>0, 1, 0))
+  
+  # Recorrect for City Restart
+  if(all_df$product_id==102){
+    flag_exclusion <- 0
+  }
+  
   return(flag_exclusion)
   
 }

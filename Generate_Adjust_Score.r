@@ -102,7 +102,8 @@ gen_apply_policy <- function(scoring_df,flag_credirect,flag_cession,
   }
   
   # Apply if City Cash or CashPoint application
-  if(flag_bad_ckr_citycash==1 & flag_credirect==0){
+  if(flag_bad_ckr_citycash==1 & flag_credirect==0 & 
+     !(all_df$product_id %in% c(102))){
     scoring_df <- gen_adjust_score(scoring_df, c("Bad","Indeterminate"))
   }
   if(flag_beh_company==0 & flag_credirect==0 & flag_cashpoint==0 & 
