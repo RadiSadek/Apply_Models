@@ -34,7 +34,7 @@ gen_apply_score <- function(empty_fields,threshold_empty,flag_exclusion,
     scoring_df$score <- "Bad"
     scoring_df$color <- 1
     
-  } else if (flag_third_side==1 & flag_cashpoint==1){
+  } else if (flag_third_side==1 & flag_cashpoint==1 & all_df$product_id!=103){
     
     scoring_df$score <- "Bad"
     scoring_df$color <- 1

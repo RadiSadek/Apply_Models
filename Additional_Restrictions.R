@@ -61,13 +61,16 @@ gen_restrict_cashpoint_app <- function(scoring_df,all_df,flag_beh,
     1, scoring_df$color)
   
   # Treat if has parallel and depending on DPD
-  scoring_df$color <- ifelse(scoring_df$score %in% c("Bad","Indeterminate",
-    "Good 1","Good 2","Good 3","Good 4") & flag_parallel[[1]]==1 & 
-    !is.na(flag_parallel[[2]]) & flag_parallel[[2]]>=180,1, 
-    ifelse(scoring_df$score %in% c("Bad","Indeterminate",
-    "Good 1","Good 2") & flag_parallel[[1]]==1 & !is.na(flag_parallel[[2]]) & 
-    flag_parallel[[2]]>=90,1,scoring_df$color))
-  
+  if(all_df$product_id!=103){
+    scoring_df$color <- 
+      ifelse(scoring_df$score %in% c("Bad","Indeterminate",
+       "Good 1","Good 2","Good 3","Good 4") & flag_parallel[[1]]==1 & 
+       !is.na(flag_parallel[[2]]) & flag_parallel[[2]]>=180,1, 
+      ifelse(scoring_df$score %in% c("Bad","Indeterminate",
+       "Good 1","Good 2") & flag_parallel[[1]]==1 & !is.na(flag_parallel[[2]]) & 
+       flag_parallel[[2]]>=90,1,scoring_df$color))
+  } 
+
   # No Gratis and not Good 4
   if(all_df$product_id %in% c(68,90)){
     scoring_df$color <- ifelse(scoring_df$score %in% c("Indeterminate",
@@ -233,27 +236,38 @@ gen_restrict_credirect_app <- function(scoring_df,all_df,
 # Function to apply restrictions for Cashpoint 
 gen_restrict_cashpoint_beh <- function(scoring_df,all_df,all_id,application_id,
      prev_amount,flag_parallel,db_name){
+  
   days_delay <- gen_query(con,
       gen_plan_main_select_query(db_name,max(all_id$id[all_id$company_id==5 & 
        all_id$status  %in% c(4,5)])))$max_delay
   days_delay <- ifelse(is.na(days_delay),0,days_delay)
   
+  # Compute allowed step 
   scoring_df$prev_amount <- prev_amount$amount
   scoring_df$diff_amount <- scoring_df$amount - prev_amount$amount
   
-  if(days_delay<=30){
-    scoring_df$color <- ifelse(scoring_df$diff_amount>400,1,scoring_df$color)
-  } else if(days_delay<=59){
-    scoring_df$color <- ifelse(scoring_df$diff_amount>200,1,scoring_df$color)
-  } else if(days_delay<=90){
-    scoring_df$color <- ifelse(scoring_df$diff_amount>0,1,scoring_df$color)
-  } else if(days_delay<=180){
-    scoring_df$color <- ifelse(scoring_df$amount>(0.6*scoring_df$prev_amount),1,
-                               scoring_df$color)
-  } else{
-    scoring_df$color <- ifelse(scoring_df$amount>400,1,scoring_df$color)
+  if(all_df$product_id!=103){
+    if(days_delay<=30){
+      scoring_df$color <- ifelse(scoring_df$diff_amount>400,1,scoring_df$color)
+    } else if(days_delay<=59){
+      scoring_df$color <- ifelse(scoring_df$diff_amount>200,1,scoring_df$color)
+    } else if(days_delay<=90){
+      scoring_df$color <- ifelse(scoring_df$diff_amount>0,1,scoring_df$color)
+    } else if(days_delay<=180){
+      scoring_df$color <- ifelse(scoring_df$amount>(0.6*scoring_df$prev_amount),
+        1,scoring_df$color)
+    } else{
+      scoring_df$color <- ifelse(scoring_df$amount>400,1,scoring_df$color)
+    }
+  } else {
+    nb_term <- subset(all_id,all_id$company_id==5 & all_id$product_id==103)
+    if(nrow(nb_term)<=2){
+      scoring_df$color <- ifelse(scoring_df$diff_amount>0,1,scoring_df$color)
+    } else{
+      scoring_df$color <- ifelse(scoring_df$diff_amount>100,1,scoring_df$color)
+    }
   }
-  
+ 
   # No Indeterminates
   scoring_df$color <- ifelse(scoring_df$score %in% c("Bad","Indeterminate"),
      1, scoring_df$color)  
@@ -264,13 +278,16 @@ gen_restrict_cashpoint_beh <- function(scoring_df,all_df,all_id,application_id,
         "Good 1","Good 2","Good 3"),1,scoring_df$color) 
   }
   
-  # Teeat those with parallel credits
-  scoring_df$color <- ifelse(scoring_df$score %in% c("Bad","Indeterminate",
-      "Good 1","Good 2","Good 3","Good 4") & flag_parallel[[1]]==1 & 
-      !is.na(flag_parallel[[2]]) & flag_parallel[[2]]>=180,1, 
-    ifelse(scoring_df$score %in% c("Bad","Indeterminate","Good 1","Good 2") 
-          & flag_parallel[[1]]==1 & !is.na(flag_parallel[[2]]) & 
-          flag_parallel[[2]]>=90,1,scoring_df$color))
+  # Treat those with parallel credits
+  if(all_df$product_id!=103){
+    scoring_df$color <- 
+      ifelse(scoring_df$score %in% c("Bad","Indeterminate",
+       "Good 1","Good 2","Good 3","Good 4") & flag_parallel[[1]]==1 & 
+       !is.na(flag_parallel[[2]]) & flag_parallel[[2]]>=180,1, 
+      ifelse(scoring_df$score %in% c("Bad","Indeterminate","Good 1","Good 2") 
+       & flag_parallel[[1]]==1 & !is.na(flag_parallel[[2]]) & 
+       flag_parallel[[2]]>=90,1,scoring_df$color))
+  }
   
   return(scoring_df)
 }
