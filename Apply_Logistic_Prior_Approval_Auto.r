@@ -305,7 +305,7 @@ select_credits$group <-
 #############################################
 
 # Read current database
-id_max <- max(po$id)+1
+id_max <- max(po$id)+10
 
 if(nrow(select_credits)>0){
 
