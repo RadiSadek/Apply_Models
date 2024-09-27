@@ -51,7 +51,7 @@ product_id <- NA
 
 # Read input file
 df <- read.xlsx(
-  "C:\\Projects\\Campaign\\20240819-Above-3months\\input\\raw.xlsx")
+  "C:\\Projects\\Campaign\\20240924-Above-3months\\input\\raw.xlsx")
 select_credits <- df[,c("id","client_id","product_id","is_vip")]
 
 
@@ -102,4 +102,8 @@ for(i in 1:nrow(select_credits)){
     select_credits$max_delay[i] <- as.numeric(calc[[4]])
   }, error=function(e){}))
 }
+
+# Ouput
+write.xlsx(select_credits,"C:\\Users\\rsadek.CC\\Desktop\\score.xlsx")
+
 

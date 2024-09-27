@@ -101,6 +101,13 @@ gen_risky_query <- function(db_name,all_df){
   WHERE egn=",all_df$egn, " AND forbidden_credit_approval = 1", sep =""))
 }
 
+# Define query to get if client is defined as risky (for PA offers) 
+gen_risky_query_offers <- function(db_name,all_df){
+  return(paste("SELECT egn
+  FROM ",db_name,".clients_risk
+  WHERE egn=",all_df$egn, sep =""))
+}
+
 # Define query to get total amount of current application amount
 gen_total_amount_curr_query <- function(db_name,application_id){
   return(paste("SELECT final_credit_amount

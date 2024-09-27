@@ -99,7 +99,7 @@ all_df <- gen_work_data(db_name,all_credits,all_df)
 
 
 # Check if client has a risk profile
-risk <- gen_query(con,gen_risky_query(db_name,all_df))
+risk <- gen_query(con,gen_risky_query_offers(db_name,all_df))
 
 
 # Check if client was optisan 
