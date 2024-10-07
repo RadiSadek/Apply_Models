@@ -47,6 +47,7 @@ source(file.path(base_dir,"Normal_Variables.r"))
 source(file.path(base_dir,"CKR_variables.r"))
 source(file.path(base_dir,"Generate_Adjust_Score.r"))
 source(file.path(base_dir,"Gbm_Beh_Credirect.r"))
+source(file.path(base_dir,"Gbm_App_CityCash.r"))
 source(file.path(base_dir,"Logistic_Beh_Cashpoint.r"))
   
   
@@ -188,7 +189,11 @@ if(nrow(addresses)==0){
   gen_address_query(all_df$client_id,
   "App\\\\Models\\\\Credits\\\\Applications\\\\Application"))
 }
-all_df$city_pop <- gen_coordinates(db_name,application_id,all_df)$city_pop
+address_data <- gen_coordinates(db_name,application_id,all_df)
+all_df$city_pop <- address_data$city_pop
+all_df$lat <- address_data$lat
+all_df$lon <- address_data$lon
+all_df$distance_office <- as.numeric(gen_distance_office(db_name,all_df))
 
 
 # Get if office is self approval
@@ -235,14 +240,17 @@ flag_exclusion <- ifelse(length(which(names(
   ifelse(nrow(risk)>0, 1, 0))
 
 
-all_df <- cbind(all_df, data_ckr_financial)	
-names(all_df)[(ncol(all_df)-8):ncol(all_df)] <- c("ckr_cur_fin","ckr_act_fin",	
-   "ckr_fin_fin",	"src_ent_fin","amount_fin","cred_count_fin",	
-   "outs_principal_fin","outs_overdue_fin","cession_fin")	
-all_df <- cbind(all_df, data_ckr_bank)		
-names(all_df)[(ncol(all_df)-8):ncol(all_df)] <- c("ckr_cur_bank",	
-   "ckr_act_bank","ckr_fin_bank","src_ent_bank","amount_bank","cred_count_bank",	
-   "outs_principal_bank","outs_overdue_bank","cession_bank")
+# Get and rename columns for CKR variables
+all_df <- cbind(all_df, data_ckr_financial)
+names(all_df)[(ncol(all_df)-11):ncol(all_df)] <- c("ckr_cur_fin","ckr_act_fin",
+   "ckr_fin_fin",	"src_ent_fin","amount_fin","cred_count_fin",
+   "outs_principal_fin","outs_overdue_fin","cession_fin",
+   "monthly_installment_financial","codebtor_fin","guarantor_fin")
+all_df <- cbind(all_df, data_ckr_bank)	
+names(all_df)[(ncol(all_df)-11):ncol(all_df)] <- c("ckr_cur_bank",
+   "ckr_act_bank","ckr_fin_bank","src_ent_bank","amount_bank","cred_count_bank",
+   "outs_principal_bank","outs_overdue_bank","cession_bank",
+   "monthly_installment_bank","codebtor_bank","guarantor_bank")
 
 
 # Set period variable (monthly, twice weekly, weekly)

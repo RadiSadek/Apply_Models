@@ -1010,12 +1010,21 @@ gen_parallel_score <- function(prev_amount,all_id,t_income,criteria_po,
   if(flag_beh==0 & flag_cashpoint==0 & flag_finmag==0 & flag_credirect==0){
     fraud_app_citycash <-  suppressMessages(
       gen_app_citycash_fraud(df,scoring_df,base_dir))
+    gbm_app_citycash <- suppressMessages(gen_app_bgm_citycash(df,scoring_df,
+      products,period,all_df,prev_amount,amount_tab,t_income,
+      disposable_income_adj,base_dir))
+    gbm_citycash_app_pd <- gbm_app_citycash[[1]]
+    gbm_citycash_app_score <- gbm_app_citycash[[2]]
   }
   
   # Check for empty parallel score fields
   if(!exists("gbm_credirect_beh_pd")){
     gbm_credirect_beh_pd <- NA
     gbm_credirect_beh_score <- NA
+  }
+  if(!exists("gbm_app_citycash")){
+    gbm_citycash_app_pd <- NA
+    gbm_citycash_app_score <- NA
   }
   if(!exists("logistic_cashpoint_beh_pd")){
     logistic_cashpoint_beh_pd <- NA
@@ -1026,8 +1035,7 @@ gen_parallel_score <- function(prev_amount,all_id,t_income,criteria_po,
   }
   return(as.data.frame(cbind(gbm_credirect_beh_pd,gbm_credirect_beh_score,
      logistic_cashpoint_beh_pd,logistic_cashpoint_beh_score,
-     fraud_app_citycash)))
-  
+     fraud_app_citycash,gbm_citycash_app_pd,gbm_citycash_app_score)))
 }
 
 # Generate PA offer in main scoring

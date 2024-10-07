@@ -226,9 +226,9 @@ gen_get_company_id_query <- function(db_name){
 # Define query to get the CKR status 
 gen_query_ckr <- function(all_df,all_credits,type_of,crit,db_name){
   names_col <- c("current_status_active","status_active","status_finished",
-                 "source_entity_count","amount_drawn","cred_count", 
-                 "outstanding_performing_principal",
-                 "outstanding_overdue_principal","amount_cession")
+    "source_entity_count","amount_drawn","cred_count", 
+    "outstanding_performing_principal","outstanding_overdue_principal",
+    "amount_cession","monthly_installment","codebtor_status","guarantor_status")
   query_ckr <- paste("SELECT 
   ",db_name,".ckr_reports.reportable_id,
   ",db_name,".ckr_reports.created_at,
@@ -241,7 +241,10 @@ gen_query_ckr <- function(all_df,all_credits,type_of,crit,db_name){
   ",db_name,".ckr_report_data.cred_count,
   ",db_name,".ckr_report_data.outstanding_performing_principal,
   ",db_name,".ckr_report_data.outstanding_overdue_principal,	
-  ",db_name,".ckr_report_data.amount_cession
+  ",db_name,".ckr_report_data.amount_cession,
+  ",db_name,".ckr_report_data.monthly_installment,
+  ",db_name,".ckr_report_data.codebtor_status,
+  ",db_name,".ckr_report_data.guarantor_status
   FROM ",db_name,".ckr_report_data
   INNER JOIN ",db_name,".ckr_reports
   ON ",db_name,".ckr_reports.id=",db_name,".ckr_report_data.report_id
@@ -252,7 +255,7 @@ gen_query_ckr <- function(all_df,all_credits,type_of,crit,db_name){
   result_df <- gen_query(con,query_ckr)
 
   if(nrow(result_df)==0){
-    empty_df <- as.data.frame(cbind(NA,NA,NA,NA,NA,NA,NA,NA,NA))
+    empty_df <- as.data.frame(cbind(NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA))
     names(empty_df) <- names_col
     return(empty_df)
   } else {
@@ -546,4 +549,12 @@ gen_client_id_query <- function(db_name,all_df){
 gen_city_pop_query <- function(db_name,id){
   return(paste("SELECT id, population FROM ",db_name,".cities WHERE id = 
   (",id,")",sep=""))
+}
+
+# Get coordinates of offices 
+gen_office_coordinates <- function(db_name,input){
+  return(paste(
+    "SELECT name, longitude AS lon, latitude AS lat 
+    FROM ",db_name,".structure_offices WHERE longitude IS NOT NULL and id = ",
+    input,sep=""))
 }

@@ -41,6 +41,17 @@ gen_ckr_variables <- function(all_df,flag_beh,flag_credirect){
     ifelse(is.na(all_df$outs_overdue_bank),0,all_df$outs_overdue_bank) + 
     ifelse(is.na(all_df$outs_overdue_fin),0,all_df$outs_overdue_fin)
   
+  all_df$amount_drawn_total <- all_df$amount_bank + all_df$amount_fin
+  all_df$monthly_installment_total <- all_df$monthly_installment_bank + 
+    all_df$monthly_installment_financial
+  all_df$current_status_active_total <- ifelse(
+    all_df$ckr_cur_fin>all_df$ckr_cur_bank, all_df$ckr_cur_fin,
+    all_df$ckr_cur_bank)
+  all_df$codebtor_tot <- ifelse(all_df$codebtor_bank>all_df$codebtor_fin,
+    all_df$codebtor_bank,all_df$codebtor_fin)
+  all_df$guarantor_tot <- ifelse(all_df$guarantor_bank>all_df$guarantor_fin,
+   all_df$guarantor_bank,all_df$guarantor_fin) 
+  
   return(all_df)
 }
 
