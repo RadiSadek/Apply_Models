@@ -13,7 +13,7 @@ gen_app_credirect_installments <- function(df,scoring_df,products,
   names(coefficients) <- c("coeff")
   
   # Cut and bin
-  df$age <- ifelse(df$age<=20,"20_less","more_20")
+  df$age <- ifelse(df$age<=18,"18","19+")
   df$age <- as.factor(df$age)
   
   df$gender <- as.factor(df$gender)
@@ -22,9 +22,9 @@ gen_app_credirect_installments <- function(df,scoring_df,products,
     ifelse(is.na(df$ownership), "not_1", "not_1"))
   df$ownership <- as.factor(df$ownership_cut)
   
-  df$education <- ifelse(is.na(df$education),"2",
-    ifelse(df$education==1,"1",
-    ifelse(df$education %in% c(3,4), "3_4", "2")))
+  df$education <- 
+    ifelse(is.na(df$education),"2_3",
+    ifelse(df$education %in% c(2,3),"2_3",df$education))
   df$education <- as.factor(df$education)
   
   df$marital_status_cut <- ifelse(is.na(df$marital_status), "other",
