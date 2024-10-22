@@ -325,7 +325,12 @@ all_credit$group <-
    ifelse(all_credit$score_max_amount %in% c("Indeterminate","Good 1"),
           102,103)),
    ifelse(all_credit$payday==0,
-   ifelse(all_credit$ptc_score %in% c("very_low"),101,102),101)),NA))
+   ifelse(all_credit$ptc_score %in% c("very_low"),101,102),101)),
+   ifelse(all_credit$company_id==1,
+          ifelse(all_credit$ptc_score %in% c("very_low","low"),NA,
+          ifelse(all_credit$ptc_score %in% c("medium"),NA,
+          ifelse(all_credit$ptc_score %in% c("high","very_high"),NA,NA))),
+   NA)))
 
 
 
