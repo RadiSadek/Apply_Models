@@ -44,7 +44,7 @@ main_dir <- "C:\\Projects\\Apply_Scoring\\"
 # Read argument of ID
 args <- commandArgs(trailingOnly = TRUE)
 application_id <- args[1]
-#application_id <- 1370762
+application_id <- 54129
 product_id <- NA
 
 
@@ -440,9 +440,9 @@ ptc$id <- 1
 current <- gen_query(con,paste("SELECT id, application_id FROM ",db_name,
 ".credits_applications_ptc_score WHERE application_id=",application_id,sep=""))
 if(nrow(current)>0){
-  suppressMessages(suppressWarnings(dbSendQuery(con,paste("DELETE FROM ",
-  db_name,".credits_applications_ptc_score WHERE application_id=",
-  application_id,sep=""))))
+  # suppressMessages(suppressWarnings(dbSendQuery(con,paste("DELETE FROM ",
+  # db_name,".credits_applications_ptc_score WHERE application_id=",
+  # application_id,sep=""))))
 }
 
 # Make final dataframe for output
