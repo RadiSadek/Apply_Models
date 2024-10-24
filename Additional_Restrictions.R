@@ -327,11 +327,11 @@ gen_restrict_credirect_beh <- function(scoring_df,all_df,all_id,application_id,
   
   # Define maximum step with previous
   if(passed_install_at_pay==0){
-    max_step_installments <- c(100,200,300,300,400)
+    max_step_installments <- c(200,300,500,600,800)
   } else if(passed_install_at_pay==1){
-    max_step_installments <- c(400,600,800,800,900)
+    max_step_installments <- c(500,700,1000,1000,1300)
   } else if(passed_install_at_pay==2){
-    max_step_installments <- c(500,800,1100,1100,1200)
+    max_step_installments <- c(600,900,1200,1200,1600)
   } else if(passed_install_at_pay==3){
     max_step_installments <- c(700,1000,1400,1400,1700)
   } else {
