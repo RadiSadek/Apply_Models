@@ -224,11 +224,17 @@ gen_get_company_id_query <- function(db_name){
 }
 
 # Define query to get the CKR status 
-gen_query_ckr <- function(all_df,all_credits,type_of,crit,db_name){
-  names_col <- c("current_status_active","status_active","status_finished",
-    "source_entity_count","amount_drawn","cred_count", 
-    "outstanding_performing_principal","outstanding_overdue_principal",
-    "amount_cession","monthly_installment","codebtor_status","guarantor_status")
+gen_query_ckr <- function(all_df,all_credits,type_of,crit,incl_ids=0,db_name){
+  
+  names_col <- c("reportable_id", 
+             "current_status_active","status_active","status_finished",
+             "source_entity_count","amount_drawn","cred_count", 
+             "outstanding_performing_principal","outstanding_overdue_principal",
+             "amount_cession","monthly_installment","codebtor_status",
+             "guarantor_status")
+  
+  client_ids <- all_df %>% distinct(client_id)
+  
   query_ckr <- paste("SELECT 
   ",db_name,".ckr_reports.reportable_id,
   ",db_name,".ckr_reports.created_at,
@@ -249,30 +255,49 @@ gen_query_ckr <- function(all_df,all_credits,type_of,crit,db_name){
   INNER JOIN ",db_name,".ckr_reports
   ON ",db_name,".ckr_reports.id=",db_name,".ckr_report_data.report_id
   WHERE ",db_name,".ckr_report_data.type=",type_of," AND ",db_name,
-  ".ckr_reports.reportable_id=",all_df$client_id,
-  " AND ",db_name,".ckr_reports.reportable_type=
+  ".ckr_reports.reportable_id IN (",paste(client_ids$client_id,
+  collapse=","),") AND ",db_name,".ckr_reports.reportable_type=
   'App\\\\Models\\\\Clients\\\\Client'",sep ="")
+  
   result_df <- gen_query(con,query_ckr)
-
+  
   if(nrow(result_df)==0){
     empty_df <- as.data.frame(cbind(NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA))
     names(empty_df) <- names_col
     return(empty_df)
-  } else {
-    result_df$date_curr <- all_df$date
-    result_df$date_diff <- difftime(result_df$date_curr, result_df$created_at, 
-                                    units=c("days"))
-    result_df <- result_df[order(result_df$date_diff),]
-    if(crit!=0 & nrow(result_df)>1){
-      result_df <- result_df[2:nrow(result_df),]
-    }
-    result_final <- as.data.frame(matrix(nrow = 1, 
-                                         ncol = ncol(result_df)))
-    names(result_final) <- names(result_df)
-    for(i in 1:ncol(result_final)){
-      result_final[1,i] <- result_df[which(!is.na(result_df[,i]))[1],i]
-    }
-    return(result_final[,names_col])}
+  }
+  
+  result_df <- merge(result_df, all_df[,c("client_id", "date")], 
+                     by.x = "reportable_id", by.y = "client_id", all.x = T)
+  colnames(result_df)[ncol(result_df)] <- "date_curr"
+  result_df$date_diff <- difftime(result_df$date_curr, result_df$created_at, 
+                                  units=c("days"))
+  result_df <- result_df[order(result_df$date_diff),]
+  
+  result_final <- result_df %>%
+    group_by(reportable_id) %>%
+    arrange(date_diff) %>%
+    filter(!(crit != 0 & row_number() == 1)) %>%
+    summarise(across(everything(), ~ first(na.omit(.)), 
+                     .names = "final_{.col}"), .groups = "drop") %>%
+    rename_with(~ gsub("^final_", "", .), everything())
+  
+  if (incl_ids == 0) {
+    result_final <- result_final %>%
+      select(all_of(names_col), -reportable_id)
+  }
+  
+  if (incl_ids == 1){
+    result_final <- result_final %>%
+      select(all_of(names_col)) %>%
+      rename("client_id" = "reportable_id")
+    
+    result_final <- merge(result_final, all_df[,c("client_id", 
+                                       "application_id")], by = "client_id")
+    result_final <- result_final %>%
+      select(application_id, everything(), -client_id)
+  }
+  return(result_final)
 }
 
 # Define query for SEON phone variables
