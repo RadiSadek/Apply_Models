@@ -1079,7 +1079,7 @@ gen_pa_term_citycash <- function(db_name,empty_fields,threshold_empty,
 
   # Subset scoring dataframe according to criteria
   correct_scoring_df <- subset(scoring_df,scoring_df$color!=1 &
-   scoring_df$score %in% c("Good 2","Good 3","Good 4"))
+   scoring_df$score %in% c("Good 3","Good 4"))
   
   # Get highest amount
   get_max_amount <- suppressWarnings(max(correct_scoring_df$amount))
