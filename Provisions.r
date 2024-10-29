@@ -16,7 +16,7 @@ suppressMessages(suppressWarnings(library(here)))
 suppressMessages(suppressWarnings(library(dotenv)))
 suppressMessages(suppressWarnings(require("reshape")))
 suppressMessages(suppressWarnings(require(jsonlite)))
-
+suppressMessages(suppressWarnings(library(dplyr)))
 
 # Defines the directory where custom .env file is located
 load_dot_env(file = here('.env'))
