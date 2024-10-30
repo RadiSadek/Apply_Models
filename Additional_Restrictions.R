@@ -89,21 +89,16 @@ gen_restrict_finmag_app <- function(scoring_df,all_df,all_id,flag_beh){
      ifelse(scoring_df$amount>3000,1,scoring_df$color))
   
   # Accept only Good 4
-  if(flag_beh==0){
-    scoring_df$color <- 
-      ifelse(is.na(scoring_df$pd),scoring_df$color,
-             ifelse(scoring_df$pd>0.3,1,scoring_df$color))
-  } else {
-    scoring_df$color <- 
-      ifelse(is.na(scoring_df$pd),scoring_df$color,
-             ifelse(scoring_df$pd>0.1,1,scoring_df$color))
-  }
-  
-  # Accept only with bezsro4en trudov dogovor
-  if(is.na(all_df$status_work) | all_df$status_work!=2){
-    scoring_df$color <- 
-      ifelse(is.na(scoring_df$pd),scoring_df$color,1)
-  }
+  scoring_df$color <- 
+      ifelse(is.na(scoring_df$score),scoring_df$color,
+      ifelse(scoring_df$score %in% c("NULL"),scoring_df$color,
+      ifelse(scoring_df$score %in% c("Good 4"),scoring_df$color,1)))
+ 
+  # # Accept only with bezsro4en trudov dogovor
+  # if(is.na(all_df$status_work) | all_df$status_work!=2){
+  #   scoring_df$color <- 
+  #     ifelse(is.na(scoring_df$pd),scoring_df$color,1)
+  # }
   
   return(scoring_df)
 }
@@ -426,7 +421,7 @@ gen_restrict_credirect_beh <- function(scoring_df,all_df,all_id,application_id,
      ifelse(scoring_df$score %in% c("Indeterminate") & scoring_df$amount>2000,1,
      ifelse(scoring_df$score %in% c("Good 1") & scoring_df$amount>4000,1,
      ifelse(scoring_df$score %in% c("Good 2","Good 3","Good 4") & 
-            scoring_df$amount>6000,1,scoring_df$color)))
+            scoring_df$amount>8000,1,scoring_df$color)))
 
   return(scoring_df)
 }
