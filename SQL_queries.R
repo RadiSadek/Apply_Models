@@ -5,7 +5,13 @@
 
 # Define big query which reads from credits_applications
 gen_big_sql_query <- function(db_name,application_id){
-big_sql_query <- paste("SELECT 
+  if (is.numeric(application_id)) {
+    ids <- data.frame("application_id"=application_id)
+  } else if (is.data.frame(application_id)) {
+    ids <- application_id
+  }
+  
+  big_sql_query <- paste("SELECT 
 ",db_name,".credits_applications_clients.application_id, 
 ",db_name,".credits_applications_clients.ownership,
 ",db_name,".credits_applications_clients.education,
@@ -48,9 +54,11 @@ ON ",db_name,".credits_applications_clients.application_id = ",db_name,
 LEFT JOIN ",db_name,".credits_applications
 ON ",db_name,".credits_applications_clients.application_id = ",db_name,
 ".credits_applications.id
-WHERE credits_applications_clients.application_id=", application_id, sep="")
-return(big_sql_query)
+WHERE credits_applications_clients.application_id IN 
+(",paste(ids$application_id,collapse=","),");", sep="")
+  return(big_sql_query)
 }
+
 
 # Define query for products periods and amounts
 gen_products_query <- function(db_name,all_df){
@@ -156,12 +164,13 @@ gen_paid_amount_query <- function(var,db){
 }
 
 # Define query to get total paid amount of previous credit 
-gen_total_paid_amount_query <- function(var,db){		
-  return(paste("SELECT object_id, SUM(amount) 		
-  FROM ",db,".cash_flow		
-  WHERE nomenclature_id IN (90,100,101) AND deleted_at 
-  IS NULL AND object_type = 4	AND object_id=",var,
-  " GROUP BY object_id",sep =""))		
+gen_total_paid_amount_query <- function(var, db) {
+  object_ids <- paste(var, collapse = ",")
+  return(paste("SELECT object_id, SUM(amount)
+  FROM ", db, ".cash_flow
+  WHERE nomenclature_id IN (90,100,101) AND deleted_at IS NULL 
+  AND object_type = 4 AND object_id IN (", object_ids, ")
+  GROUP BY object_id", sep = ""))
 }
 
 # Define query to get all payments of previous credit 
@@ -389,12 +398,24 @@ gen_discount_amount <- function(db_name,input){
 }
 
 # Get taxes per credit
-gen_taxes_amount <- function(db_name,input){
-  return(paste(
-    "SELECT SUM(amount) AS tax_amount
+gen_taxes_amount <- function(db_name,input,incl_ids){
+  input <- paste(input, collapse = ",")
+  if(incl_ids==0){
+    taxes <- paste(
+      "SELECT SUM(amount) AS tax_amount
      FROM ",db_name,".credits_plan_taxes
      WHERE tax_id NOT IN (4,22) AND 
-     application_id=",input,sep=""))
+     application_id=",input,sep="")
+  } 
+  if(incl_ids==1){
+    taxes <- paste(
+      "SELECT application_id, SUM(amount) AS tax_amount
+     FROM ",db_name,".credits_plan_taxes
+     WHERE tax_id NOT IN (4,22) AND 
+     application_id IN (", input, ")
+     GROUP BY application_id",sep="")
+  }
+  return(taxes)
 }
 
 # Read ACTIVE PO refinance data per client_id
