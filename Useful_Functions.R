@@ -1051,7 +1051,7 @@ gen_pa_term_citycash <- function(db_name,empty_fields,threshold_empty,
   
   # Rescore for City Cash
   flag_finmag <- 0
-  flag_credirect <- 0
+  flag_credirect <- 1
   all_df$product_id <- df$product_id <- 98
   all_df$total_income <- df$total_income <- 1000
   products <- gen_query(con,gen_products_query(db_name,all_df))
@@ -1076,10 +1076,17 @@ gen_pa_term_citycash <- function(db_name,empty_fields,threshold_empty,
    application_id,flag_new_credirect_old_city,flag_credit_next_salary,
    flag_beh_company,flag_cashpoint,0,fraud_flag,flag_risky_address,
    flag_parallel,flag_finmag)
-
+  
+  # Join installments if necessary
+  if(!("installmesnt_amount" %in% names(scoring_df))){
+    scoring_df <- merge(scoring_df,products[,c("amount","period",
+      "installment_amount")],by.x = c("amount","period"),
+      by.y = c("amount","period"),all.x = TRUE)
+  }
+  
   # Subset scoring dataframe according to criteria
   correct_scoring_df <- subset(scoring_df,scoring_df$color!=1 &
-   scoring_df$score %in% c("Good 3","Good 4"))
+   scoring_df$score %in% c("Good 2","Good 3","Good 4"))
   
   # Get highest amount
   get_max_amount <- suppressWarnings(max(correct_scoring_df$amount))
