@@ -18,6 +18,7 @@ suppressMessages(suppressWarnings(library(dotenv)))
 suppressMessages(suppressWarnings(require("reshape")))
 suppressMessages(suppressWarnings(require(jsonlite)))
 suppressMessages(suppressWarnings(require(gbm)))
+suppressMessages(suppressWarnings(library(dplyr)))
 
 
 # Defines the directory where custom .env file is located
@@ -163,8 +164,8 @@ total_amount_curr <- gen_query(con,gen_total_amount_curr_query(
 
 
 # Read CKR 
-data_ckr_bank <- gen_query_ckr(all_df,all_credits,1,0,db_name)
-data_ckr_financial <- gen_query_ckr(all_df,all_credits,2,0,db_name)
+data_ckr_bank <- gen_query_ckr(all_df,all_credits,1,0,0,db_name)
+data_ckr_financial <- gen_query_ckr(all_df,all_credits,2,0,0,db_name)
 
 
 # Read all previous active or terminated credits of client

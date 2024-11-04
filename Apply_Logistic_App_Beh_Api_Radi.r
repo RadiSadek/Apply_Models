@@ -23,7 +23,7 @@ suppressMessages(suppressWarnings(require("reshape")))
 suppressMessages(suppressWarnings(library(openxlsx)))
 suppressMessages(suppressWarnings(require(jsonlite)))
 suppressMessages(suppressWarnings(require(gbm)))
-
+suppressMessages(suppressWarnings(library(dplyr)))
 
 # Database
 db_name <- "citycash"
