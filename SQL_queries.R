@@ -270,8 +270,14 @@ gen_query_ckr <- function(all_df,all_credits,type_of,crit,incl_ids=0,db_name){
   
   result_df <- gen_query(con,query_ckr)
   
-  if(nrow(result_df)==0){
+  if(nrow(result_df)==0 & incl_ids == 0){
     empty_df <- as.data.frame(cbind(NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA))
+    names(empty_df) <- names_col[-1]
+    return(empty_df)
+  }
+  
+  if(nrow(result_df)==0 & incl_ids == 1){
+    empty_df <- as.data.frame(cbind(NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA))
     names(empty_df) <- names_col
     return(empty_df)
   }
@@ -286,8 +292,8 @@ gen_query_ckr <- function(all_df,all_credits,type_of,crit,incl_ids=0,db_name){
   result_final <- result_df %>%
     group_by(reportable_id) %>%
     arrange(date_diff) %>%
-    filter(!(crit != 0 & row_number() == 1)) %>%
-    summarise(across(everything(), ~ first(na.omit(.)), 
+    filter(!(crit != 0 & row_number() == 1 & n() > 1)) %>%
+    summarise(across(everything(), ~ first(na.omit(.)),
                      .names = "final_{.col}"), .groups = "drop") %>%
     rename_with(~ gsub("^final_", "", .), everything())
   
