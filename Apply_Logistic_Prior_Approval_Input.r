@@ -51,7 +51,7 @@ product_id <- NA
 
 # Read input file
 df <- read.xlsx(
-  "C:\\Projects\\Campaign\\20240924-Above-3months\\input\\raw.xlsx")
+  "C:\\Projects\\Campaign\\20241024-Above-3months\\input\\raw_not_ok.xlsx")
 select_credits <- df[,c("id","client_id","product_id","is_vip")]
 
 
@@ -95,6 +95,10 @@ for(i in 1:nrow(select_credits)){
     }
     client_id <- select_credits$client_id[i]
     last_id <- select_credits$id[i]
+    if(i %in% c(250,500,750,1000,1250,1500,2000)){
+      con <- dbConnect(RMySQL::MySQL(),dbname = "citycash",host ="192.168.2.110",
+         port = 3306,user = "userro1",password = "DHng_2pg5zdL0yI9x@")
+    }
     calc <- gen_terminated_fct(con,client_id,product_id,last_id,0,db_name,0)
     select_credits$max_amount[i] <- calc[[1]]
     select_credits$max_installment_amount[i] <- calc[[2]]
