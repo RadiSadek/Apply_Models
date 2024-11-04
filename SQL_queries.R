@@ -604,3 +604,80 @@ gen_office_coordinates <- function(db_name,input){
     FROM ",db_name,".structure_offices WHERE longitude IS NOT NULL and id = ",
     input,sep=""))
 }
+
+
+# Define query for fetching CityCash apps in buckets
+gen_bucket_credits_query <- function(db_name, brand_ids){
+  cur_month <- as.character(as.Date(format(Sys.Date(), "%Y-%m-01")))
+  query_raw <- paste("SELECT bc.id as bc_id, bc.application_id, cab.days_delay,
+  b.brand_id
+  FROM ",db_name,".call_center_buckets_credits as bc
+  LEFT JOIN ",db_name,".call_center_buckets as b ON bc.bucket_id = b.id
+  LEFT JOIN ",db_name,".credits_applications as ca ON bc.application_id = ca.id
+  LEFT JOIN ",db_name,".credits_applications_balance as cab 
+  ON bc.application_id = cab.application_id
+  WHERE b.active_from = '",cur_month,"' AND ca.status = 4 AND b.brand_id IN 
+  (",paste(brand_ids,collapse=","),") AND b.`type` IN (1,2,3,4,7,8,9,10,11);", 
+                     sep="")
+  return(query_raw)
+}
+
+# Define query for fetching credit data
+gen_credit_history_query <- function(db_name, ids, brand_ids){
+  query_raw <- paste("SELECT ca.id, ca.client_id, ca.status, ca.signed_at,
+  ca.has_prev_brand_credits, ca.has_prev_credits, cab.max_days_delay
+  FROM ",db_name,".credits_applications as ca
+  LEFT JOIN ",db_name,".credits_applications_balance as cab 
+  ON ca.id = cab.application_id
+  WHERE ca.client_id IN (",paste(ids$client_id,collapse=","),")
+  AND ca.product_id IN (SELECT id FROM ",db_name,".products 
+  WHERE brand_id IN (",paste(brand_ids,collapse=","),")) AND ca.status IN (4,5)
+  AND (ca.sub_status IS NULL OR ca.sub_status NOT IN (122, 129));", sep="")
+  return(query_raw)
+}
+
+# Define query for fetching incoming call history
+gen_incoming_calls_query <- function(db_name, all_df){
+  incoming_calls <- paste("SELECT 
+  application_id, date(created_at) as call_date 
+  FROM citycash.clients_actions
+  WHERE actionable_type = 'App\\\\Models\\\\CallCenter\\\\IncomingCall'
+  AND application_id IN (",paste(all_df$application_id,collapse=","),");",
+                          sep="")
+  return(incoming_calls)
+}
+
+# Define query for fetching outgoing call history
+gen_outgoing_calls_query <- function(db_name, all_df){
+  outgoing_calls <- paste("SELECT 
+  r.resultable_id, bc.application_id, r.`type`, r.created_at
+  FROM citycash.results as r
+  LEFT JOIN citycash.call_center_buckets_credits as bc 
+  ON r.resultable_id = bc.id
+  WHERE r.resultable_type = 'App\\\\Models\\\\CallCenter\\\\BucketCredit'
+  AND bc.application_id IN (",paste(all_df$application_id,collapse=","),");",
+                          sep="")
+  return(outgoing_calls)
+}
+
+# Define query for fetching scores
+gen_scores_query <- function(db_name, all_df){
+  score <- paste("SELECT cpc.application_id, cas.score 
+   FROM citycash.credits_plan_contract as cpc
+   LEFT JOIN citycash.credits_applications_scoring as cas ON 
+   cpc.application_id = cas.application_id AND cpc.installments = cas.period 
+   AND cpc.amount = cas.amount
+   WHERE cpc.application_id IN 
+   (", paste(all_df$application_id, collapse = ","), ");",sep="")
+  return(score)
+}
+
+# Define query for fetching plan main
+gen_plan_main_query <- function(db_name, all_df){
+  plan_main <- paste("SELECT application_id, installment_num, pay_day, 
+    pmt_final as due_amount, days_delay
+    FROM citycash.credits_plan_main
+    WHERE application_id IN (",paste(all_df$application_id,collapse=","),");",
+                     sep="")
+  return(plan_main)
+}

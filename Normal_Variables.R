@@ -63,4 +63,23 @@ gen_seon_phones <- function(db_name,criteria,var){
   return(gen_query(con,gen_seon_phones_query(db_name,criteria,var)))
 }
 
+# Function to generate gender and age
+gen_genage <- function(all_df){
+  all_df$gender <- ifelse(substring(all_df$egn,9,9) %in% c(0,2,4,6,8), 0, 1)
+  
+  all_df$dob <- ifelse(!(substring(all_df$egn,3,3) %in% c("5","4")) & 
+  (substring(all_df$egn,1,2) %in% c("00","01","02","03","04","05","06")),
+  NA, ifelse(as.character(substring(all_df$egn,1,2)) %in% c("00","01","02","03",
+  "04","05","06"), paste("20",substring(all_df$egn,1,2),"-",
+  (as.numeric(substring(all_df$egn,3,3))-4),
+  substring(all_df$egn,4,4),"-", substring(all_df$egn,5,6),sep=""),
+  ifelse(as.character(substring(all_df$egn,1,2)) %in% c("10","11"),
+  NA, paste("19",substring(all_df$egn,1,2),"-",
+  substring(all_df$egn,3,4),"-", substring(all_df$egn,5,6), sep=""))))
+  all_df$dob <- as.Date(all_df$dob)
+  all_df$age <- ifelse(is.na(all_df$dob), 18, 
+  floor(as.numeric(difftime(Sys.Date(), all_df$dob, 
+  units=c("days"))/365.242)))
+  return(all_df)
+}
 
