@@ -301,7 +301,7 @@ offers$deleted_at <- NA
 offers$credit_amount_updated <- NA
 offers$installment_amount_updated <- NA
 offers$active_from <- NA
-offers$active_to <- NA
+offers$active_to <- paste0("'",Sys.Date() + 180,"'")
 offers <- offers[,c("id","office_id","client_id","group","product_id",
     "application_id","max_amount","max_installment_amount",
     "credit_amount_updated","installment_amount_updated","hide_until_date",
@@ -616,11 +616,14 @@ po_group <- po_group[!(po_group$id %in% po_group_check$id),]
 if(nrow(po_group)>0){
   po_change_query <- paste("UPDATE ",db_name,
     ".clients_prior_approval_applications SET deleted_at = NULL,
-    active_to = NULL, active_from = NULL,
-    `group` = NULL, updated_at = '",
+    active_from = NULL, `group` = NULL, updated_at = '",
     substring(Sys.time(),1,19),"' WHERE id IN",
     gen_string_po_terminated(po_group), sep="")
   suppressMessages(suppressWarnings(dbSendQuery(con,po_change_query)))
+  po_group$active_to <- as.Date(po_group$active_to) + 180
+  suppressMessages(suppressWarnings(dbSendQuery(con,
+    gen_string_delete_po_terminated(po_group,paste0("'",
+      po_group$active_to,"'"),"active_to",db_name))))
 }
 
 #  Redelete group for those activated and obsolete 

@@ -106,7 +106,7 @@ gen_all_credits_query <- function(db_name,all_df){
 gen_risky_query <- function(db_name,all_df){
   return(paste("SELECT egn
   FROM ",db_name,".clients_risk
-  WHERE egn=",all_df$egn, " AND forbidden_credit_approval = 1", sep =""))
+  WHERE egn=",all_df$egn, " AND level = 3", sep =""))
 }
 
 # Define query to get if client is defined as risky (for PA offers) 
