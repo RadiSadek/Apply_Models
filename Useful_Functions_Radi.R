@@ -1212,7 +1212,7 @@ gen_call_history <- function(db_name, all_df){
               by = "application_id") %>%
     filter(call_date < dpd_date) %>%
     group_by(application_id) %>%
-    summarize(incoming_contact = as.numeric(n() > 0))
+    summarise(incoming_contact = as.numeric(n() > 0))
   all_df <- merge(all_df, incoming, by = "application_id", all.x = T)
   all_df$incoming_contact[is.na(all_df$incoming_contact)] <- 0
   
@@ -1230,7 +1230,7 @@ gen_call_history <- function(db_name, all_df){
            call_1m_prior_dpd = as.numeric(created_at >= (dpd_date - days(30)) 
                                           & created_at <= dpd_date)) %>%
     group_by(application_id) %>%
-    summarize(outgoing_contacts = as.numeric(sum(outgoing_contacts) > 0),
+    summarise(outgoing_contacts = as.numeric(sum(outgoing_contacts) > 0),
               call_1w_prior_dpd = sum(call_1w_prior_dpd, na.rm = T), 
               call_2w_prior_dpd = sum(call_2w_prior_dpd, na.rm = T), 
               call_1m_prior_dpd = sum(call_1m_prior_dpd, na.rm = T))
@@ -1269,7 +1269,7 @@ gen_payment_ratio <- function(db_name, all_df){
   payment_ratio <- plan_main %>% 
     filter(pay_day <= dpd_date) %>%
     group_by(application_id) %>%
-    summarize(due_amount = sum(due_amount, na.rm = T)) %>%
+    summarise(due_amount = sum(due_amount, na.rm = T)) %>%
     left_join(paid_amount, by = c("application_id" = "object_id")) %>%
     left_join(taxes, by = "application_id") %>%
     mutate(paid_amount = ifelse(is.na(paid_amount), 0, paid_amount),
@@ -1292,7 +1292,7 @@ gen_default_inst_ratio <- function(db_name, all_df){
                      by = "application_id", all.x = T)
   default_installment <- plan_main %>%
     group_by(application_id) %>%
-    summarize(default_inst_ratio = 
+    summarise(default_inst_ratio = 
                 min(installment_num[days_delay >= lower_dpd]) / max(installment_num))
   
   all_df <- merge(all_df, default_installment, by = "application_id", all.x = T)

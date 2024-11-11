@@ -83,12 +83,12 @@ initial_ids$dpd_date <- Sys.Date()
 initial_ids <- initial_ids %>%
   filter((brand_id == 1 & days_delay >= 10) | (brand_id == 2 & days_delay >= 1))
 
-# Add the closest dpd group for model selection group
+# Add the closest dpd group for model selection
 dpds <- c(10, 30, 60, 90, 180, 360)
 initial_ids$dpd_group <- sapply(initial_ids$days_delay,
                                 function(x) dpds[which.min(abs(dpds - x))])
 
-# Add the closest (lower) dpd group for model selection group
+# Add the closest (lower) dpd group
 initial_ids$lower_dpd <- sapply(initial_ids$days_delay, function(x) {
   dpds[max(which(dpds <= x))]
 })
@@ -98,7 +98,6 @@ all_df <- gen_query(con,gen_big_sql_query(db_name,initial_ids))
 all_df <- gen_time_format(all_df)
 all_df <- merge(initial_ids, all_df, by = "application_id", all.x = T)
 all_df <- gen_genage(all_df)
-
 all_df <- gen_credit_history(db_name, all_df, c(1))
 
 # Read & process CKR data
@@ -143,8 +142,20 @@ Sys.time()-start_t
 df <- merge(ptp, all_df[,c("application_id", "bc_id", "dpd_group")], 
             by = "application_id", all.x = T)
 
+# Stats ----
 counts <- as.data.frame(table(df$dpd_group, df$collections_category))
 
 pct <- as.data.frame(table(df$dpd_group, df$collections_category)/
       rowSums(table(df$dpd_group, df$collections_category)))
+
+dues <- suppressWarnings(dbFetch(dbSendQuery(con,paste("SELECT application_id, 
+matured_dues
+FROM citycash.credits_applications_balance
+WHERE application_id IN (",paste(ptp$application_id,collapse=","),");",sep=""))))
+dd <- merge(ptp, dues, by = "application_id", all.x = T)
+dd <- dd %>% filter(matured_dues > 0)
+
+
+all_df_bu <- all_df
+
 
