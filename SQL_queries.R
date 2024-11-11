@@ -5,10 +5,11 @@
 
 # Define big query which reads from credits_applications
 gen_big_sql_query <- function(db_name,application_id){
-  if (is.numeric(application_id)) {
-    ids <- data.frame("application_id"=application_id)
-  } else if (is.data.frame(application_id)) {
+  
+  if (is.data.frame(application_id)) {
     ids <- application_id
+  } else {
+    ids <- data.frame("application_id"=application_id)
   }
   
   big_sql_query <- paste("SELECT 
