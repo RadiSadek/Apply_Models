@@ -410,7 +410,7 @@ gen_restrict_credirect_beh <- function(scoring_df,all_df,all_id,application_id,
         scoring_df$allowed_amount <- scoring_df$allowed_amount_app
         
       }
-      scoring_df$allowed_amount <- ifelse(scoring_df$allowed_amount>1000,1000,
+      scoring_df$allowed_amount <- ifelse(scoring_df$allowed_amount>1200,1200,
                                           scoring_df$allowed_amount)
       scoring_df$color <- ifelse(scoring_df$amount>scoring_df$allowed_amount,
                                  1,scoring_df$color)
