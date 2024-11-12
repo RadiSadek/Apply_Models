@@ -52,6 +52,8 @@ gen_ptp <- function(all_df, collections_cutoffs){
                                       `0.25-0.50` * coef[4] +
                                       `0.50-0.75` * coef[5] +
                                       `0.75-1` * coef[6])
+      probs$collections_ptp <- round(probs$collections_ptp, 3)
+      
       # Finalize the result
       temp_output <- data.frame(
         application_id = temp_df[["application_id"]],

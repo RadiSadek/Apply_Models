@@ -624,7 +624,7 @@ gen_bucket_credits_query <- function(db_name, brand_ids){
   LEFT JOIN ",db_name,".credits_applications_balance as cab 
   ON bc.application_id = cab.application_id
   WHERE b.active_from = '",cur_month,"' AND ca.status = 4 AND b.brand_id IN 
-  (",paste(brand_ids,collapse=","),") AND b.`type` IN (1,2,3,4,7,8,9,10,11);", 
+  (",paste(brand_ids,collapse=","),") AND b.`type` IN (1,2,3,4);", 
                      sep="")
   return(query_raw)
 }

@@ -1,6 +1,3 @@
-rm(list=ls())
-gc()
-start_t <- Sys.time()
 ################################################################################
 #                       Script for applying Collections model                  #
 #    Apply Multinomial GBM to credits in buckets (CityCash)                    #
@@ -14,10 +11,7 @@ start_t <- Sys.time()
 ########################
 
 # Library
-suppressMessages(suppressWarnings(library(RMariaDB)))
-suppressMessages(suppressWarnings(library(DBI)))
-suppressMessages(suppressWarnings(library(Rcpp)))
-#suppressMessages(suppressWarnings(library(RMySQL)))
+suppressMessages(suppressWarnings(library(RMySQL)))
 suppressMessages(suppressWarnings(library(here)))
 suppressMessages(suppressWarnings(library(dotenv)))
 suppressMessages(suppressWarnings(require("reshape")))
@@ -27,49 +21,61 @@ suppressMessages(suppressWarnings(require(gbm)))
 suppressMessages(suppressWarnings(library(dplyr)))
 suppressMessages(suppressWarnings(library(lubridate)))
 
-
-# Database
-db_name <- "citycash"
-con <- dbConnect(RMariaDB::MariaDB(),dbname = "citycash",host ="192.168.2.110",
-                 port = 3306,user = "userro1",password = "DHng_2pg5zdL0yI9x@")
-# db_user <- "root"
-# db_password <- "123456"
-# db_name <- "citycash_db"
-# db_host <- "127.0.0.1"
-# df_port <- 3306
-# con <- dbConnect(MySQL(), user=db_user, password=db_password, 
-#                  dbname=db_name, host=db_host, port = df_port)
+# Defines the directory where custom .env file is located
+load_dot_env(file = here('.env'))
 
 
+#######################
+### Manual settings ###
+#######################
 
-# Define work directory
-base_dir <- "C:/Projects/Apply_Scoring"
-
-
-# Read argument of ID
-# args <- commandArgs(trailingOnly = TRUE)
-# application_id <- args[1]
-# application_id <- 1955840
-# product_id <- NA
+# Defines the directory where the RScript is located
+base_dir <- Sys.getenv("SCORING_PATH", unset = "", names = FALSE)
 
 
-# Set working directory for input (R data for logistic regression) and output #
-setwd(base_dir)
+#####################
+####### MySQL #######
+#####################
+
+db_host <- Sys.getenv("DB_HOST", 
+                      unset = "localhost", 
+                      names = FALSE)
+db_port <- strtoi(Sys.getenv("DB_PORT", 
+                             unset = "3306", 
+                             names = FALSE))
+db_name <- Sys.getenv("DB_DATABASE", 
+                      unset = "citycash", 
+                      names = FALSE)
+db_username <- Sys.getenv("DB_USERNAME", 
+                          unset = "root", 
+                          names = FALSE)
+db_password <- Sys.getenv("DB_PASSWORD", 
+                          unset = "secret", 
+                          names = FALSE)
+con <- dbConnect(MySQL(), user=db_username, 
+                 password=db_password, dbname=db_name, 
+                 host=db_host, port = db_port)
+sqlMode <- paste("SET sql_mode=''", sep ="")
+suppressWarnings(fetch(dbSendQuery(con, sqlMode), 
+                       n=-1))
+
+
+#################################
+####### Load source files #######
+#################################
 
 
 # Load other r files
-source(paste(base_dir,"/Apply_Models/Useful_Functions_Radi.r", sep=""))
-source(paste(base_dir,"/Apply_Models/Empty_Fields.r", sep=""))
-source(paste(base_dir,"/Apply_Models/Cutoffs.r", sep=""))
-source(paste(base_dir,"/Apply_Models/SQL_queries.r", sep=""))
-source(paste(base_dir,"/Apply_Models/Disposable_Income.r", sep=""))
-source(paste(base_dir,"/Apply_Models/Behavioral_Variables.r", sep=""))
-source(paste(base_dir,"/Apply_Models/Normal_Variables.r", sep=""))
-source(paste(base_dir,"/Apply_Models/CKR_variables.r", sep=""))
-source(paste(base_dir,"/Apply_Models/Multinomial_GBM_Collections.r", sep=""))
+source(file.path(base_dir,"Useful_Functions.r"))
+source(file.path(base_dir,"Empty_Fields.r"))
+source(file.path(base_dir,"Cutoffs.r"))
+source(file.path(base_dir,"SQL_queries.r"))
+source(file.path(base_dir,"Disposable_Income.r"))
+source(file.path(base_dir,"Behavioral_Variables.r"))
+source(file.path(base_dir,"Normal_Variables.r"))
+source(file.path(base_dir,"CKR_variables.r"))
+source(file.path(base_dir,"Multinomial_GBM_Collections.r"))
 
-# Load model data
-load("rdata\\collections_gbm_data.rdata")
 
 ####################################
 ### Read database and build data ###
@@ -92,11 +98,6 @@ initial_ids$dpd_group <- sapply(initial_ids$days_delay,
 initial_ids$lower_dpd <- sapply(initial_ids$days_delay, function(x) {
   dpds[max(which(dpds <= x))]
 })
-
-initial_ids <- initial_ids %>%
-  group_by(dpd_group) %>%
-  sample_n(150) %>%
-  ungroup()
 
 # Read credits applications
 all_df <- gen_query(con,gen_big_sql_query(db_name,initial_ids))
@@ -136,32 +137,27 @@ all_df <- gen_payment_ratio(db_name, all_df)
 # Gen passed installments before DPD group/All installments ratio
 all_df <- gen_default_inst_ratio(db_name, all_df)
 
-Sys.time()-start_t
-
 # Apply model ----
 
-start_t <- Sys.time()
 ptp <- gen_ptp(all_df, cu_collections_citycash)
-Sys.time()-start_t
-
 ptp <- merge(ptp, all_df[,c("application_id", "bc_id")], 
             by = "application_id", all.x = T)
 
 # Write to DB ----
 
-# if(nrow(ptp) > 0){
-#   for (i in 1:nrow(ptp)) {
-#     update_query <- paste(
-#       "UPDATE ", db_name, ".call_center_buckets_credits SET ",
-#       "collections_ptp = '", ptp$collections_ptp[i], "', ",
-#       "collections_category = '", ptp$collections_category[i], "', ",
-#       "collections_updated_at = '", substring(Sys.time(), 1, 19), "' ",
-#       "WHERE id = '", ptp$bc_id[i], "'",
-#       sep = ""
-#     )
-#     suppressMessages(suppressWarnings(dbSendQuery(con,update_query)))
-#   }
-# }
+if(nrow(ptp) > 0){
+  for (i in 1:nrow(ptp)) {
+    update_query <- paste(
+      "UPDATE ", db_name, ".call_center_buckets_credits SET ",
+      "collections_ptp = '", ptp$collections_ptp[i], "', ",
+      "collections_category = '", ptp$collections_category[i], "', ",
+      "collections_updated_at = '", substring(Sys.time(), 1, 19), "' ",
+      "WHERE id = '", ptp$bc_id[i], "'",
+      sep = ""
+    )
+    suppressMessages(suppressWarnings(dbSendQuery(con,update_query)))
+  }
+}
 
 # Export ptp dataframe for testing purporses ----
 
