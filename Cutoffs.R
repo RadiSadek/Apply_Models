@@ -50,7 +50,7 @@ cu_app_city_prescore <- c(0.375,0.325,0.3,0.25,0.2)
 
 ##########  Cutoffs for Collections model for CityCash
 
-cu_collections_last12m <- list(
+cu_collections_citycash <- list(
   dpd10 = c(0, 0.674, 0.763, 0.810, 0.839, 1),
   dpd30 = c(0, 0.346, 0.491, 0.617, 0.736, 1),
   dpd60 = c(0, 0.137, 0.212, 0.306, 0.442, 1),
