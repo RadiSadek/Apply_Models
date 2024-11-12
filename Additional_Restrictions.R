@@ -188,10 +188,10 @@ gen_restrict_credirect_app <- function(scoring_df,all_df,
 
   if(flag_credit_next_salary==1){
     scoring_df$color <- 
-      ifelse(scoring_df$score %in% c("Good 4") & scoring_df$amount>1000,1,
+      ifelse(scoring_df$score %in% c("Good 4") & scoring_df$amount>1200,1,
       ifelse(scoring_df$score %in% c("Good 3","Good 2","Good 1",
                                      "Indeterminate") &
-             scoring_df$amount>1000,1,
+             scoring_df$amount>1200,1,
              scoring_df$color))
   } else {
     scoring_df$color <- 
