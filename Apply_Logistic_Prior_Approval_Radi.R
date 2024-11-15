@@ -88,7 +88,9 @@ all_credits <- rbind(
   subset(all_credits,all_credits$company_id==1 & all_credits$sub_status==128 & 
     substring(all_credits$deactivated_at,1,10)==(as.Date(Sys.time())-3)),
   subset(all_credits,all_credits$company_id==1 & all_credits$sub_status==123 & 
-    substring(all_credits$deactivated_at,1,10)==(as.Date(Sys.time())-4)))
+    substring(all_credits$deactivated_at,1,10)==(as.Date(Sys.time())-4)),
+  subset(all_credits,all_credits$company_id==7 & 
+    substring(all_credits$deactivated_at,1,10)==(as.Date(Sys.time())-2)))
 
 
 # Remove certain offices
