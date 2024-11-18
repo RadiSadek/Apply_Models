@@ -355,7 +355,7 @@ offers$deleted_at <- NA
 offers$credit_amount_updated <- NA
 offers$installment_amount_updated <- NA
 offers$active_from <- NA
-offers$active_to <- paste0("'",Sys.Date() + 180,"'")
+offers$active_to <- NA
 offers <- offers[,c("id","office_id","client_id","group","product_id",
     "application_id","max_amount","max_installment_amount",
     "credit_amount_updated","installment_amount_updated","hide_until_date",
