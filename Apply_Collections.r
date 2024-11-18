@@ -101,6 +101,7 @@ initial_ids$lower_dpd <- sapply(initial_ids$days_delay, function(x) {
 
 # Read credits applications
 all_df <- gen_query(con,gen_big_sql_query(db_name,initial_ids))
+
 all_df <- gen_time_format(all_df)
 all_df <- merge(initial_ids, all_df, by = "application_id", all.x = T)
 all_df <- gen_genage(all_df)
@@ -138,28 +139,39 @@ all_df <- gen_payment_ratio(db_name, all_df)
 all_df <- gen_default_inst_ratio(db_name, all_df)
 
 # Apply model ----
-
 ptp <- gen_ptp(all_df, cu_collections_citycash)
 ptp <- merge(ptp, all_df[,c("application_id", "bc_id")], 
             by = "application_id", all.x = T)
+ptp$id <- ptp$bc_id
 
 # Write to DB ----
+con <- dbConnect(MySQL(), user=db_username, 
+                 password=db_password, dbname=db_name, 
+                 host=db_host, port = db_port)
+sqlMode <- paste("SET sql_mode=''", sep ="")
+suppressWarnings(fetch(dbSendQuery(con, sqlMode), 
+                       n=-1))
 
-if(nrow(ptp) > 0){
-  for (i in 1:nrow(ptp)) {
-    update_query <- paste(
-      "UPDATE ", db_name, ".call_center_buckets_credits SET ",
-      "collections_ptp = '", ptp$collections_ptp[i], "', ",
-      "collections_category = '", ptp$collections_category[i], "', ",
-      "collections_updated_at = '", substring(Sys.time(), 1, 19), "' ",
-      "WHERE id = '", ptp$bc_id[i], "'",
-      sep = ""
-    )
-    suppressMessages(suppressWarnings(dbSendQuery(con,update_query)))
+if (nrow(ptp) > 0) {
+  # Split the dataframe into chunks of batch_size
+  batch_size <- 5000
+  total_rows <- nrow(ptp)
+  batches <- split(ptp, ceiling(seq_along(1:total_rows) / batch_size))
+  
+  # Loop through each batch and construct queries
+  for (batch in batches) {
+    col_ptp <- update_multiple_rows(batch, batch$collections_ptp, 
+      "collections_ptp", "call_center_buckets_credits", db_name)
+    col_cat <- update_multiple_rows(batch, batch$collections_category, 
+      "collections_category","call_center_buckets_credits", db_name)
+    ids <- paste0(batch$id, collapse = ", ")
+    
+    # Send queries
+    suppressMessages(suppressWarnings(dbSendQuery(con, col_cat)))
+    suppressMessages(suppressWarnings(dbSendQuery(con, col_ptp)))
+    suppressMessages(suppressWarnings(dbSendQuery(con,
+      paste("UPDATE ",db_name,".call_center_buckets_credits
+      SET collections_updated_at = '", substring(Sys.time(),1,19),
+      "' WHERE id IN (", ids, ");", sep=""))))
   }
 }
-
-# Export ptp dataframe for testing purporses ----
-
-ptp$exported_at <- Sys.time()
-write.csv(ptp, file.path(base_dir, "scores","ptp_collections.csv"))

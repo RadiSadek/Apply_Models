@@ -1413,3 +1413,14 @@ gen_multiclass_gbm_probs <- function(model_info, data, n_trees, n_classes,
   return(final_probs)
 }
 
+# Function to update multiple rows in DB
+update_multiple_rows <- function(input,var,var_name,table_name,db_name){
+  iterate_string <- paste("WHEN id = ",input$id[1]," THEN ",var[1],sep="")
+  if(nrow(input)>1){
+    for(i in 2:nrow(input)){
+      iterate_string <- paste(iterate_string,
+                      paste("WHEN id = ",input$id[i]," THEN ",var[i],sep=""))}
+  }
+  return(paste("UPDATE ",db_name,".",table_name," SET ",
+          var_name," = CASE ",iterate_string," ELSE ",var_name," END;",sep=""))
+}

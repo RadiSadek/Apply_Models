@@ -2,7 +2,7 @@
 gen_ptp <- function(all_df, collections_cutoffs){
   
   # Load model params
-  load("rdata\\collections_gbm_data.rdata")
+  load(file.path(base_dir,"rdata","collections_gbm_data.rdata"))
   
   # Variables to include
   variables <- c("application_id", "age", "gender", "marital_status", "ownership", 

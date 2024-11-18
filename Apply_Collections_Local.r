@@ -46,13 +46,6 @@ con <- dbConnect(RMariaDB::MariaDB(),dbname = "citycash",host ="192.168.2.110",
 base_dir <- "C:/Projects/Apply_Scoring"
 
 
-# Read argument of ID
-# args <- commandArgs(trailingOnly = TRUE)
-# application_id <- args[1]
-# application_id <- 1955840
-# product_id <- NA
-
-
 # Set working directory for input (R data for logistic regression) and output #
 setwd(base_dir)
 
@@ -67,9 +60,6 @@ source(paste(base_dir,"/Apply_Models/Behavioral_Variables.r", sep=""))
 source(paste(base_dir,"/Apply_Models/Normal_Variables.r", sep=""))
 source(paste(base_dir,"/Apply_Models/CKR_variables.r", sep=""))
 source(paste(base_dir,"/Apply_Models/Multinomial_GBM_Collections.r", sep=""))
-
-# Load model data
-load("rdata\\collections_gbm_data.rdata")
 
 ####################################
 ### Read database and build data ###
@@ -92,11 +82,6 @@ initial_ids$dpd_group <- sapply(initial_ids$days_delay,
 initial_ids$lower_dpd <- sapply(initial_ids$days_delay, function(x) {
   dpds[max(which(dpds <= x))]
 })
-
-initial_ids <- initial_ids %>%
-  group_by(dpd_group) %>%
-  sample_n(150) %>%
-  ungroup()
 
 # Read credits applications
 all_df <- gen_query(con,gen_big_sql_query(db_name,initial_ids))
@@ -146,24 +131,28 @@ Sys.time()-start_t
 
 ptp <- merge(ptp, all_df[,c("application_id", "bc_id")], 
             by = "application_id", all.x = T)
+ptp$id <- ptp$bc_id
 
 # Write to DB ----
 
-# if(nrow(ptp) > 0){
-#   for (i in 1:nrow(ptp)) {
-#     update_query <- paste(
-#       "UPDATE ", db_name, ".call_center_buckets_credits SET ",
-#       "collections_ptp = '", ptp$collections_ptp[i], "', ",
-#       "collections_category = '", ptp$collections_category[i], "', ",
-#       "collections_updated_at = '", substring(Sys.time(), 1, 19), "' ",
-#       "WHERE id = '", ptp$bc_id[i], "'",
-#       sep = ""
-#     )
-#     suppressMessages(suppressWarnings(dbSendQuery(con,update_query)))
-#   }
-# }
+if (nrow(ptp) > 0) {
+  # Split the dataframe into chunks of batch_size
+  batch_size <- 5000
+  total_rows <- nrow(ptp)
+  batches <- split(ptp, ceiling(seq_along(1:total_rows) / batch_size))
+  i <- 0
+  
+  # Loop through each batch and construct queries
+  for (batch in batches) {
+    i <- i+1
+    col_ptp <- update_multiple_rows(batch, batch$collections_ptp, 
+    "collections_ptp", "call_center_buckets_credits", db_name)
+    col_cat <- update_multiple_rows(batch, batch$collections_category, 
+    "collections_category","call_center_buckets_credits", db_name)
+    ids <- paste0(batch$id, collapse = ", ")
+    print(paste0("Updated batch ", i))
+  }
+}
 
 # Export ptp dataframe for testing purporses ----
-
 ptp$exported_at <- Sys.time()
-write.csv(ptp, file.path(base_dir, "scores","ptp_collections.csv"))
