@@ -1176,3 +1176,252 @@ gen_call_center_offers_citycash_string <- function(db_name,all_df,flag_add){
   return(final_str)
   
 }
+
+# Generate credit history
+gen_credit_history <- function(db_name, all_df, brand_ids){
+  all_df$curr_credit <- 1
+  ids <- all_df %>% distinct(client_id)
+  df <- gen_query(con, gen_credit_history_query(db_name, ids, brand_ids))
+  df <- df %>%
+    left_join(all_df[,c("application_id", "curr_credit")], 
+              by = c("id"="application_id")) %>%
+    mutate(curr_credit = ifelse(is.na(curr_credit), 0, curr_credit)) %>%
+    group_by(client_id) %>%
+    arrange(client_id, signed_at) %>%
+    mutate(credit_flag = 1,
+           credit_num = cumsum(credit_flag),
+           credit_count = lag(credit_num, default = 0),
+           days_delay_cum = cummax(max_days_delay),
+           max_dpd_app = lag(days_delay_cum, default = 0)) %>%
+    ungroup() %>%
+    filter(curr_credit == 1) %>%
+    select(id, has_prev_brand_credits, has_prev_credits, credit_count, 
+           max_dpd_app) %>%
+    mutate(default = as.numeric(max_dpd_app > 90))
+  
+  df <- merge(all_df, df, by.x = "application_id", by.y = "id", all.x = T)
+  df <- df %>% select(-curr_credit)
+  return(df)
+}
+
+# Generate call center contact history
+gen_call_history <- function(db_name, all_df){
+  incoming <- gen_query(con, gen_incoming_calls_query(db_name, all_df))
+  incoming <- incoming %>%
+    left_join(all_df[,c("application_id", "dpd_date")], 
+              by = "application_id") %>%
+    filter(call_date < dpd_date) %>%
+    group_by(application_id) %>%
+    summarise(incoming_contact = as.numeric(n() > 0))
+  all_df <- merge(all_df, incoming, by = "application_id", all.x = T)
+  all_df$incoming_contact[is.na(all_df$incoming_contact)] <- 0
+  
+  outgoing <- gen_query(con, gen_outgoing_calls_query(db_name, all_df))
+  outgoing$created_at <- as.Date(outgoing$created_at)
+  
+  out_calls <- outgoing %>%
+    left_join(all_df[,c("application_id", "dpd_date")], 
+              by = "application_id") %>%
+    mutate(outgoing_contacts = as.numeric(created_at <= dpd_date),
+           call_1w_prior_dpd = as.numeric(created_at >= (dpd_date - days(7)) 
+                                          & created_at <= dpd_date),
+           call_2w_prior_dpd = as.numeric(created_at >= (dpd_date - days(14)) 
+                                          & created_at <= dpd_date),
+           call_1m_prior_dpd = as.numeric(created_at >= (dpd_date - days(30)) 
+                                          & created_at <= dpd_date)) %>%
+    group_by(application_id) %>%
+    summarise(outgoing_contacts = as.numeric(sum(outgoing_contacts) > 0),
+              call_1w_prior_dpd = sum(call_1w_prior_dpd, na.rm = T), 
+              call_2w_prior_dpd = sum(call_2w_prior_dpd, na.rm = T), 
+              call_1m_prior_dpd = sum(call_1m_prior_dpd, na.rm = T))
+  all_df <- merge(all_df, out_calls, by = "application_id", all.x = T)
+  
+  last_result <- outgoing %>%
+    left_join(all_df[,c("application_id", "dpd_date")], 
+              by = "application_id") %>%
+    filter(dpd_date >= created_at) %>%
+    arrange(application_id, desc(created_at)) %>%
+    distinct(application_id, .keep_all = T) %>%
+    select(application_id, type) %>%
+    rename("last_result" = "type")
+  all_df <- merge(all_df, last_result, by = "application_id", all.x = T)
+  
+  return(all_df)
+}
+
+# Generate payment ratio and default installment ratio
+gen_payment_ratio <- function(db_name, all_df){
+  # Gen paid before
+  paid_amount <- gen_query(con, 
+                           gen_total_paid_amount_query(all_df$application_id,db_name))
+  colnames(paid_amount)[2] <- "paid_amount"
+  
+  # Gen taxes
+  taxes <- gen_query(con, gen_taxes_amount(db_name, all_df$application_id, 
+                                           incl_ids = 1))
+  
+  # Gen plan main
+  plan_main <- gen_query(con, gen_plan_main_query(db_name, all_df))
+  plan_main <- merge(plan_main, all_df[,c("application_id", "dpd_date")], 
+                     by = "application_id", all.x = T)
+  
+  # Calculate payment ratio
+  payment_ratio <- plan_main %>% 
+    filter(pay_day <= dpd_date) %>%
+    group_by(application_id) %>%
+    summarise(due_amount = sum(due_amount, na.rm = T)) %>%
+    left_join(paid_amount, by = c("application_id" = "object_id")) %>%
+    left_join(taxes, by = "application_id") %>%
+    mutate(paid_amount = ifelse(is.na(paid_amount), 0, paid_amount),
+           tax_amount = ifelse(is.na(tax_amount), 0, tax_amount),
+           paid_amount = paid_amount,
+           passed_amount = due_amount+tax_amount,
+           repayment_ratio = paid_amount / passed_amount,
+           repayment_ratio = ifelse(is.infinite(repayment_ratio) | 
+                                      repayment_ratio > 1, 1, repayment_ratio))
+  
+  all_df <- merge(all_df, payment_ratio[,c("application_id", 
+                                           "repayment_ratio")], all.x = T)
+  return(all_df)
+}
+
+# Gen passed installments before DPD group/All installments ratio
+gen_default_inst_ratio <- function(db_name, all_df){
+  plan_main <- gen_query(con, gen_plan_main_query(db_name, all_df))
+  plan_main <- merge(plan_main, all_df[,c("application_id", "lower_dpd")], 
+                     by = "application_id", all.x = T)
+  default_installment <- plan_main %>%
+    group_by(application_id) %>%
+    summarise(default_inst_ratio = 
+                min(installment_num[days_delay >= lower_dpd]) / max(installment_num))
+  
+  all_df <- merge(all_df, default_installment, by = "application_id", all.x = T)
+  return(all_df)
+}
+
+
+# Fill factor and numeric NA's with -999
+fill_na <- function(column, numeric_value, factor_value) {
+  if (is.factor(column)) {
+    levels(column) <- c(levels(column), factor_value)
+    column[is.na(column)] <- factor_value
+  } else if (is.numeric(column)) {
+    column[is.na(column)] <- numeric_value
+  }
+  return(column)
+}
+
+# Generate and order dummy columns in GBM style
+gen_gbm_dummies <- function(data, feature_names, features) {
+  encoded_data <- data.frame(matrix(ncol = 0, nrow = nrow(data)))
+  
+  for (feature in feature_names) {
+    if (is.factor(data[[feature]])) {
+      levels_of_feature <- levels(data[[feature]])
+      for (level in levels_of_feature) {
+        dummy_column_name <- paste0(feature, level)
+        encoded_data[[dummy_column_name]] <- as.numeric(data[[feature]] == level)
+      }
+    } else {
+      encoded_data[[feature]] <- data[[feature]]
+    }
+  }
+  
+  # In case of missing dummy vars -> create
+  missing_features <- features[!features %in% colnames(encoded_data)]
+  encoded_data[missing_features] <- 0
+  encoded_data <- encoded_data %>% select(all_of(features))
+  
+  return(encoded_data)
+}
+
+# Generate the tree structure for a single tree
+gen_tree_structure <- function(model_trees, n){
+  tree_structure <- model_trees[[n]]
+  
+  tree_structure <- data.frame(
+    SplitVar = tree_structure[[1]],
+    SplitCodePred = tree_structure[[2]],
+    LeftNode = tree_structure[[3]],
+    RightNode = tree_structure[[4]],
+    Prediction = tree_structure[[5]]
+    
+  )
+  return(tree_structure)
+}
+
+# Function to get the final prediction for a single tree
+gen_terminal_prediction <- function(encoded_data, tree_data) {
+  
+  current_node <- 0
+  
+  while (tree_data$SplitVar[current_node + 1] != -1) {
+    split_var <- tree_data$SplitVar[current_node + 1]
+    split_value <- tree_data$SplitCodePred[current_node + 1]
+    feature_value <- encoded_data[[split_var + 1]]
+    
+    if (feature_value < split_value) {
+      current_node <- tree_data$LeftNode[current_node + 1]
+    } else {
+      current_node <- tree_data$RightNode[current_node + 1]
+    }
+  }
+  return(tree_data$Prediction[current_node + 1])
+}
+
+# Softmax function to calculate probabilities from log-odds
+gen_softmax <- function(x) {
+  exp_x <- exp(x - max(x))  # Subtracting max for numerical stability
+  exp_x / sum(exp_x)
+}
+
+# Custom multiclass gbm predict function
+gen_multiclass_gbm_probs <- function(model_info, data, n_trees, n_classes,
+                                     category_labels) {
+  
+  initial_log_odds <- model_info$initial_pred
+  model_trees <- model_info$model_trees
+  features <- model_info$features
+  feature_names <- colnames(data)[-1]
+  
+  encoded_data <- gen_gbm_dummies(data, feature_names, features)
+  
+  # Initialize log-odds accumulation for each class
+  log_odds_per_class <- rep(0, n_classes)
+  
+  log_odds_per_row <- matrix(initial_log_odds, nrow = nrow(encoded_data), 
+                             ncol = n_classes)
+  
+  for (i in 1:n_trees) {
+    for (class in 1:n_classes) {
+      tree_index <- (i - 1) * n_classes + class
+      tree_data <- gen_tree_structure(model_trees, tree_index)
+      
+      # Get predictions for each row
+      row_predictions <- apply(encoded_data, 1, function(row) {
+        gen_terminal_prediction(row, tree_data)
+      })
+      
+      # Accumulate the predictions into the log odds matrix
+      log_odds_per_row[, class] <- log_odds_per_row[, class] + row_predictions
+    }
+  }
+  
+  final_probs <- as.data.frame(t(apply(log_odds_per_row, 1, gen_softmax)))
+  colnames(final_probs) <- category_labels
+  
+  return(final_probs)
+}
+
+
+# Function to update multiple rows in DB
+update_multiple_rows <- function(input,var,var_name,table_name,db_name){
+  iterate_string <- paste("WHEN id = ",input$id[1]," THEN ",var[1],sep="")
+  if(nrow(input)>1){
+    for(i in 2:nrow(input)){
+      iterate_string <- paste(iterate_string,
+       paste("WHEN id = ",input$id[i]," THEN ",var[i],sep=""))}
+  }
+  return(paste("UPDATE ",db_name,".",table_name," SET ",
+       var_name," = CASE ",iterate_string," ELSE ",var_name," END;",sep=""))
+}
