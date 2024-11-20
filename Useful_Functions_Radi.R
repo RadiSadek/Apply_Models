@@ -1023,7 +1023,7 @@ gen_parallel_score <- function(prev_amount,all_id,t_income,criteria_po,
     gbm_credirect_beh_score <- NA
   }
   if(!exists("gbm_app_citycash")){
-    gbm_citycash_app_pd  <- NA
+    gbm_citycash_app_pd <- NA
     gbm_citycash_app_score <- NA
   }
   if(!exists("logistic_cashpoint_beh_pd")){
@@ -1253,7 +1253,7 @@ gen_call_history <- function(db_name, all_df){
 gen_payment_ratio <- function(db_name, all_df){
   # Gen paid before
   paid_amount <- gen_query(con, 
-                           gen_total_paid_amount_query(all_df$application_id,db_name))
+     gen_total_paid_amount_query(all_df$application_id,db_name))
   colnames(paid_amount)[2] <- "paid_amount"
   
   # Gen taxes
@@ -1293,7 +1293,7 @@ gen_default_inst_ratio <- function(db_name, all_df){
   default_installment <- plan_main %>%
     group_by(application_id) %>%
     summarise(default_inst_ratio = 
-                min(installment_num[days_delay >= lower_dpd]) / max(installment_num))
+         min(installment_num[days_delay >= lower_dpd]) / max(installment_num))
   
   all_df <- merge(all_df, default_installment, by = "application_id", all.x = T)
   return(all_df)
@@ -1320,7 +1320,8 @@ gen_gbm_dummies <- function(data, feature_names, features) {
       levels_of_feature <- levels(data[[feature]])
       for (level in levels_of_feature) {
         dummy_column_name <- paste0(feature, level)
-        encoded_data[[dummy_column_name]] <- as.numeric(data[[feature]] == level)
+        encoded_data[[dummy_column_name]] <- 
+          as.numeric(data[[feature]] == level)
       }
     } else {
       encoded_data[[feature]] <- data[[feature]]
@@ -1412,7 +1413,6 @@ gen_multiclass_gbm_probs <- function(model_info, data, n_trees, n_classes,
   
   return(final_probs)
 }
-
 
 # Function to update multiple rows in DB
 update_multiple_rows <- function(input,var,var_name,table_name,db_name){

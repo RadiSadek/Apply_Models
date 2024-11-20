@@ -5,17 +5,17 @@ gen_ptp <- function(all_df, collections_cutoffs){
   load(file.path(base_dir,"rdata","collections_gbm_data.rdata"))
   
   # Variables to include
-  variables <- c("application_id", "age", "gender", "marital_status", "ownership", 
-         "household_total", "household_children", "has_prev_brand_credits", 
-         "has_prev_credits", "default", "credit_count", "max_dpd_app", 
-         "outs_overdue_ratio_total", "source_entity_count_total", 
-         "status_finished_total", "status_active_total", "cred_count_total", 
-         "amount_cession_total", "incoming_contact", 'last_result', 
-         "outgoing_contacts", "call_1w_prior_dpd", "call_2w_prior_dpd", 
-         "call_1m_prior_dpd", "score", "repayment_ratio", "default_inst_ratio")
+  variables <- c("application_id", "age", "gender", "marital_status",
+   "ownership","household_total", "household_children",
+   "has_prev_brand_credits","has_prev_credits", "default","credit_count",
+   "max_dpd_app","outs_overdue_ratio_total", "source_entity_count_total", 
+   "status_finished_total", "status_active_total", "cred_count_total", 
+   "amount_cession_total", "incoming_contact", 'last_result', 
+   "outgoing_contacts", "call_1w_prior_dpd", "call_2w_prior_dpd", 
+   "call_1m_prior_dpd", "score", "repayment_ratio", "default_inst_ratio")
 
   factor_columns <- c("score", "ownership", "marital_status", "gender", 
-                      "has_prev_brand_credits", "has_prev_credits", "last_result")
+       "has_prev_brand_credits", "has_prev_credits", "last_result")
   all_df[factor_columns] <- lapply(all_df[factor_columns], as.factor)
   
   category_labels <- c("0-0.05", "0.05-0.15", "0.15-0.25", "0.25-0.50", 
@@ -65,7 +65,7 @@ gen_ptp <- function(all_df, collections_cutoffs){
       cutoffs <- collections_cutoffs[[paste0("dpd", dpd)]]
       labels <- c(1:length(cutoffs))
       temp_output$collections_category <- cut(temp_output$collections_ptp, 
-      breaks = cutoffs, labels = labels[-length(labels)], include.lowest = TRUE)
+      breaks = cutoffs, labels = labels[-length(labels)],include.lowest = TRUE)
       
       results[[paste0("dpd_", dpd, "_brand_", brand)]] <- temp_output
       

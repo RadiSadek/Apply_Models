@@ -1008,7 +1008,7 @@ gen_parallel_score <- function(prev_amount,all_id,t_income,criteria_po,
   }
   
   if(flag_beh==0 & flag_cashpoint==0 & flag_finmag==0 & flag_credirect==0){
-    fraud_app_citycash <-  suppressMessages(
+    fraud_app_citycash <- suppressMessages(
       gen_app_citycash_fraud(df,scoring_df,base_dir))
     gbm_app_citycash <- suppressMessages(gen_app_bgm_citycash(df,scoring_df,
       products,period,all_df,prev_amount,amount_tab,t_income,
@@ -1083,7 +1083,7 @@ gen_pa_term_citycash <- function(db_name,empty_fields,threshold_empty,
       "installment_amount")],by.x = c("amount","period"),
       by.y = c("amount","period"),all.x = TRUE)
   }
-  
+
   # Subset scoring dataframe according to criteria
   correct_scoring_df <- subset(scoring_df,scoring_df$color!=1 &
    scoring_df$score %in% c("Good 3","Good 4"))
@@ -1253,7 +1253,7 @@ gen_call_history <- function(db_name, all_df){
 gen_payment_ratio <- function(db_name, all_df){
   # Gen paid before
   paid_amount <- gen_query(con, 
-                           gen_total_paid_amount_query(all_df$application_id,db_name))
+     gen_total_paid_amount_query(all_df$application_id,db_name))
   colnames(paid_amount)[2] <- "paid_amount"
   
   # Gen taxes
@@ -1293,7 +1293,7 @@ gen_default_inst_ratio <- function(db_name, all_df){
   default_installment <- plan_main %>%
     group_by(application_id) %>%
     summarise(default_inst_ratio = 
-                min(installment_num[days_delay >= lower_dpd]) / max(installment_num))
+         min(installment_num[days_delay >= lower_dpd]) / max(installment_num))
   
   all_df <- merge(all_df, default_installment, by = "application_id", all.x = T)
   return(all_df)
@@ -1320,7 +1320,8 @@ gen_gbm_dummies <- function(data, feature_names, features) {
       levels_of_feature <- levels(data[[feature]])
       for (level in levels_of_feature) {
         dummy_column_name <- paste0(feature, level)
-        encoded_data[[dummy_column_name]] <- as.numeric(data[[feature]] == level)
+        encoded_data[[dummy_column_name]] <- 
+          as.numeric(data[[feature]] == level)
       }
     } else {
       encoded_data[[feature]] <- data[[feature]]
@@ -1419,8 +1420,8 @@ update_multiple_rows <- function(input,var,var_name,table_name,db_name){
   if(nrow(input)>1){
     for(i in 2:nrow(input)){
       iterate_string <- paste(iterate_string,
-                      paste("WHEN id = ",input$id[i]," THEN ",var[i],sep=""))}
+       paste("WHEN id = ",input$id[i]," THEN ",var[i],sep=""))}
   }
   return(paste("UPDATE ",db_name,".",table_name," SET ",
-          var_name," = CASE ",iterate_string," ELSE ",var_name," END;",sep=""))
+       var_name," = CASE ",iterate_string," ELSE ",var_name," END;",sep=""))
 }
