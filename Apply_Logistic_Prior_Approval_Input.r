@@ -51,7 +51,7 @@ product_id <- NA
 
 # Read input file
 df <- read.xlsx(
-  "C:\\Projects\\Campaign\\20241024-Above-3months\\input\\raw_not_ok.xlsx")
+  "C:\\Projects\\Campaign\\20241122-Above-3months\\input\\raw.xlsx")
 select_credits <- df[,c("id","client_id","product_id","is_vip")]
 
 
@@ -95,7 +95,7 @@ for(i in 1:nrow(select_credits)){
     }
     client_id <- select_credits$client_id[i]
     last_id <- select_credits$id[i]
-    if(i %in% c(250,500,750,1000,1250,1500,2000)){
+    if(i %in% seq(1,nrow(select_credits),500)){
       con <- dbConnect(RMySQL::MySQL(),dbname = "citycash",host ="192.168.2.110",
          port = 3306,user = "userro1",password = "DHng_2pg5zdL0yI9x@")
     }
