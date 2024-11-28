@@ -624,7 +624,7 @@ gen_bucket_credits_query <- function(db_name, brand_ids){
   LEFT JOIN ",db_name,".credits_applications_balance as cab 
   ON bc.application_id = cab.application_id
   WHERE b.active_from = '",cur_month,"' AND ca.status = 4 AND b.brand_id IN 
-  (",paste(brand_ids,collapse=","),") AND b.`type` IN (1,2,3,4);", 
+  (",paste(brand_ids,collapse=","),") AND b.`type` IN (1,2,3,4,7,8,9,10,11);", 
                      sep="")
   return(query_raw)
 }
@@ -632,13 +632,13 @@ gen_bucket_credits_query <- function(db_name, brand_ids){
 # Define query for fetching credit data
 gen_credit_history_query <- function(db_name, ids, brand_ids){
   query_raw <- paste("SELECT ca.id, ca.client_id, ca.status, ca.signed_at,
-  ca.has_prev_brand_credits, ca.has_prev_credits, cab.max_days_delay
+  ca.has_prev_brand_credits, ca.has_prev_credits, cab.max_days_delay, p.brand_id
   FROM ",db_name,".credits_applications as ca
   LEFT JOIN ",db_name,".credits_applications_balance as cab 
   ON ca.id = cab.application_id
+  LEFT JOIN ",db_name,".products as p ON ca.product_id = p.id 
   WHERE ca.client_id IN (",paste(ids$client_id,collapse=","),")
-  AND ca.product_id IN (SELECT id FROM ",db_name,".products 
-  WHERE brand_id IN (",paste(brand_ids,collapse=","),")) AND ca.status IN (4,5)
+  AND p.brand_id IN (",paste(brand_ids,collapse=","),") AND ca.status IN (4,5)
   AND (ca.sub_status IS NULL OR ca.sub_status NOT IN (122, 129));", sep="")
   return(query_raw)
 }
