@@ -511,11 +511,11 @@ gen_restrict_finmag_beh <- function(scoring_df,prev_amount,products,
     scoring_df$color <- ifelse(scoring_df$amount>scoring_df$allowed_amount,
                                1,scoring_df$color)
     
-  # Accept only with bezsro4en trudov dogovor
-  if(is.na(all_df$status_work) | all_df$status_work!=2){
-      scoring_df$color <- 
-        ifelse(is.na(scoring_df$pd),scoring_df$color,1)
-  }
+  # # Accept only with bezsro4en trudov dogovor
+  # if(is.na(all_df$status_work) | all_df$status_work!=2){
+  #     scoring_df$color <- 
+  #       ifelse(is.na(scoring_df$pd),scoring_df$color,1)
+  # }
   
   return(scoring_df)
 }
