@@ -74,7 +74,7 @@ gen_ptp <- function(all_df, collections_cutoffs_citycash,
       temp_output$brand <- brand
       
       if(brand == 1){
-        cutoffs <- collections_cutoffs_citycash[[paste0("dpd", dpd)]]
+        cutoffs <- collections_cutoffs_citycash
       }
       if(brand == 2){
         cutoffs <- collections_cutoffs_credirect[[paste0("dpd", dpd)]]
