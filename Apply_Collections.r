@@ -82,21 +82,25 @@ source(file.path(base_dir,"Multinomial_GBM_Collections.r"))
 ####################################
 
 # Get all applications in CityCash DPD buckets
-initial_ids <- gen_query(con, gen_bucket_credits_query(db_name, c(1)))
+initial_ids <- gen_query(con, gen_bucket_credits_query(db_name, c(1,2)))
 initial_ids$dpd_date <- Sys.Date()
 
 # Remove clients with dpd irrelevant to the brand buckets
 initial_ids <- initial_ids %>%
-  filter(brand_id == 1 & days_delay >= 10)
+  filter((brand_id == 1 & days_delay >= 10) | (brand_id == 2 & days_delay >= 1))
 
 # Add the closest dpd group for model selection
 dpds <- c(10, 30, 60, 90, 180, 360)
-initial_ids$dpd_group <- sapply(initial_ids$days_delay,
-                                function(x) dpds[which.min(abs(dpds - x))])
+
+initial_ids$dpd_group <- sapply(seq_len(nrow(initial_ids)), function(i) {
+  current_dpds <- if (initial_ids$brand_id[i] == 2) c(1, dpds) else dpds
+  current_dpds[which.min(abs(current_dpds - initial_ids$days_delay[i]))]
+})
 
 # Add the closest (lower) dpd group
-initial_ids$lower_dpd <- sapply(initial_ids$days_delay, function(x) {
-  dpds[max(which(dpds <= x))]
+initial_ids$lower_dpd <- sapply(seq_len(nrow(initial_ids)), function(i) {
+  current_dpds <- if (initial_ids$brand_id[i] == 2) c(1, dpds) else dpds
+  current_dpds[max(which(current_dpds <= initial_ids$days_delay[i]))]
 })
 
 # Read credits applications
@@ -105,7 +109,7 @@ all_df <- gen_query(con,gen_big_sql_query(db_name,initial_ids))
 all_df <- gen_time_format(all_df)
 all_df <- merge(initial_ids, all_df, by = "application_id", all.x = T)
 all_df <- gen_genage(all_df)
-all_df <- gen_credit_history(db_name, all_df, c(1))
+all_df <- gen_credit_history(db_name, all_df, c(1,2))
 
 # Read & process CKR data
 all_credits <- data.frame()
@@ -139,7 +143,7 @@ all_df <- gen_payment_ratio(db_name, all_df)
 all_df <- gen_default_inst_ratio(db_name, all_df)
 
 # Apply model ----
-ptp <- gen_ptp(all_df, cu_collections_citycash)
+ptp <- gen_ptp(all_df, cu_collections_citycash, cu_collections_credirect)
 ptp <- merge(ptp, all_df[,c("application_id", "bc_id")], 
             by = "application_id", all.x = T)
 ptp$id <- ptp$bc_id

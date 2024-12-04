@@ -1,8 +1,10 @@
 # Generate PTP and Category
-gen_ptp <- function(all_df, collections_cutoffs){
+gen_ptp <- function(all_df, collections_cutoffs_citycash, 
+                    collections_cutoffs_credirect){
   
   # Load model params
-  load(file.path(base_dir,"rdata","collections_gbm_data.rdata"))
+  load(file.path(base_dir,"rdata","collections_gbm_citycash.rdata"))
+  load(file.path(base_dir,"rdata","collections_gbm_credirect.rdata"))
   
   # Variables to include
   variables <- c("application_id", "age", "gender", "marital_status",
@@ -23,11 +25,13 @@ gen_ptp <- function(all_df, collections_cutoffs){
   
   # Model DPD groups
   dpds <- c(10, 30, 60, 90, 180, 360)
-  brands <- c(1)
+  brands <- c(1, 2)
   
   results <- list()
-  for (dpd in dpds) {
-    for (brand in brands) {
+  
+  for (brand in brands) {
+    dpds_loop <- if (brand == 2) c(1, dpds) else dpds
+    for (dpd in dpds_loop) {
       
       # Select the relevant data
       temp_df <- subset(all_df, dpd_group == dpd & brand_id == brand, 
@@ -38,11 +42,18 @@ gen_ptp <- function(all_df, collections_cutoffs){
       }
       
       # Generate multiclass probabilities
+      if(brand == 1){
       probs <- gen_multiclass_gbm_probs(
-        model_info = collections_gbm_data[[paste0("model_dpd", dpd)]],
+        model_info = collections_gbm_citycash[[paste0("model_dpd", dpd)]],
         data = temp_df, n_trees = 1000, n_classes = 6, 
         category_labels = category_labels)
-      
+      }
+      if(brand == 2){
+        probs <- gen_multiclass_gbm_probs(
+          model_info = collections_gbm_credirect[[paste0("model_dpd", dpd)]],
+          data = temp_df, n_trees = 1000, n_classes = 6, 
+          category_labels = category_labels)
+      }
       # Calculate ptp
       coef <- c(0.025, 0.1, 0.2, 0.375, 0.625, 0.875)
       probs$collections_ptp <- with(probs, 
@@ -62,7 +73,13 @@ gen_ptp <- function(all_df, collections_cutoffs){
       temp_output$dpd <- dpd
       temp_output$brand <- brand
       
-      cutoffs <- collections_cutoffs[[paste0("dpd", dpd)]]
+      if(brand == 1){
+        cutoffs <- collections_cutoffs_citycash[[paste0("dpd", dpd)]]
+      }
+      if(brand == 2){
+        cutoffs <- collections_cutoffs_credirect[[paste0("dpd", dpd)]]
+      }
+      
       labels <- c(1:length(cutoffs))
       temp_output$collections_category <- cut(temp_output$collections_ptp, 
       breaks = cutoffs, labels = labels[-length(labels)],include.lowest = TRUE)

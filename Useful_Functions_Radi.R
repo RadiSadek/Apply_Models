@@ -1186,7 +1186,7 @@ gen_credit_history <- function(db_name, all_df, brand_ids){
     left_join(all_df[,c("application_id", "curr_credit")], 
               by = c("id"="application_id")) %>%
     mutate(curr_credit = ifelse(is.na(curr_credit), 0, curr_credit)) %>%
-    group_by(client_id) %>%
+    group_by(client_id, brand_id) %>%
     arrange(client_id, signed_at) %>%
     mutate(credit_flag = 1,
            credit_num = cumsum(credit_flag),
