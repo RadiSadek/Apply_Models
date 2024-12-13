@@ -77,7 +77,7 @@ gen_ptp <- function(all_df, collections_cutoffs_citycash,
         cutoffs <- collections_cutoffs_citycash
       }
       if(brand == 2){
-        cutoffs <- collections_cutoffs_credirect[[paste0("dpd", dpd)]]
+        cutoffs <- collections_cutoffs_credirect
       }
       
       labels <- c(1:length(cutoffs))

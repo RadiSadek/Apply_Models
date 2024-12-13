@@ -65,7 +65,7 @@ gen_seon_phones <- function(db_name,criteria,var){
 
 # Function to generate gender and age
 gen_genage <- function(all_df){
-  all_df$gender <- ifelse(substring(all_df$egn,9,9) %in% c(0,2,4,6,8), 0, 1)
+  all_df$gender <- ifelse(substring(all_df$egn,9,9) %in% c(0,2,4,6,8), 1, 0)
   
   all_df$dob <- ifelse(!(substring(all_df$egn,3,3) %in% c("5","4")) & 
   (substring(all_df$egn,1,2) %in% c("00","01","02","03","04","05","06")),
